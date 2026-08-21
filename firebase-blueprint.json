@@ -1,0 +1,238 @@
+{
+  "entities": {
+    "logs_sistema": {
+      "title": "Logs de Auditoria do Sistema",
+      "description": "Registros de auditoria de ações críticas no sistema",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID do usuário que executou a ação"
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "E-mail do usuário que executou a ação"
+        },
+        "userName": {
+          "type": "string",
+          "description": "Nome de exibição do usuário"
+        },
+        "action": {
+          "type": "string",
+          "description": "Descrição sucinta da ação realizada"
+        },
+        "category": {
+          "type": "string",
+          "description": "Categoria/departamento do sistema",
+          "enum": ["Administrativo", "Comercial", "Financeiro", "Estoque", "Sistema"]
+        },
+        "ip": {
+          "type": "string",
+          "description": "Endereço IP público do cliente"
+        },
+        "userAgent": {
+          "type": "string",
+          "description": "User Agent do navegador do cliente"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Data e hora em que a ação ocorreu"
+        }
+      },
+      "required": ["userId", "userEmail", "action", "category", "ip", "date"]
+    },
+    "integracao_pagamentos": {
+      "title": "Integração de Pagamentos",
+      "description": "Configurações das chaves de API dos gateways de pagamento",
+      "type": "object",
+      "properties": {
+        "provedor": { "type": "string" },
+        "publicKey": { "type": "string" },
+        "accessToken": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientSecret": { "type": "string" },
+        "status": { "type": "string", "enum": ["Ativo", "Modo Teste", "Inativo"] }
+      },
+      "required": ["provedor", "status"]
+    },
+    "centros_custo": {
+      "title": "Centros de Custo e Lucro",
+      "description": "Estrutura de centros de custo e centros de lucro para lançamentos contábeis e orçamentários",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "tipo": { "type": "string", "enum": ["custo", "lucro"] },
+        "categoria": { "type": "string" },
+        "centroPai": { "type": "string" },
+        "descricao": { "type": "string" },
+        "status": { "type": "string", "enum": ["Ativo", "Inativo"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["nome", "tipo", "categoria", "status"]
+    },
+    "contas_receber": {
+      "title": "Contas a Receber",
+      "description": "Lançamentos e faturas de contas a receber de clientes",
+      "type": "object",
+      "properties": {
+        "descricao": { "type": "string" },
+        "valor": { "type": "number" },
+        "vencimento": { "type": "string" },
+        "parcelas": { "type": "number" },
+        "clienteId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Aberto", "Recebido", "Atrasado", "Auditar Web", "Cancelado"] },
+        "recebidoEm": { "type": "string" },
+        "valorRecebido": { "type": "number" },
+        "contaBancaria": { "type": "string" },
+        "centroCusto": { "type": "string" },
+        "pedidoId": { "type": "string" }
+      },
+      "required": ["descricao", "valor", "vencimento", "status"]
+    },
+    "wishlist_item": {
+      "title": "Item da Lista de Desejos",
+      "description": "Associação de produto favoritado por um usuário",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID do produto favoritado"
+        },
+        "addedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Data e hora de quando o produto foi favoritado"
+        }
+      },
+      "required": ["id", "addedAt"]
+    },
+    "cashback_transaction": {
+      "title": "Transação de Cashback",
+      "description": "Registro de ganho, resgate ou desconto de cashback",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["earning", "withdrawal", "discount"] },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Aprovado", "Pendente", "Rejeitado"] }
+      },
+      "required": ["id", "type", "amount", "description", "date", "status"]
+    },
+    "cart_item": {
+      "title": "Item do Carrinho de Compras",
+      "description": "Item salvo no carrinho de compras do usuário para persistência",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "imagemPrincipal": { "type": "string" },
+        "precoOriginal": { "type": "number" },
+        "precoAplicado": { "type": "number" },
+        "quantidade": { "type": "number" },
+        "categoria": { "type": "string" },
+        "sku": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "nome", "precoOriginal", "precoAplicado", "quantidade"]
+    },
+    "configuracao_email": {
+      "title": "Configurações de Notificação por E-mail",
+      "description": "Configurações de servidor SMTP e credenciais de API de e-mail (SendGrid/Mailgun/Amazon SES) para disparos automáticos",
+      "type": "object",
+      "properties": {
+        "metodo": { "type": "string", "enum": ["smtp", "api"] },
+        "smtpHost": { "type": "string" },
+        "smtpPort": { "type": "number" },
+        "smtpUser": { "type": "string" },
+        "smtpPass": { "type": "string" },
+        "smtpSecure": { "type": "boolean" },
+        "apiProvider": { "type": "string", "enum": ["sendgrid", "mailgun", "ses", "custom"] },
+        "apiKey": { "type": "string" },
+        "apiDomain": { "type": "string" },
+        "apiEndpoint": { "type": "string" },
+        "fromEmail": { "type": "string" },
+        "fromName": { "type": "string" },
+        "templates": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["metodo", "fromEmail", "fromName"]
+    },
+    "mural_notice": {
+      "title": "Mural Condominial",
+      "description": "Comunicados informativos ou perguntas/dúvidas compartilhadas entre síndicos",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "condominio": { "type": "string" },
+        "bairro": { "type": "string" },
+        "tipo": { "type": "string", "enum": ["comunicado", "duvida"] },
+        "titulo": { "type": "string" },
+        "texto": { "type": "string" },
+        "status": { "type": "string", "enum": ["em_revisao", "publicado", "rejeitado"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "condominio", "bairro", "titulo", "texto", "status"]
+    },
+    "mural_resposta": {
+      "title": "Resposta no Mural Condominial",
+      "description": "Respostas e contribuições de outros síndicos para dúvidas no mural",
+      "type": "object",
+      "properties": {
+        "noticeId": { "type": "string" },
+        "userId": { "type": "string" },
+        "autorNome": { "type": "string" },
+        "condominio": { "type": "string" },
+        "bairro": { "type": "string" },
+        "texto": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["noticeId", "userId", "texto", "condominio"]
+    }
+  },
+  "firestore": {
+    "muralNotices/{noticeId}": {
+      "schema": "mural_notice",
+      "description": "Coleção de comunicados e dúvidas do mural condominial"
+    },
+    "muralNotices/{noticeId}/respostas/{respostaId}": {
+      "schema": "mural_resposta",
+      "description": "Subcoleção de respostas e orientações de síndicos para cada comunicado ou dúvida"
+    },
+    "config/email": {
+      "schema": "configuracao_email",
+      "description": "Configurações globais de e-mail e notificações por SMTP ou API"
+    },
+    "logs_sistema": {
+      "schema": "logs_sistema",
+      "description": "Coleção global de logs de auditoria"
+    },
+    "integracao_pagamentos": {
+      "schema": "integracao_pagamentos",
+      "description": "Coleção de configurações de gateways de pagamento"
+    },
+    "centros_custo": {
+      "schema": "centros_custo",
+      "description": "Coleção de centros de custo e de lucro da empresa"
+    },
+    "contas_receber": {
+      "schema": "contas_receber",
+      "description": "Coleção de lançamentos de contas a receber"
+    },
+    "users/{userId}/wishlist/{productId}": {
+      "schema": "wishlist_item",
+      "description": "Subcoleção contendo itens da lista de desejos de cada usuário"
+    },
+    "users/{userId}/cashback_transactions/{transactionId}": {
+      "schema": "cashback_transaction",
+      "description": "Histórico de lançamentos e resgates de cashback do usuário"
+    },
+    "users/{userId}/cart/{productId}": {
+      "schema": "cart_item",
+      "description": "Itens no carrinho de compras do usuário para persistência entre sessões"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "LimpEcommerce",
+  "description": "E-Commerce de Produtos de Limpeza e Conservação com Cashback e Gestão Administrativa",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

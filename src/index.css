@@ -1,0 +1,253 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Inter:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-light: #5ac8fa; /* Apple Light Blue */
+  --color-brand-dark: #0071e3;  /* Apple Blue */
+  --color-brand-primary: #1d1d1f; /* Apple Dark */
+}
+
+@layer base {
+  html {
+    font-size: 17px;
+  }
+  html,
+  body,
+  #root {
+    @apply h-full m-0 bg-[#f5f5f7] text-[#1d1d1f] text-[16px] sm:text-[17px] leading-relaxed font-sans antialiased;
+  }
+  p {
+    text-align: justify;
+  }
+  /* Typography defaults in base layer so utility classes can override them */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: #1d1d1f;
+  }
+}
+
+/* Modern SaaS Theme Overrides */
+
+/* Elegant Soft Shadows */
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+.shadow-md {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+}
+
+/* Buttons */
+button {
+  transition: all 0.2s ease-in-out !important;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Form inputs */
+input,
+select,
+textarea {
+  transition: all 0.2s ease-in-out;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Structure tweaks */
+aside {
+  background-color: #ffffff !important;
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+header {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Tables */
+table th {
+  background-color: #f8fafc !important;
+  color: #64748b !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+table td {
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #334155;
+}
+
+/* Cards and panels */
+.bg-white {
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05) !important;
+  border-radius: 0.75rem !important; /* Tailwind rounded-xl */
+}
+
+/* Overriding specific structural nodes that shouldn't have card border/shadow */
+header.bg-white,
+aside.bg-white,
+div.bg-white.w-full.absolute {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Specifically for active nav links */
+aside .bg-brand-dark {
+  background-color: #eff6ff !important; /* Soft blue */
+  color: #1e40af !important; /* Deep blue */
+  font-weight: 600 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* -----------------------------------------
+   Dark Mode Support (Tailwind v4 based on .dark)
+   ----------------------------------------- */
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+}
+
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6 {
+  color: #f1f5f9 !important;
+}
+
+html.dark p,
+html.dark span,
+html.dark label {
+  color: #94a3b8;
+}
+
+html.dark strong,
+html.dark b {
+  color: #f1f5f9 !important;
+}
+
+/* Sidebar and Header overrides in dark mode */
+html.dark aside {
+  background-color: #1e293b !important;
+  border-right: 1px solid #334155 !important;
+}
+
+html.dark header {
+  background-color: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+/* Tables in dark mode */
+html.dark table th {
+  background-color: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+html.dark table td {
+  border-bottom: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Cards & containers in dark mode */
+html.dark .bg-white {
+  background-color: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Select, input, textarea, etc. in dark mode */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+html.dark input::placeholder {
+  color: #475569 !important;
+}
+
+/* Specifically for active nav links in dark mode */
+html.dark aside .bg-brand-dark {
+  background-color: #1e3a8a !important; /* Deep dark blue */
+  color: #93c5fd !important; /* Light blue text */
+  border: none !important;
+}
+
+/* Custom modal background */
+html.dark .bg-slate-900\/50 {
+  background-color: rgba(15, 23, 42, 0.7) !important;
+}
+
+
+
+/* Print Rules */
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+  
+  body {
+    background-color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+
+  /* Force display of elements that might be hidden by default but needed for print */
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  
+  /* Reset some paddings/margins for print */
+  .print\:p-0 { padding: 0 !important; }
+  .print\:m-0 { margin: 0 !important; }
+  .print\:w-full { width: 100% !important; }
+  .print\:shadow-none { box-shadow: none !important; }
+  
+  /* Paginator counter for footer */
+  .print-page-number::after {
+    counter-increment: page;
+    content: "Página " counter(page);
+  }
+}

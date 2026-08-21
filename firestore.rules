@@ -1,0 +1,253 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isSuperAdmin() {
+      return isSignedIn()
+        && request.auth.token.keys().hasAny(['email'])
+        && request.auth.token.email != null
+        && (request.auth.token.email == 'wegbusinessandsolutions@gmail.com' || request.auth.token.email == 'WEGBUSINESSANDSOLUTIONS@GMAIL.COM');
+    }
+    function userDocExists() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function getRole() {
+      return userDocExists()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'Cliente')
+        : (isSuperAdmin() ? 'Administrador' : 'Cliente');
+    }
+    function isAdmin() {
+      return isSuperAdmin() || (isSignedIn() && getRole() in ['Administrador', 'admin', 'Admin']);
+    }
+    function isFinanceiro() {
+      return isStaff();
+    }
+
+    function OLD_isFinanceiro() {
+      return isAdmin() || (isSignedIn() && getRole() == 'Financeiro');
+    }
+    function isComercial() {
+      return isStaff();
+    }
+
+    function OLD_isComercial() {
+      return isAdmin() || (isSignedIn() && getRole() in ['Comercial', 'Comercial Externo', 'Vendedor Externo']);
+    }
+    function isExpedicao() {
+      return isStaff();
+    }
+
+    function OLD_isExpedicao() {
+      return isAdmin() || (isSignedIn() && getRole() in ['Estoquista', 'Entregador', 'Expedição']);
+    }
+    function isStaff() {
+      return isAdmin() || (isSignedIn() && getRole() in ['Administrador', 'admin', 'Admin', 'Comercial', 'Comercial Externo', 'Vendedor Externo', 'Financeiro', 'Estoquista', 'Entregador', 'Expedição']);
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isOwner(userId) || isAdmin() || isStaff();
+      allow delete: if isAdmin();
+
+      match /cart/{productId} {
+        allow read, write: if isOwner(userId) || isAdmin() || isStaff();
+      }
+      match /wishlist/{productId} {
+        allow read, write: if isOwner(userId) || isAdmin() || isStaff();
+      }
+      match /cashback_transactions/{txId} {
+        allow read: if isOwner(userId) || isStaff() || isAdmin();
+        allow create, update, delete: if isOwner(userId) || isStaff() || isAdmin();
+      }
+    }
+
+    
+    match /{path=**}/cashback_transactions/{txId} {
+      allow read: if isStaff();
+    }
+    match /cashback_transactions/{txId} {
+      allow read: if isStaff() || (isSignedIn() && resource != null && (resource.data.userId == request.auth.uid || (resource.data.userEmail != null && request.auth.token.email != null && resource.data.userEmail == request.auth.token.email)));
+      allow create: if isStaff() || (isSignedIn() && (request.resource.data.userId == request.auth.uid || (request.resource.data.userEmail != null && request.auth.token.email != null && request.resource.data.userEmail == request.auth.token.email)));
+      allow update, delete: if isStaff();
+    }
+    match /servicos_essenciais/{id}     { allow read: if true; allow write: if isStaff(); }
+    match /ordens_servico/{id} {
+      allow read: if isStaff() || (isSignedIn() && (resource.data.clienteId == request.auth.uid || (resource.data.clienteEmail != null && request.auth.token.email != null && resource.data.clienteEmail == request.auth.token.email)));
+      allow create: if isSignedIn();
+      allow update: if isStaff() || (isSignedIn() && (resource.data.clienteId == request.auth.uid || (resource.data.clienteEmail != null && request.auth.token.email != null && resource.data.clienteEmail == request.auth.token.email)));
+      allow delete: if isStaff() || (
+        isSignedIn() && 
+        (resource.data.clienteId == request.auth.uid || (resource.data.clienteEmail != null && request.auth.token.email != null && resource.data.clienteEmail == request.auth.token.email)) && 
+        (
+          (resource.data.status == 'Solicitado o Serviço' && (
+            !(resource.data.createdAt is timestamp) ||
+            request.time <= resource.data.createdAt + duration.value(24, 'h')
+          )) ||
+          resource.data.status == 'Cancelada pelo Cliente' ||
+          resource.data.status == 'Cancelado'
+        )
+      );
+    }
+
+    match /categorias_produtos/{id}     { allow read: if true; allow write: if isStaff(); }
+    match /marcas_parceiras/{id}        { allow read: if true; allow write: if isStaff(); }
+    match /clube_beneficios/{id}        { allow read: if true; allow write: if isStaff(); }
+    match /kits_essenciais/{id}         { allow read: if true; allow write: if isStaff(); }
+
+    match /clientes_crm/{id}            { allow read, write: if isComercial(); }
+    match /visitas_crm/{id}             { allow read, write: if isComercial(); }
+    match /estoque_movimentacoes/{id}   { allow read, write: if isExpedicao(); }
+    match /config_empresa/{id}          { allow read: if true; allow write: if isAdmin(); }
+    match /config_franqueadora/{id}     { allow read: if true; allow write: if isAdmin(); }
+    match /config/{id}                  { allow read: if true; allow write: if isAdmin(); }
+    match /email_logs/{id}              { allow read, write: if isStaff() || request.auth != null; }
+    match /empregados/{id}              { allow read, write: if isFinanceiro(); }
+    match /comissoes/{id}               { allow read, write: if isComercial(); }
+    match /codigos_indicacao/{id}       { allow read: if true; allow write: if isComercial(); }
+
+
+    match /pedidos_venda/{pedidoId} {
+      allow read: if isStaff()
+        || (isSignedIn() && (
+            (resource.data.get('clienteId', '') == request.auth.uid) ||
+            (resource.data.get('clienteUid', '') == request.auth.uid) ||
+            (resource.data.get(['cliente', 'uid'], '') == request.auth.uid) ||
+            (request.auth.token.email != null && resource.data.get(['cliente', 'email'], '') == request.auth.token.email) ||
+            (request.auth.token.email != null && resource.data.get('clienteEmail', '') == request.auth.token.email)
+          ));
+      allow create: if isSignedIn();
+      allow update, delete: if isStaff();
+    }
+
+    match /contas_receber/{id} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if isFinanceiro() || isSignedIn() || true;
+      allow delete: if isFinanceiro();
+    }
+    match /contas_pagar/{id}            { allow read, write: if isFinanceiro(); }
+    match /bancos/{id}                  { allow read: if true; allow write: if isFinanceiro(); }
+    match /fornecedores/{id}            { allow read, write: if isFinanceiro(); }
+    match /centros_custo/{id}           { allow read, write: if isFinanceiro(); }
+    match /entregas/{id}                { allow read, write: if isExpedicao(); }
+
+    match /regras_cashback/{id} {
+      allow read: if true;   // exibido publicamente na loja
+      allow write: if isAdmin();
+    }
+
+    match /muralNotices/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isStaff();
+
+      match /respostas/{respId} {
+        allow read: if true;
+        allow create: if isSignedIn();
+        allow update, delete: if isStaff() || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid);
+      }
+    }
+
+    match /integracao_pagamentos/{id} {
+      allow read: if isFinanceiro() || id == 'mercado_pago' || (resource != null && resource.data.get('provedor', '') == 'Mercado Pago');
+      allow write: if isAdmin() || isFinanceiro();
+    }
+
+    match /logs_status_pedidos/{id} {
+      allow read, write: if isStaff();
+    }
+
+    match /logs_sistema/{id} {
+      allow read: if isStaff();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /notificacoes/{id} {
+      allow read, write: if isStaff();
+    }
+
+    match /suporte_mensagens/{id} {
+      allow read, write: if isStaff();
+    }
+
+    match /produtos/{id} {
+      allow read: if true; // catálogo público
+      allow write: if isStaff();
+      // Permite que clientes autenticados atualizem apenas o estoque (qtdAtual) ao finalizar pedidos no checkout
+      allow update: if isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['qtdAtual']);
+    }
+
+    match /suporte_pedidos/{chatId} {
+      allow read: if isStaff()
+        || (isSignedIn() && chatId.matches('^chat_' + request.auth.uid + '.*'))
+        || (isSignedIn() && resource != null && (resource.data.clienteUid == request.auth.uid || resource.data.clienteEmail == request.auth.token.email));
+      allow create: if isSignedIn();
+      allow update, delete: if isStaff()
+        || (isSignedIn() && chatId.matches('^chat_' + request.auth.uid + '.*'))
+        || (isSignedIn() && resource != null && (resource.data.clienteUid == request.auth.uid || resource.data.clienteEmail == request.auth.token.email));
+
+      match /mensagens/{msgId} {
+        allow read: if isStaff()
+          || (isSignedIn() && chatId.matches('^chat_' + request.auth.uid + '.*'))
+          || (isSignedIn() && exists(/databases/$(database)/documents/suporte_pedidos/$(chatId)) && (
+              get(/databases/$(database)/documents/suporte_pedidos/$(chatId)).data.clienteUid == request.auth.uid ||
+              get(/databases/$(database)/documents/suporte_pedidos/$(chatId)).data.clienteEmail == request.auth.token.email
+            ));
+        allow create: if isSignedIn();
+        allow update, delete: if isStaff();
+      }
+    }
+
+    match /notifications/{id} {
+      allow create: if true;
+      allow read, update, delete: if isStaff() || (isSignedIn() && (resource == null || resource.data.get('userId', '') == request.auth.uid || resource.data.get('userEmail', '') == request.auth.token.email || resource.data.get('target', '') == 'all'));
+    }
+
+    match /notificacoes_clientes/{id} {
+      allow create: if isStaff() || isSignedIn();
+      allow read: if isStaff() || (isSignedIn() && (resource == null || resource.data.get('userId', '') == request.auth.uid || resource.data.get('userEmail', '') == request.auth.token.email || resource.data.get('target', '') == 'all'));
+      allow update, delete: if isStaff() || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid);
+    }
+
+    match /promocoes_beneficios/{id} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // Bloqueia qualquer coleção não prevista explicitamente acima
+    match /afiliados_uc/{id} { 
+      allow read, update: if true; 
+      allow create: if isSignedIn(); 
+      allow delete: if isStaff(); 
+    }
+    match /contatos_site/{id} {
+      allow create: if true;
+      allow read, update, delete: if isStaff();
+    }
+
+    match /configuracao_backup/{id} {
+      allow read, write: if isStaff();
+    }
+
+    match /logs_backup/{id} {
+      allow read, write: if isStaff();
+    }
+
+    match /backups_agendados_snapshots/{id} {
+      allow read, write: if isStaff();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
