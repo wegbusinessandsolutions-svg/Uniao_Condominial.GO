@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Trash2, ShoppingBag, CreditCard, ChevronRight, CheckCircle2, QrCode, Clipboard, User, Check, Printer, MapPin, Phone, Mail, Package } from "lucide-react";
+import { ArrowLeft, Trash2, ShoppingBag, CreditCard, ChevronRight, CheckCircle2, QrCode, Clipboard, User, Check, Printer, MapPin, Phone, Mail, Package, ExternalLink } from "lucide-react";
 import { isStaffRole } from "../../lib/permissions";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
@@ -925,20 +925,21 @@ export default function Cart() {
             )}
 
             {confirmedFormaPagamento === "15" && (
-              <div className="bg-amber-50/50 border border-amber-100 rounded-3xl p-6 text-center space-y-3 shadow-xs">
-                <p className="text-sm font-bold text-slate-700">Código de Barras do Boleto</p>
-                <div className="font-mono text-xs bg-white p-3 rounded-xl border border-slate-200 text-slate-600 break-all select-all">
-                  34191.79001 01043.513184 91020.150008 7 981200000{Math.floor(confirmedTotal)}00
+              <div className="bg-[#00B1EA]/10 border border-[#00B1EA]/30 rounded-3xl p-6 text-center space-y-4 shadow-xs animate-fade-in">
+                <div className="w-16 h-16 mx-auto bg-[#00B1EA]/20 text-[#00B1EA] rounded-full flex items-center justify-center">
+                  <CreditCard size={32} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-800">Pagamento via Mercado Pago</p>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Você escolheu pagar com Boleto Bancário. O processo de faturamento agora será concluído com segurança através do Mercado Pago.
+                  </p>
                 </div>
                 <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(`34191.79001 01043.513184 91020.150008 7 981200000${Math.floor(confirmedTotal)}00`);
-                    alert("Linha digitável copiada!");
-                  }}
-                  className="w-full inline-flex items-center justify-center gap-2 text-xs font-bold text-amber-800 bg-white hover:bg-amber-100/50 py-3 px-4 rounded-xl border border-amber-200 shadow-xs transition-all active:scale-95 cursor-pointer"
+                  onClick={() => window.open('https://www.mercadopago.com.br/', '_blank')}
+                  className="w-full inline-flex items-center justify-center gap-2 text-sm font-bold text-white bg-[#00B1EA] hover:bg-[#00B1EA]/90 py-3.5 px-4 rounded-xl shadow-md shadow-[#00B1EA]/20 transition-all active:scale-95 cursor-pointer"
                 >
-                  <Clipboard size={14} />
-                  Copiar Linha Digitável
+                  Continuar para Mercado Pago <ExternalLink size={16} />
                 </button>
               </div>
             )}

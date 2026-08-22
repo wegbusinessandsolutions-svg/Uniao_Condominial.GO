@@ -96,11 +96,11 @@ export default function Home() {
             Por que nos escolher?
           </h2>
           
-          <div className="relative rounded-3xl overflow-hidden shadow-md flex justify-center w-full bg-slate-50">
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md w-full bg-slate-50">
             <img
               src="/Cond_Vert_Horiz_UC.jpg"
               alt="Goiânia é feita de grandes condomínios. Verticais e horizontais. Todos precisam de soluções. Todos podem ganhar juntos."
-              className="w-full h-auto max-w-full object-contain block rounded-3xl"
+              className="w-full h-auto block"
               loading="eager"
             />
           </div>
