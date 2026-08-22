@@ -16,7 +16,8 @@ import {
   TrendingUp,
   ExternalLink,
   DollarSign,
-  FileText
+  FileText,
+  Target
 } from "lucide-react";
 import DashboardConfigTabs from "../../components/admin/DashboardConfigTabs";
 
@@ -27,6 +28,7 @@ export default function DashboardComercialConfig() {
 
   const defaultConfig = {
     // Módulos Principais
+    dashboardMetasVendas: true,
     moduloClientes: true,
     moduloCategorias: true,
     moduloPedidos: true,
@@ -183,6 +185,13 @@ export default function DashboardComercialConfig() {
             </h3>
           </div>
           <div className="p-4 space-y-2.5">
+            <ToggleOption
+              label="Dashboard de Metas de Vendas"
+              description="Gráfico de barras Recharts comparando volume mensal com metas da coleção metas_vendas."
+              icon={<Target size={18} />}
+              checked={config.dashboardMetasVendas}
+              onChange={() => handleToggle("dashboardMetasVendas")}
+            />
             <ToggleOption
               label="Total de Clientes"
               description="Contador de condomínios e contas cadastradas."

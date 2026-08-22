@@ -164,7 +164,7 @@ export default function ShopLayout() {
               <h4 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider mb-6">Atendimento</h4>
               <ul className="space-y-3.5 text-sm sm:text-base">
                 <li>
-                  <Link to="#" className="text-slate-600 hover:text-brand-dark transition-colors font-medium">Cashback</Link>
+                  <Link to="/cliente/cashback" className="text-slate-600 hover:text-brand-dark transition-colors font-medium">Cashback</Link>
                 </li>
                 <li>
                   <Link to="/minha-conta" className="text-slate-600 hover:text-brand-dark transition-colors font-medium">Minha conta</Link>

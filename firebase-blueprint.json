@@ -191,9 +191,27 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["noticeId", "userId", "texto", "condominio"]
+    },
+    "meta_vendas": {
+      "title": "Metas de Vendas",
+      "description": "Definição de metas de faturamento e volume comercial por mês e ano",
+      "type": "object",
+      "properties": {
+        "ano": { "type": "number" },
+        "metaAnual": { "type": "number" },
+        "meses": { "type": "object" },
+        "observacoes": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "updatedBy": { "type": "string" }
+      },
+      "required": ["ano"]
     }
   },
   "firestore": {
+    "metas_vendas/{metaId}": {
+      "schema": "meta_vendas",
+      "description": "Coleção de metas de vendas mensais e anuais por ano"
+    },
     "muralNotices/{noticeId}": {
       "schema": "mural_notice",
       "description": "Coleção de comunicados e dúvidas do mural condominial"

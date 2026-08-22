@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { 
   Users, 
@@ -11,11 +11,15 @@ import {
   ArrowUpRight,
   Sliders,
   TrendingUp,
-  DollarSign
+  DollarSign,
+  Target
 } from "lucide-react";
 import { initFirebase } from "../../lib/firebase";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
+import { SkeletonCharts } from "../../components/ui/Skeleton";
+
+const DashboardMetasVendas = React.lazy(() => import("../../components/comercial/DashboardMetasVendas"));
 
 const allComercialModules = [
   {
@@ -88,6 +92,7 @@ export default function ComercialDashboard() {
   const isAdmin = ["Administrador", "admin", "Admin"].includes(profile?.role || "");
 
   const [config, setConfig] = useState<any>({
+    dashboardMetasVendas: true,
     moduloClientes: true,
     moduloCategorias: true,
     moduloPedidos: true,
@@ -227,6 +232,15 @@ export default function ComercialDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Dashboard de Metas de Vendas (Gráfico Recharts vs Metas) Lazy Loaded */}
+        {config.dashboardMetasVendas !== false && (
+          <div className="mb-8">
+            <Suspense fallback={<SkeletonCharts />}>
+              <DashboardMetasVendas />
+            </Suspense>
           </div>
         )}
 

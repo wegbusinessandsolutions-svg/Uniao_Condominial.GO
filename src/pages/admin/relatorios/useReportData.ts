@@ -62,6 +62,26 @@ export function useReportData() {
           }
           break;
         }
+        case "adm_franchises": {
+          rows = (dbSnapshots["config_empresa"] || []).map(r => ({
+            id: r.id,
+            codigoUnidade: r.codigoUnidade || "FRANQ-001",
+            razaoSocial: r.razaoSocial || r.nomeFantasia || "—",
+            cnpj: r.cnpj || "—",
+            cidadeUf: r.cidade ? `${r.cidade}/${r.uf || "GO"}` : (r.uf || "—"),
+            responsavelUnidade: r.responsavelUnidade || r.resp1Nome || "—",
+            telefone: r.telefone || "—",
+            statusFranquia: r.statusFranquia || "Ativa",
+            uf: r.uf || ""
+          }));
+          if (filters.statusFranquia && filters.statusFranquia !== "Todos") {
+            rows = rows.filter(r => r.statusFranquia === filters.statusFranquia);
+          }
+          if (filters.uf && filters.uf !== "Todos") {
+            rows = rows.filter(r => r.uf === filters.uf);
+          }
+          break;
+        }
 
         // COMERCIAL
         case "com_sales": {

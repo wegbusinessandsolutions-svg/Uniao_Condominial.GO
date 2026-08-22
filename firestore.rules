@@ -111,6 +111,7 @@ service cloud.firestore {
     match /empregados/{id}              { allow read, write: if isFinanceiro(); }
     match /comissoes/{id}               { allow read, write: if isComercial(); }
     match /codigos_indicacao/{id}       { allow read: if true; allow write: if isComercial(); }
+    match /metas_vendas/{id}            { allow read, write: if isComercial(); }
 
 
     match /pedidos_venda/{pedidoId} {

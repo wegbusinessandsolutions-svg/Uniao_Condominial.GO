@@ -100,6 +100,32 @@ export const REPORT_CATALOG: ReportDefinition[] = [
       { label: "Total de Logs", value: String(rows.length), tone: "neutral" }
     ]
   },
+  {
+    id: "adm_franchises",
+    code: "ADM-FRANQ",
+    title: "Rede de Unidades Franqueadas",
+    module: "Administrativo",
+    description: "Visão consolidada das unidades da rede de franquias, status operacional, contatos e cidades.",
+    sourceCollections: ["config_empresa"],
+    filters: [
+      { key: "statusFranquia", label: "Status da Franquia", type: "select", options: [{label: "Todos", value: "Todos"}, {label: "Ativa", value: "Ativa"}, {label: "Em Implantação", value: "Em Implantação"}, {label: "Suspensa", value: "Suspensa"}, {label: "Inativa", value: "Inativa"}] },
+      { key: "uf", label: "Estado (UF)", type: "select", options: [{label: "Todos", value: "Todos"}, {label: "GO", value: "GO"}, {label: "DF", value: "DF"}, {label: "SP", value: "SP"}, {label: "MG", value: "MG"}, {label: "RJ", value: "RJ"}] }
+    ],
+    columns: [
+      { key: "codigoUnidade", label: "Cód. Unidade", align: "center" },
+      { key: "razaoSocial", label: "Razão Social / Nome Fantasia" },
+      { key: "cnpj", label: "CNPJ" },
+      { key: "cidadeUf", label: "Cidade / UF" },
+      { key: "responsavelUnidade", label: "Franqueado / Gestor" },
+      { key: "telefone", label: "Telefone" },
+      { key: "statusFranquia", label: "Situação", align: "center", format: "badge" }
+    ],
+    buildSummaryCards: (rows) => [
+      { label: "Total de Unidades", value: String(rows.length), tone: "neutral" },
+      { label: "Unidades Ativas", value: String(rows.filter(r => (r.statusFranquia || 'Ativa') === 'Ativa').length), tone: "success" },
+      { label: "Em Implantação", value: String(rows.filter(r => r.statusFranquia === 'Em Implantação').length), tone: "warning" }
+    ]
+  },
 
   // ==========================================
   // COMERCIAL

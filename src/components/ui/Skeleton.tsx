@@ -3,11 +3,13 @@ import React from "react";
 interface BaseSkeletonProps {
   className?: string;
   key?: React.Key;
+  style?: React.CSSProperties;
 }
 
-export function SkeletonBase({ className = "" }: BaseSkeletonProps) {
+export function SkeletonBase({ className = "", style }: BaseSkeletonProps) {
   return (
     <div
+      style={style}
       className={`bg-slate-200/80 animate-pulse rounded-md ${className}`}
     />
   );
@@ -127,6 +129,101 @@ export function SkeletonReportDashboard({ className = "" }: BaseSkeletonProps) {
 
       {/* Table Skeleton */}
       <SkeletonTable rows={6} cols={6} />
+    </div>
+  );
+}
+
+export function SkeletonCharts({ className = "" }: BaseSkeletonProps) {
+  return (
+    <div className={`grid grid-cols-1 lg:grid-cols-3 gap-6 ${className}`}>
+      {/* Line chart skeleton */}
+      <div className="lg:col-span-2 bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <SkeletonCircle size="w-9 h-9" />
+              <div className="space-y-1.5">
+                <SkeletonText width="w-36" height="h-4" />
+                <SkeletonText width="w-56" height="h-3" />
+              </div>
+            </div>
+            <SkeletonText width="w-28" height="h-3.5" />
+          </div>
+          <div className="grid grid-cols-2 gap-4 mb-6 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+            <div className="flex items-center gap-3">
+              <SkeletonCircle size="w-8 h-8" />
+              <div className="space-y-1">
+                <SkeletonText width="w-20" height="h-2.5" />
+                <SkeletonText width="w-24" height="h-4" />
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <SkeletonCircle size="w-8 h-8" />
+              <div className="space-y-1">
+                <SkeletonText width="w-24" height="h-2.5" />
+                <SkeletonText width="w-20" height="h-4" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="h-64 w-full flex items-end gap-3 pt-4 px-2">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="flex-1 flex flex-col items-center gap-2">
+              <SkeletonBase className={`w-full rounded-t-md bg-slate-200/70`} style={{ height: `${25 + ((i * 17) % 65)}%` }} />
+              <SkeletonText width="w-8" height="h-3" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Pie chart skeleton */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+        <div>
+          <div className="flex items-center gap-2.5 mb-2">
+            <SkeletonCircle size="w-9 h-9" />
+            <div className="space-y-1.5">
+              <SkeletonText width="w-40" height="h-4" />
+              <SkeletonText width="w-48" height="h-3" />
+            </div>
+          </div>
+        </div>
+        <div className="h-64 w-full flex flex-col items-center justify-center gap-4">
+          <SkeletonCircle size="w-36 h-36" className="border-8 border-slate-100" />
+          <div className="flex gap-2 justify-center w-full">
+            <SkeletonBase className="h-3 w-16 rounded" />
+            <SkeletonBase className="h-3 w-16 rounded" />
+            <SkeletonBase className="h-3 w-16 rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function AdminContentSkeleton({ className = "" }: BaseSkeletonProps) {
+  return (
+    <div className={`space-y-6 animate-in fade-in duration-150 ${className}`}>
+      {/* Top Banner Skeleton */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <SkeletonText width="w-48" height="h-7" />
+          <SkeletonText width="w-80" height="h-4" />
+        </div>
+        <div className="flex gap-2">
+          <SkeletonBase className="h-10 w-28 rounded-xl" />
+          <SkeletonBase className="h-10 w-36 rounded-xl" />
+        </div>
+      </div>
+
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </div>
+
+      {/* Chart Section Placeholder */}
+      <SkeletonCharts />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { flushSync } from "react-dom";
 import {
@@ -17,6 +17,13 @@ import {
   TrendingUp,
   MousePointer,
   Award,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import {
   BarChart,
@@ -45,6 +52,11 @@ import { exportBeneficiosPdf, exportServicosPdf, exportGenericPdf } from "../../
 import { compareSkuAscending } from "../../lib/serviceUtils";
 import { useAuth } from "../../context/AuthContext";
 import FormularioBeneficioModal from "../../components/admin/FormularioBeneficioModal";
+import GenericTableFilters, {
+  FilterState,
+  initialFilterState,
+  DynamicFilterOption,
+} from "../../components/admin/GenericTableFilters";
 
 interface Metric {
   label: string;
@@ -93,13 +105,12 @@ export default function GenericModulePage({
   const { profile } = useAuth();
   const [data, setData] = useState<any[]>(staticData);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
 
-  // Stock/Custom filtering states
-  const [showFilters, setShowFilters] = useState(false);
-  const [filterTipo, setFilterTipo] = useState("Todos");
-  const [filterStartDate, setFilterStartDate] = useState("");
-  const [filterEndDate, setFilterEndDate] = useState("");
+  // Advanced Filtering & Search State
+  const [filters, setFilters] = useState<FilterState>(initialFilterState);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number | "all">(15);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -368,59 +379,262 @@ export default function GenericModulePage({
     }
   };
 
-  const filteredData = data.filter((item) => {
-    // Search Term Filter
-    if (searchTerm) {
-      const matchesSearch = Object.values(item).some((val) =>
-        String(val).toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      if (!matchesSearch) return false;
-    }
-
-    // Filters for "Controle de Estoque"
-    if (collectionName === "estoque_movimentacoes") {
-      // Tipo Filter (Entrada / Saída)
-      if (filterTipo && filterTipo !== "Todos") {
-        if (item.tipo !== filterTipo) return false;
+  const handleSort = (colKey: string) => {
+    if (filters.sortBy === colKey) {
+      if (filters.sortOrder === "asc") {
+        setFilters((prev) => ({ ...prev, sortOrder: "desc" }));
+      } else if (filters.sortOrder === "desc") {
+        setFilters((prev) => ({ ...prev, sortBy: "", sortOrder: "default" }));
+      } else {
+        setFilters((prev) => ({ ...prev, sortOrder: "asc" }));
       }
+    } else {
+      setFilters((prev) => ({ ...prev, sortBy: colKey, sortOrder: "asc" }));
+    }
+  };
 
-      // Date Filter (createdAt)
-      if (item.createdAt) {
-        const itemDate = new Date(item.createdAt);
-        if (filterStartDate) {
-          const start = new Date(filterStartDate);
-          start.setHours(0, 0, 0, 0);
-          if (itemDate < start) return false;
-        }
-        if (filterEndDate) {
-          const end = new Date(filterEndDate);
-          end.setHours(23, 59, 59, 999);
-          if (itemDate > end) return false;
-        }
-      } else if (filterStartDate || filterEndDate) {
-        return false;
+  // Reset pagination to page 1 on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  // Dynamic status options from fields & data
+  const { statusOptions, statusCounts } = useMemo(() => {
+    const counts: Record<string, number> = {};
+    const set = new Set<string>();
+
+    const statusField = fields.find(
+      (f) => f.key === "status" || f.key === "situacao" || f.key === "estado"
+    );
+    if (statusField?.options) {
+      statusField.options.forEach((opt) => set.add(opt));
+    }
+
+    data.forEach((item) => {
+      const st = item.status || item.situacao || item.estado;
+      if (st && typeof st === "string") {
+        set.add(st);
+        counts[st] = (counts[st] || 0) + 1;
       }
-    }
+    });
 
-    return true;
-  }).sort((a, b) => {
-    if (
-      collectionName === "servicos_essenciais" ||
-      title?.toLowerCase().includes("serviço") ||
-      title?.toLowerCase().includes("servico")
-    ) {
-      return compareSkuAscending(a, b);
-    }
-    if (
-      collectionName === "marcas_parceiras" ||
-      title?.toLowerCase().includes("marca")
-    ) {
-      const nomeA = (a.nome || "").trim();
-      const nomeB = (b.nome || "").trim();
-      return nomeA.localeCompare(nomeB, "pt-BR", { sensitivity: "base", numeric: true });
-    }
-    return 0;
-  });
+    return {
+      statusOptions: Array.from(set),
+      statusCounts: counts,
+    };
+  }, [fields, data]);
+
+  // Dynamic filter options for selects, dates, and numbers
+  const dynamicOptions: DynamicFilterOption[] = useMemo(() => {
+    const list: DynamicFilterOption[] = [];
+
+    // Fields configured in props
+    fields.forEach((f) => {
+      if (f.key === "status" || f.key === "situacao" || f.key === "estado") return;
+      if (f.type === "select") {
+        const uniqueValues = new Set<string>(f.options || []);
+        data.forEach((item) => {
+          if (item[f.key] && typeof item[f.key] === "string") {
+            uniqueValues.add(item[f.key]);
+          }
+        });
+        list.push({
+          key: f.key,
+          label: f.label,
+          type: "select",
+          options: Array.from(uniqueValues),
+        });
+      } else if (f.type === "number") {
+        list.push({
+          key: f.key,
+          label: f.label,
+          type: "number",
+        });
+      } else if (f.type === "date") {
+        list.push({
+          key: f.key,
+          label: f.label,
+          type: "date",
+        });
+      }
+    });
+
+    // Also check for common categorical columns not in fields
+    columns.forEach((c) => {
+      if (
+        c.key === "status" ||
+        c.key === "situacao" ||
+        c.key === "imagem" ||
+        c.key === "logomarca" ||
+        list.some((o) => o.key === c.key)
+      ) {
+        return;
+      }
+      if (
+        c.key === "tipo" ||
+        c.key === "categoria" ||
+        c.key === "categoriaPai" ||
+        c.key === "departamento" ||
+        c.key === "nivel" ||
+        c.key === "cargo" ||
+        c.key === "unidade"
+      ) {
+        const uniqueVals = new Set<string>();
+        data.forEach((item) => {
+          if (item[c.key] && typeof item[c.key] === "string") {
+            uniqueVals.add(item[c.key]);
+          }
+        });
+        if (uniqueVals.size > 0 && uniqueVals.size <= 30) {
+          list.push({
+            key: c.key,
+            label: c.label,
+            type: "select",
+            options: Array.from(uniqueVals),
+          });
+        }
+      }
+    });
+
+    return list;
+  }, [fields, columns, data]);
+
+  const filteredData = useMemo(() => {
+    return data
+      .filter((item) => {
+        // 1. Search Term Filter (Global or Column-specific)
+        if (filters.search.trim()) {
+          const query = filters.search.trim().toLowerCase();
+          if (filters.searchField === "all") {
+            const matchesSearch = Object.entries(item).some(([k, val]) => {
+              if (val === null || val === undefined) return false;
+              if (typeof val === "object") return false;
+              return String(val).toLowerCase().includes(query);
+            });
+            if (!matchesSearch) return false;
+          } else {
+            const val = item[filters.searchField];
+            if (val === null || val === undefined || !String(val).toLowerCase().includes(query)) {
+              return false;
+            }
+          }
+        }
+
+        // 2. Status Filter
+        if (filters.status !== "all") {
+          const itemStatus = item.status || item.situacao || item.estado;
+          if (itemStatus !== filters.status) return false;
+        }
+
+        // 3. Date Range Filter
+        if (filters.startDate || filters.endDate) {
+          const dateVal =
+            item[filters.dateField] ||
+            item.createdAt ||
+            item.data ||
+            item.updatedAt ||
+            item.dataHora ||
+            item.validade;
+
+          if (dateVal) {
+            const itemDate = new Date(dateVal);
+            if (!isNaN(itemDate.getTime())) {
+              if (filters.startDate) {
+                const start = new Date(filters.startDate);
+                start.setHours(0, 0, 0, 0);
+                if (itemDate < start) return false;
+              }
+              if (filters.endDate) {
+                const end = new Date(filters.endDate);
+                end.setHours(23, 59, 59, 999);
+                if (itemDate > end) return false;
+              }
+            }
+          } else if (filters.startDate || filters.endDate) {
+            return false;
+          }
+        }
+
+        // 4. Dynamic Select / Category Filters
+        for (const [key, selectedVal] of Object.entries(filters.selectFilters)) {
+          if (selectedVal && selectedVal !== "all") {
+            if (String(item[key] || "") !== selectedVal) {
+              return false;
+            }
+          }
+        }
+
+        // 5. Dynamic Number Filters (Min / Max)
+        for (const [key, range] of Object.entries(filters.numberFilters) as [
+          string,
+          { min?: number | ""; max?: number | "" }
+        ][]) {
+          const numVal = Number(item[key]);
+          if (range?.min !== "" && range?.min !== undefined) {
+            if (isNaN(numVal) || numVal < Number(range.min)) return false;
+          }
+          if (range?.max !== "" && range?.max !== undefined) {
+            if (isNaN(numVal) || numVal > Number(range.max)) return false;
+          }
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        // Custom Column Header Sort
+        if (filters.sortBy && filters.sortOrder !== "default") {
+          const valA = a[filters.sortBy];
+          const valB = b[filters.sortBy];
+          const multiplier = filters.sortOrder === "asc" ? 1 : -1;
+
+          if (valA === undefined || valA === null) return 1;
+          if (valB === undefined || valB === null) return -1;
+
+          if (typeof valA === "number" && typeof valB === "number") {
+            return (valA - valB) * multiplier;
+          }
+
+          const strA = String(valA).toLowerCase();
+          const strB = String(valB).toLowerCase();
+          return strA.localeCompare(strB, "pt-BR", { numeric: true }) * multiplier;
+        }
+
+        // Default Sort Fallbacks
+        if (
+          collectionName === "servicos_essenciais" ||
+          title?.toLowerCase().includes("serviço") ||
+          title?.toLowerCase().includes("servico")
+        ) {
+          return compareSkuAscending(a, b);
+        }
+        if (
+          collectionName === "marcas_parceiras" ||
+          title?.toLowerCase().includes("marca")
+        ) {
+          const nomeA = (a.nome || "").trim();
+          const nomeB = (b.nome || "").trim();
+          return nomeA.localeCompare(nomeB, "pt-BR", { sensitivity: "base", numeric: true });
+        }
+        return 0;
+      });
+  }, [data, filters, collectionName, title]);
+
+  // Pagination calculations
+  const totalPages = pageSize === "all" ? 1 : Math.max(1, Math.ceil(filteredData.length / pageSize));
+  const validCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedData = useMemo(() => {
+    if (pageSize === "all") return filteredData;
+    const startIndex = (validCurrentPage - 1) * pageSize;
+    return filteredData.slice(startIndex, startIndex + pageSize);
+  }, [filteredData, validCurrentPage, pageSize]);
+
+  const availableFilterColumns = useMemo(() => {
+    return columns.map((col) => ({
+      key: col.key,
+      label: col.label,
+    }));
+  }, [columns]);
 
   const isClubeBeneficios = collectionName === "clube_beneficios";
 
@@ -649,106 +863,61 @@ export default function GenericModulePage({
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between gap-4 print:hidden">
-          <div className="relative max-w-md w-full">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Buscar..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-brand-light focus:border-transparent text-sm"
-            />
-          </div>
-          
-          <button 
-            onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2 border rounded-lg text-sm font-medium transition-all flex items-center gap-2 cursor-pointer select-none ${
-              showFilters || filterTipo !== "Todos" || filterStartDate || filterEndDate
-                ? "bg-brand-light/15 border-brand-light text-brand-dark shadow-2xs"
-                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            <Filter size={16} /> 
-            <span>Filtros</span>
-            {(filterTipo !== "Todos" || filterStartDate || filterEndDate) && (
-              <span className="w-2 h-2 rounded-full bg-brand-light animate-pulse inline-block" />
-            )}
-          </button>
-        </div>
+      {/* Filter and Global Search Component */}
+      <GenericTableFilters
+        filters={filters}
+        onFilterChange={setFilters}
+        onResetFilters={() => setFilters(initialFilterState)}
+        availableColumns={availableFilterColumns}
+        dynamicOptions={dynamicOptions}
+        statusOptions={statusOptions}
+        statusCounts={statusCounts}
+        totalCount={data.length}
+        filteredCount={filteredData.length}
+        isOpen={isFilterPanelOpen}
+        onToggleOpen={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+      />
 
-        {/* Dynamic Expandable Filter Panel */}
-        {showFilters && collectionName === "estoque_movimentacoes" && (
-          <div className="bg-slate-50/75 border-b border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-4 items-end animate-fadeIn print:hidden">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo</label>
-              <select
-                value={filterTipo}
-                onChange={(e) => setFilterTipo(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-light focus:border-transparent outline-none text-slate-700 font-medium transition-all"
-              >
-                <option value="Todos">Todos os tipos</option>
-                <option value="Entrada">Entrada</option>
-                <option value="Saída">Saída</option>
-              </select>
-            </div>
-            
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">De (Data)</label>
-              <input
-                type="date"
-                value={filterStartDate}
-                onChange={(e) => setFilterStartDate(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-light focus:border-transparent outline-none text-slate-700 font-medium transition-all"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Até (Data)</label>
-              <input
-                type="date"
-                value={filterEndDate}
-                onChange={(e) => setFilterEndDate(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-light focus:border-transparent outline-none text-slate-700 font-medium transition-all"
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setFilterTipo("Todos");
-                  setFilterStartDate("");
-                  setFilterEndDate("");
-                }}
-                className="flex-1 py-1.5 px-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg text-xs font-bold transition-all cursor-pointer select-none text-center"
-              >
-                Limpar
-              </button>
-              <button
-                onClick={() => setShowFilters(false)}
-                className="flex-1 py-1.5 px-3 bg-brand-dark text-white rounded-lg text-xs font-bold hover:bg-brand-dark/95 transition-all cursor-pointer select-none text-center"
-              >
-                Aplicar
-              </button>
-            </div>
-          </div>
-        )}
-
+      <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+            <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
               <tr>
-                {columns.map((col) => (
-                  <th key={col.key} className="px-4 py-3 font-semibold">
-                    {col.label}
-                  </th>
-                ))}
+                {columns.map((col) => {
+                  const isSorted = filters.sortBy === col.key;
+                  const isSortable = col.key !== "imagem" && col.key !== "logomarca" && col.key !== "acoes";
+
+                  return (
+                    <th
+                      key={col.key}
+                      onClick={() => isSortable && handleSort(col.key)}
+                      className={`px-4 py-3 font-semibold select-none transition-colors ${
+                        isSortable ? "cursor-pointer hover:bg-slate-100/80" : ""
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>{col.label}</span>
+                        {isSortable && (
+                          <span className="text-slate-400">
+                            {isSorted ? (
+                              filters.sortOrder === "asc" ? (
+                                <ArrowUp size={14} className="text-sky-600" />
+                              ) : filters.sortOrder === "desc" ? (
+                                <ArrowDown size={14} className="text-sky-600" />
+                              ) : (
+                                <ArrowUpDown size={14} className="opacity-40" />
+                              )
+                            ) : (
+                              <ArrowUpDown size={13} className="opacity-40 hover:opacity-100" />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
                 {collectionName && (
-                  <th className="px-4 py-3 font-semibold w-[100px] print:hidden">
+                  <th className="px-4 py-3 font-semibold w-[120px] text-right print:hidden">
                     Ações
                   </th>
                 )}
@@ -762,13 +931,13 @@ export default function GenericModulePage({
                       <td key={col.key} className="px-4 py-4">
                         <div
                           className="h-4 bg-slate-100 rounded"
-                          style={{ width: cIdx === 0 ? '60%' : cIdx === 1 ? '45%' : '75%' }}
+                          style={{ width: cIdx === 0 ? "60%" : cIdx === 1 ? "45%" : "75%" }}
                         />
                       </td>
                     ))}
                     {collectionName && (
                       <td className="px-4 py-4 print:hidden">
-                        <div className="h-4 bg-slate-100 rounded w-16" />
+                        <div className="h-4 bg-slate-100 rounded w-16 ml-auto" />
                       </td>
                     )}
                   </tr>
@@ -777,56 +946,71 @@ export default function GenericModulePage({
                 <tr>
                   <td
                     colSpan={columns.length + (collectionName ? 1 : 0)}
-                    className="px-4 py-12 text-center text-slate-500"
+                    className="px-4 py-16 text-center text-slate-500"
                   >
-                    <FileText className="mx-auto h-8 w-8 mb-3 text-slate-300" />
-                    <p>Nenhum registro encontrado.</p>
+                    <FileText className="mx-auto h-10 w-10 mb-3 text-slate-300" />
+                    <p className="font-semibold text-slate-700">Nenhum registro encontrado</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {data.length > 0
+                        ? "Tente ajustar ou limpar os filtros de busca para visualizar os itens."
+                        : "Nenhum item cadastrado nesta categoria até o momento."}
+                    </p>
+                    {data.length > 0 && (
+                      <button
+                        onClick={() => setFilters(initialFilterState)}
+                        className="mt-3 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Limpar todos os filtros
+                      </button>
+                    )}
                   </td>
                 </tr>
               ) : (
-                filteredData.map((row, i) => (
+                paginatedData.map((row, i) => (
                   <tr
-                    key={i}
-                    className="hover:bg-slate-50/50 transition-colors"
+                    key={row.id || i}
+                    className="hover:bg-slate-50/70 transition-colors"
                   >
                     {columns.map((col) => (
-                      <td key={col.key} className="px-4 py-3 text-slate-700">
+                      <td key={col.key} className="px-4 py-3.5 text-slate-700">
                         {col.render
                           ? col.render(row[col.key], row)
-                          : row[col.key] || "-"}
+                          : row[col.key] !== undefined && row[col.key] !== null && row[col.key] !== ""
+                          ? String(row[col.key])
+                          : "—"}
                       </td>
                     ))}
                     {collectionName && (
-                      <td className="px-4 py-3 print:hidden">
-                        <div className="flex items-center justify-end gap-3">
+                      <td className="px-4 py-3.5 print:hidden text-right">
+                        <div className="flex items-center justify-end gap-2.5">
                           <button
                             onClick={handlePrint}
-                            className="text-slate-400 hover:text-blue-900 transition-colors"
+                            className="p-1 text-slate-400 hover:text-blue-900 hover:bg-slate-100 rounded-md transition-colors"
                             title="Imprimir"
                           >
-                            <Printer size={18} />
+                            <Printer size={16} />
                           </button>
                           <button
                             onClick={() => handleExportPdf(row)}
                             disabled={isExportingPdf}
-                            className="text-slate-400 hover:text-sky-600 transition-colors cursor-pointer disabled:opacity-50"
-                            title="Baixar PDF deste Benefício"
+                            className="p-1 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                            title="Baixar PDF deste Registro"
                           >
-                            <Download size={18} />
+                            <Download size={16} />
                           </button>
                           <button
                             onClick={() => handleOpenModal(row)}
-                            className="text-slate-400 hover:text-blue-600 transition-colors"
+                            className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                             title="Editar"
                           >
-                            <Pencil size={18} />
+                            <Pencil size={16} />
                           </button>
                           <button
                             onClick={() => setItemToDelete(row.id)}
-                            className="text-slate-400 hover:text-red-600 transition-colors"
+                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                             title="Excluir"
                           >
-                            <Trash2 size={18} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -837,8 +1021,133 @@ export default function GenericModulePage({
             </tbody>
           </table>
         </div>
-        <div className="p-4 border-t border-slate-200 flex justify-between items-center text-sm text-slate-500 print:hidden">
-          <p>Mostrando {filteredData.length} registros</p>
+
+        {/* Table Footer with Pagination Controls */}
+        <div className="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-slate-600 print:hidden bg-slate-50/50">
+          <div className="flex items-center gap-3">
+            <span className="font-medium">
+              {filteredData.length === 0 ? (
+                "0 registros"
+              ) : (
+                <>
+                  Mostrando{" "}
+                  <strong>
+                    {pageSize === "all"
+                      ? `1 a ${filteredData.length}`
+                      : `${(validCurrentPage - 1) * pageSize + 1} a ${Math.min(
+                          validCurrentPage * pageSize,
+                          filteredData.length
+                        )}`}
+                  </strong>{" "}
+                  de <strong>{filteredData.length}</strong> registros
+                  {data.length !== filteredData.length && (
+                    <span className="text-slate-400 ml-1">
+                      (total: {data.length})
+                    </span>
+                  )}
+                </>
+              )}
+            </span>
+
+            {filteredData.length > 10 && (
+              <div className="flex items-center gap-1.5 pl-3 border-l border-slate-200">
+                <span className="text-slate-500">Exibir:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    const val = e.target.value === "all" ? "all" : Number(e.target.value);
+                    setPageSize(val);
+                    setCurrentPage(1);
+                  }}
+                  className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 outline-none cursor-pointer hover:bg-slate-50"
+                >
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value="all">Todos</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Pagination Navigation Buttons */}
+          {pageSize !== "all" && totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={validCurrentPage === 1}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                title="Primeira Página"
+              >
+                <ChevronsLeft size={14} />
+              </button>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={validCurrentPage === 1}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                title="Página Anterior"
+              >
+                <ChevronLeft size={14} />
+              </button>
+
+              <div className="flex items-center gap-1 px-1">
+                {Array.from({ length: totalPages }).map((_, idx) => {
+                  const pageNum = idx + 1;
+                  // Show current page, first, last, and immediate neighbors
+                  if (
+                    pageNum === 1 ||
+                    pageNum === totalPages ||
+                    (pageNum >= validCurrentPage - 1 && pageNum <= validCurrentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`min-w-[28px] h-7 px-2 rounded-lg font-bold text-xs transition-colors ${
+                          validCurrentPage === pageNum
+                            ? "bg-sky-600 text-white shadow-xs"
+                            : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  } else if (
+                    (pageNum === 2 && validCurrentPage > 3) ||
+                    (pageNum === totalPages - 1 && validCurrentPage < totalPages - 2)
+                  ) {
+                    return (
+                      <span key={pageNum} className="px-1 text-slate-400 font-bold">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={validCurrentPage === totalPages}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                title="Próxima Página"
+              >
+                <ChevronRight size={14} />
+              </button>
+
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={validCurrentPage === totalPages}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                title="Última Página"
+              >
+                <ChevronsRight size={14} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,14 +1,19 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { Printer, Filter, ChevronRight, FileText, Download, Database, HardDriveDownload } from "lucide-react";
 import { REPORT_CATALOG, ReportDefinition } from "./reportCatalog";
 import { useReportData } from "./useReportData";
-import ReportHeader from "./ReportHeader";
-import ReportFooter from "./ReportFooter";
-import ReportFilters from "./ReportFilters";
-import ReportTable from "./ReportTable";
 import { useToast } from "../../../context/ToastContext";
-import { BackupCsvModal } from "../../../components/admin/BackupCsvModal";
+import { SkeletonTable, SkeletonBase } from "../../../components/ui/Skeleton";
+
+// Lazy-loaded report components to optimize initial bundle size
+const ReportHeader = React.lazy(() => import("./ReportHeader"));
+const ReportFooter = React.lazy(() => import("./ReportFooter"));
+const ReportFilters = React.lazy(() => import("./ReportFilters"));
+const ReportTable = React.lazy(() => import("./ReportTable"));
+const BackupCsvModal = React.lazy(() =>
+  import("../../../components/admin/BackupCsvModal").then((m) => ({ default: m.BackupCsvModal }))
+);
 
 export default function Relatorios() {
   const { addToast } = useToast();
@@ -72,10 +77,14 @@ export default function Relatorios() {
 
   return (
     <div className="w-full max-w-full min-h-screen">
-      <BackupCsvModal 
-        isOpen={isBackupModalOpen} 
-        onClose={() => setIsBackupModalOpen(false)} 
-      />
+      <Suspense fallback={null}>
+        {isBackupModalOpen && (
+          <BackupCsvModal 
+            isOpen={isBackupModalOpen} 
+            onClose={() => setIsBackupModalOpen(false)} 
+          />
+        )}
+      </Suspense>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 print:hidden">
         <div>
@@ -149,11 +158,13 @@ export default function Relatorios() {
                <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
                  <Filter className="w-4 h-4 text-slate-400" /> Filtros do Relatório
                </h3>
-               <ReportFilters 
-                  filters={activeReport?.filters || []} 
-                  values={filters} 
-                  onChange={handleFilterChange} 
-               />
+               <Suspense fallback={<div className="h-10 w-full animate-pulse bg-slate-100 rounded-lg" />}>
+                 <ReportFilters 
+                    filters={activeReport?.filters || []} 
+                    values={filters} 
+                    onChange={handleFilterChange} 
+                 />
+               </Suspense>
             </div>
             <div className="flex gap-2 ml-4 mb-2 shrink-0">
               <button 
@@ -179,12 +190,14 @@ export default function Relatorios() {
                 ref={reportRef}
                 className="bg-white min-h-[297mm] max-w-[210mm] mx-auto p-[15mm] shadow-xl print:shadow-none print:p-0 print:m-0 print:w-full print:h-auto print:max-w-none text-slate-900"
              >
-                <ReportHeader 
-                  reportCode={activeReport?.code || ""}
-                  reportTitle={activeReport?.title || ""}
-                  filtersUsed={filters}
-                  hasDateFilter={hasDateFilter}
-                />
+                <Suspense fallback={<div className="h-20 w-full animate-pulse bg-slate-100 rounded-lg mb-4" />}>
+                  <ReportHeader 
+                    reportCode={activeReport?.code || ""}
+                    reportTitle={activeReport?.title || ""}
+                    filtersUsed={filters}
+                    hasDateFilter={hasDateFilter}
+                  />
+                </Suspense>
 
                 {/* KPI Summary Cards */}
                 {summaryCards.length > 0 && (
@@ -216,10 +229,14 @@ export default function Relatorios() {
                      <p className="text-sm">Processando dados...</p>
                   </div>
                 ) : (
-                  <ReportTable columns={activeReport?.columns || []} data={data} />
+                  <Suspense fallback={<SkeletonTable rows={8} cols={6} />}>
+                    <ReportTable columns={activeReport?.columns || []} data={data} />
+                  </Suspense>
                 )}
 
-                <ReportFooter />
+                <Suspense fallback={null}>
+                  <ReportFooter />
+                </Suspense>
              </div>
           </div>
 

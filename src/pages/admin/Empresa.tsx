@@ -15,6 +15,7 @@ import {
   Download,
   CheckCircle2,
   AlertTriangle,
+  Network,
 } from "lucide-react";
 import { initFirebase } from "../../lib/firebase";
 import {
@@ -40,6 +41,15 @@ interface EmpresaData {
   telefone: string;
   email: string;
   site: string;
+
+  // Parâmetros da Franquia / Unidade
+  codigoUnidade?: string;
+  statusFranquia?: "Ativa" | "Em Implantação" | "Suspensa" | "Inativa" | string;
+  dataInicio?: string;
+  responsavelUnidade?: string;
+  taxaFranquia?: string;
+  royalties?: string;
+  fundoPropaganda?: string;
 
   // Endereço
   cep: string;
@@ -94,6 +104,14 @@ const emptyEmpresa: EmpresaData = {
   email: "",
   site: "",
 
+  codigoUnidade: "",
+  statusFranquia: "Ativa",
+  dataInicio: "",
+  responsavelUnidade: "",
+  taxaFranquia: "",
+  royalties: "5",
+  fundoPropaganda: "2",
+
   cep: "",
   rua: "",
   numero: "",
@@ -141,7 +159,7 @@ export default function Empresa() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<EmpresaData>(emptyEmpresa);
   const [activeTab, setActiveTab] = useState<
-    "Básico" | "Endereço" | "Fiscal" | "Extra"
+    "Básico" | "Franquia" | "Endereço" | "Fiscal" | "Extra"
   >("Básico");
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -391,9 +409,11 @@ export default function Empresa() {
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-3 font-semibold">Razão Social</th>
-                  <th className="px-6 py-3 font-semibold">Nome Fantasia</th>
+                  <th className="px-6 py-3 font-semibold">Cód. Unidade</th>
+                  <th className="px-6 py-3 font-semibold">Razão Social / Fantasia</th>
                   <th className="px-6 py-3 font-semibold">CNPJ</th>
+                  <th className="px-6 py-3 font-semibold">Cidade / UF</th>
+                  <th className="px-6 py-3 font-semibold text-center">Status Franquia</th>
                   <th className="px-6 py-3 font-semibold text-right">Ações</th>
                 </tr>
               </thead>
@@ -402,13 +422,19 @@ export default function Empresa() {
                   Array.from({ length: 3 }).map((_, rIdx) => (
                     <tr key={rIdx} className="animate-pulse">
                       <td className="px-6 py-4">
+                        <div className="h-4 bg-slate-100 rounded w-20" />
+                      </td>
+                      <td className="px-6 py-4">
                         <div className="h-4 bg-slate-100 rounded w-48" />
                       </td>
                       <td className="px-6 py-4">
-                        <div className="h-4 bg-slate-100 rounded w-32" />
+                        <div className="h-4 bg-slate-100 rounded w-28" />
                       </td>
                       <td className="px-6 py-4">
                         <div className="h-4 bg-slate-100 rounded w-24" />
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="h-4 bg-slate-100 rounded w-16 mx-auto" />
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="h-4 bg-slate-100 rounded w-12 ml-auto" />
@@ -418,10 +444,10 @@ export default function Empresa() {
                 ) : filteredData.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={6}
                       className="px-6 py-8 text-center text-slate-500"
                     >
-                      Nenhuma empresa encontrada.
+                      Nenhuma empresa franqueada encontrada.
                     </td>
                   </tr>
                 ) : (
@@ -430,14 +456,35 @@ export default function Empresa() {
                       key={item.id}
                       className="hover:bg-slate-50 transition-colors"
                     >
-                      <td className="px-6 py-4 font-medium text-slate-900">
-                        {item.razaoSocial || "—"}
+                      <td className="px-6 py-4 font-mono font-bold text-xs text-brand-dark">
+                        {item.codigoUnidade || "FRANQ-001"}
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
-                        {item.nomeFantasia || "—"}
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-900">{item.razaoSocial || "—"}</div>
+                        {item.nomeFantasia && (
+                          <div className="text-xs text-slate-500">{item.nomeFantasia}</div>
+                        )}
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
+                      <td className="px-6 py-4 text-slate-600 font-mono text-xs">
                         {item.cnpj || "—"}
+                      </td>
+                      <td className="px-6 py-4 text-slate-600 text-xs">
+                        {item.cidade ? `${item.cidade}/${item.uf || "GO"}` : "—"}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                            item.statusFranquia === "Inativa"
+                              ? "bg-red-100 text-red-800"
+                              : item.statusFranquia === "Suspensa"
+                              ? "bg-amber-100 text-amber-800"
+                              : item.statusFranquia === "Em Implantação"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-emerald-100 text-emerald-800"
+                          }`}
+                        >
+                          {item.statusFranquia || "Ativa"}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-3">
@@ -512,6 +559,18 @@ export default function Empresa() {
                 >
                   <Building size={16} />
                   Básico
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("Franquia")}
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+                    activeTab === "Franquia"
+                      ? "border-brand-dark text-brand-dark"
+                      : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+                  }`}
+                >
+                  <Network size={16} />
+                  Franquia
                 </button>
                 <button
                   type="button"
@@ -707,6 +766,119 @@ export default function Empresa() {
                         type="text"
                         name="site"
                         value={formData.site}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "Franquia" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                    <div className="md:col-span-2">
+                      <h4 className="text-sm font-semibold text-slate-800 border-b pb-2 mb-2">
+                        Parâmetros da Unidade Franqueada
+                      </h4>
+                      <p className="text-xs text-slate-500 mb-4">
+                        Configurações operacionais, contratuais e taxas da unidade na rede de franquias.
+                      </p>
+                    </div>
+
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                        Código / Identificação da Unidade *
+                      </label>
+                      <input
+                        type="text"
+                        name="codigoUnidade"
+                        placeholder="Ex: FRANQ-001"
+                        value={formData.codigoUnidade || ""}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm"
+                      />
+                    </div>
+
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                        Situação da Franquia
+                      </label>
+                      <select
+                        name="statusFranquia"
+                        value={formData.statusFranquia || "Ativa"}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm bg-white"
+                      >
+                        <option value="Ativa">Ativa</option>
+                        <option value="Em Implantação">Em Implantação</option>
+                        <option value="Suspensa">Suspensa</option>
+                        <option value="Inativa">Inativa</option>
+                      </select>
+                    </div>
+
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                        Data de Início / Abertura
+                      </label>
+                      <input
+                        type="date"
+                        name="dataInicio"
+                        value={formData.dataInicio || ""}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm"
+                      />
+                    </div>
+
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                        Franqueado / Gestor Responsável
+                      </label>
+                      <input
+                        type="text"
+                        name="responsavelUnidade"
+                        placeholder="Nome completo do responsável pela unidade"
+                        value={formData.responsavelUnidade || ""}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm"
+                      />
+                    </div>
+
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                        Taxa de Franquia (R$)
+                      </label>
+                      <input
+                        type="text"
+                        name="taxaFranquia"
+                        placeholder="Ex: 50.000,00"
+                        value={formData.taxaFranquia || ""}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm"
+                      />
+                    </div>
+
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                        Royalties Mensal (%)
+                      </label>
+                      <input
+                        type="text"
+                        name="royalties"
+                        placeholder="Ex: 5"
+                        value={formData.royalties || ""}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm"
+                      />
+                    </div>
+
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                        Fundo de Propaganda (%)
+                      </label>
+                      <input
+                        type="text"
+                        name="fundoPropaganda"
+                        placeholder="Ex: 2"
+                        value={formData.fundoPropaganda || ""}
                         onChange={handleChange}
                         className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm"
                       />
@@ -1059,6 +1231,64 @@ export default function Empresa() {
               <tr>
                 <td className="bg-slate-100 font-semibold px-3 py-2">Site</td>
                 <td className="px-3 py-2">{printingItem.site || "—"}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table
+            className="w-full border border-slate-200 mb-6"
+            style={{ pageBreakInside: "avoid" }}
+          >
+            <tbody>
+              <tr>
+                <th
+                  colSpan={2}
+                  className="bg-slate-900 text-white text-left px-3 py-1.5 font-bold uppercase text-[11px]"
+                >
+                  Parâmetros da Franquia
+                </th>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="bg-slate-100 font-semibold px-3 py-2 w-1/4">
+                  Código da Unidade
+                </td>
+                <td className="px-3 py-2">{printingItem.codigoUnidade || "FRANQ-001"}</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="bg-slate-100 font-semibold px-3 py-2">
+                  Situação
+                </td>
+                <td className="px-3 py-2">{printingItem.statusFranquia || "Ativa"}</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="bg-slate-100 font-semibold px-3 py-2">
+                  Data de Início
+                </td>
+                <td className="px-3 py-2">{printingItem.dataInicio || "—"}</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="bg-slate-100 font-semibold px-3 py-2">
+                  Franqueado / Gestor
+                </td>
+                <td className="px-3 py-2">{printingItem.responsavelUnidade || "—"}</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="bg-slate-100 font-semibold px-3 py-2">
+                  Taxa de Franquia
+                </td>
+                <td className="px-3 py-2">R$ {printingItem.taxaFranquia || "0,00"}</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="bg-slate-100 font-semibold px-3 py-2">
+                  Royalties
+                </td>
+                <td className="px-3 py-2">{printingItem.royalties || "5"}%</td>
+              </tr>
+              <tr>
+                <td className="bg-slate-100 font-semibold px-3 py-2">
+                  Fundo de Propaganda
+                </td>
+                <td className="px-3 py-2">{printingItem.fundoPropaganda || "2"}%</td>
               </tr>
             </tbody>
           </table>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { Outlet, Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { FileText,
   Package,
@@ -38,9 +38,7 @@ import { FileText,
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { getAuth, signOut } from "firebase/auth";
-import GuidedTour from "../common/GuidedTour";
-import { AdminNotifications } from "../common/AdminNotifications";
-import { BackupCsvModal } from "../admin/BackupCsvModal";
+import { AdminContentSkeleton } from "../ui/Skeleton";
 import {
   isStaffRole,
   isAdminRole,
@@ -50,6 +48,15 @@ import {
   getFilteredNavGroups,
   NavGroup
 } from "../../lib/permissions";
+
+// Lazy-load secondary layout components to prevent blocking initial render
+const GuidedTour = React.lazy(() => import("../common/GuidedTour"));
+const AdminNotifications = React.lazy(() =>
+  import("../common/AdminNotifications").then((m) => ({ default: m.AdminNotifications }))
+);
+const BackupCsvModal = React.lazy(() =>
+  import("../admin/BackupCsvModal").then((m) => ({ default: m.BackupCsvModal }))
+);
 
 export const navGroups: NavGroup[] = [
   {
@@ -655,13 +662,20 @@ export default function AdminLayout() {
         </header>
         <div className="flex-1 overflow-auto print:overflow-visible print:block py-4 px-2 sm:px-4 md:px-6 print:p-0 bg-slate-50 dark:bg-slate-900 print:bg-white text-black">
           <div className="w-[98%] max-w-[98%] mx-auto flex flex-col gap-6">
-            <Outlet />
-            <GuidedTour key={tourTrigger} forceStart={tourTrigger > 0} />
-            <AdminNotifications />
-            <BackupCsvModal
-              isOpen={isGlobalCsvModalOpen}
-              onClose={() => setIsGlobalCsvModalOpen(false)}
-            />
+            <Suspense fallback={<AdminContentSkeleton />}>
+              <Outlet />
+            </Suspense>
+
+            <Suspense fallback={null}>
+              <GuidedTour key={tourTrigger} forceStart={tourTrigger > 0} />
+              <AdminNotifications />
+              {isGlobalCsvModalOpen && (
+                <BackupCsvModal
+                  isOpen={isGlobalCsvModalOpen}
+                  onClose={() => setIsGlobalCsvModalOpen(false)}
+                />
+              )}
+            </Suspense>
 
             {/* Abrir Menu (visible only on mobile) */}
             <div className="md:hidden mt-auto pt-6 border-t border-slate-200 dark:border-slate-800 flex justify-center">

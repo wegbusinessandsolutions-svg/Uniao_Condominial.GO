@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
@@ -13,10 +14,11 @@ import { CustomerNotifications } from "./components/common/CustomerNotifications
 import { GeolocationLoginPrompt } from "./components/common/GeolocationLoginPrompt";
 import ShopLayout from "./components/layouts/ShopLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
+import { AdminContentSkeleton } from "./components/ui/Skeleton";
 
 import { QrCode } from "lucide-react";
 
-// Shop Pages
+// Shop Pages (Eagerly loaded for quick initial store landing)
 import Home from "./pages/shop/Home";
 import Sobre from "./pages/shop/Sobre";
 import Contato from "./pages/shop/Contato";
@@ -25,30 +27,30 @@ import ProductDetail from "./pages/shop/ProductDetail";
 import Cart from "./pages/shop/Cart";
 import CustomerArea from "./pages/shop/CustomerArea";
 
-// Admin Pages
-import AdminDashboard from "./pages/admin/Dashboard";
-import Usuarios from "./pages/admin/Usuarios";
-import GenericModulePage from "./pages/admin/GenericModulePage";
-import ManutencaoDados from "./pages/admin/ManutencaoDados";
-import AdminProdutos from "./pages/admin/Produtos";
-import AcompanhamentoVenda from "./pages/admin/AcompanhamentoVenda";
-import Relatorios from "./pages/admin/relatorios";
-import IntegracaoPagamentos from "./pages/admin/IntegracaoPagamentos";
-import ConfiguracaoFrete from "./pages/admin/ConfiguracaoFrete";
-import ConfiguracaoNotificacoes from "./pages/admin/ConfiguracaoNotificacoes";
-import MuralCondominialAdmin from "./pages/admin/MuralCondominialAdmin";
-import DashboardClienteConfig from "./pages/admin/DashboardClienteConfig";
-import DashboardFinanceiroConfig from "./pages/admin/DashboardFinanceiroConfig";
-import DashboardComercialConfig from "./pages/admin/DashboardComercialConfig";
-import DashboardComercialExternoConfig from "./pages/admin/DashboardComercialExternoConfig";
-import DashboardEntregaMercadoriasConfig from "./pages/admin/DashboardEntregaMercadoriasConfig";
-import DashboardExpedicaoConfig from "./pages/admin/DashboardExpedicaoConfig";
+// Lazy-Loaded Admin & Complex Dashboard Pages
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const Usuarios = lazy(() => import("./pages/admin/Usuarios"));
+const GenericModulePage = lazy(() => import("./pages/admin/GenericModulePage"));
+const ManutencaoDados = lazy(() => import("./pages/admin/ManutencaoDados"));
+const AdminProdutos = lazy(() => import("./pages/admin/Produtos"));
+const AcompanhamentoVenda = lazy(() => import("./pages/admin/AcompanhamentoVenda"));
+const Relatorios = lazy(() => import("./pages/admin/relatorios"));
+const IntegracaoPagamentos = lazy(() => import("./pages/admin/IntegracaoPagamentos"));
+const ConfiguracaoFrete = lazy(() => import("./pages/admin/ConfiguracaoFrete"));
+const ConfiguracaoNotificacoes = lazy(() => import("./pages/admin/ConfiguracaoNotificacoes"));
+const MuralCondominialAdmin = lazy(() => import("./pages/admin/MuralCondominialAdmin"));
+const DashboardClienteConfig = lazy(() => import("./pages/admin/DashboardClienteConfig"));
+const DashboardFinanceiroConfig = lazy(() => import("./pages/admin/DashboardFinanceiroConfig"));
+const DashboardComercialConfig = lazy(() => import("./pages/admin/DashboardComercialConfig"));
+const DashboardComercialExternoConfig = lazy(() => import("./pages/admin/DashboardComercialExternoConfig"));
+const DashboardEntregaMercadoriasConfig = lazy(() => import("./pages/admin/DashboardEntregaMercadoriasConfig"));
+const DashboardExpedicaoConfig = lazy(() => import("./pages/admin/DashboardExpedicaoConfig"));
 
-import Empregados from "./pages/admin/Empregados";
-import Empresa from "./pages/admin/Empresa";
-import Franqueadora from "./pages/admin/Franqueadora";
-import PermissoesUsuario from "./pages/admin/PermissoesUsuario";
-import BackupExport from "./pages/admin/BackupExport";
+const Empregados = lazy(() => import("./pages/admin/Empregados"));
+const Empresa = lazy(() => import("./pages/admin/Empresa"));
+const Franqueadora = lazy(() => import("./pages/admin/Franqueadora"));
+const PermissoesUsuario = lazy(() => import("./pages/admin/PermissoesUsuario"));
+const BackupExport = lazy(() => import("./pages/admin/BackupExport"));
 
 import CustomerLayout from "./components/layouts/CustomerLayout";
 import CustomerDashboard from "./pages/cliente/Dashboard";
@@ -57,41 +59,40 @@ import MeusPedidos from "./pages/cliente/MeusPedidos";
 import LocalEntrega from "./pages/cliente/LocalEntrega";
 import ServicosEssenciais from "./pages/cliente/ServicosEssenciais";
 import MinhasOrdensServico from "./pages/cliente/OrdensServico";
-import ServicosEssenciaisAdmin from "./pages/admin/ServicosEssenciais";
-import OrdensServicoAdmin from "./pages/admin/OrdensServico";
+const ServicosEssenciaisAdmin = lazy(() => import("./pages/admin/ServicosEssenciais"));
+const OrdensServicoAdmin = lazy(() => import("./pages/admin/OrdensServico"));
 
 import MarcasParceiras from "./pages/cliente/MarcasParceiras";
 import ClubeBeneficios from "./pages/cliente/ClubeBeneficios";
 import CartaoVirtual from "./pages/cliente/CartaoVirtual";
 import Cashback from "./pages/cliente/Cashback";
 import CustomerSuporte from "./pages/cliente/Suporte";
-import CashbackAdmin from "./pages/admin/CashbackAdmin";
+const CashbackAdmin = lazy(() => import("./pages/admin/CashbackAdmin"));
 
-import CashbackControle from "./pages/financeiro/CashbackControle";
-import FinanceiroDashboard from "./pages/financeiro/Dashboard";
+const CashbackControle = lazy(() => import("./pages/financeiro/CashbackControle"));
+const FinanceiroDashboard = lazy(() => import("./pages/financeiro/Dashboard"));
 
-import Fornecedores from "./pages/financeiro/Fornecedores";
+const Fornecedores = lazy(() => import("./pages/financeiro/Fornecedores"));
+const ContasPagar = lazy(() => import("./pages/financeiro/ContasPagar"));
+const ContasReceber = lazy(() => import("./pages/financeiro/ContasReceber"));
+const Bancos = lazy(() => import("./pages/financeiro/Bancos"));
+const CentrosCusto = lazy(() => import("./pages/financeiro/CentrosCusto"));
 
-import ContasPagar from "./pages/financeiro/ContasPagar";
-import ContasReceber from "./pages/financeiro/ContasReceber";
-import Bancos from "./pages/financeiro/Bancos";
-import CentrosCusto from "./pages/financeiro/CentrosCusto";
+const ComercialDashboard = lazy(() => import("./pages/comercial/Dashboard"));
+const ComercialExternoDashboard = lazy(() => import("./pages/comercial/DashboardExterno"));
+const ComercialClientes = lazy(() => import("./pages/comercial/Clientes"));
+const ComercialVisitas = lazy(() => import("./pages/comercial/VisitasCliente"));
+const ComercialComissoes = lazy(() => import("./pages/comercial/Comissoes"));
+const ControleAfiliados = lazy(() => import("./pages/comercial/ControleAfiliados"));
+const ComercialCodigosIndicacao = lazy(() => import("./pages/comercial/CodigosIndicacao"));
+const ComercialCalculadora = lazy(() => import("./pages/comercial/CalculadoraPrecos"));
+const ExpedicaoDashboard = lazy(() => import("./pages/expedicao/Dashboard"));
+const Entregas = lazy(() => import("./pages/expedicao/Entregas"));
+const ExpedicaoPedidosOnline = lazy(() => import("./pages/expedicao/PedidosOnline"));
+const ExpedicaoEstoque = lazy(() => import("./pages/expedicao/Estoque"));
+const EntregadorDashboard = lazy(() => import("./pages/entregador/Dashboard"));
 
-import ComercialDashboard from "./pages/comercial/Dashboard";
-import ComercialExternoDashboard from "./pages/comercial/DashboardExterno";
-import ComercialClientes from "./pages/comercial/Clientes";
-import ComercialVisitas from "./pages/comercial/VisitasCliente";
-import ComercialComissoes from "./pages/comercial/Comissoes";
-import ControleAfiliados from "./pages/comercial/ControleAfiliados";
-import ComercialCodigosIndicacao from "./pages/comercial/CodigosIndicacao";
-import ComercialCalculadora from "./pages/comercial/CalculadoraPrecos";
-import ExpedicaoDashboard from "./pages/expedicao/Dashboard";
-import Entregas from "./pages/expedicao/Entregas";
-import ExpedicaoPedidosOnline from "./pages/expedicao/PedidosOnline";
-import ExpedicaoEstoque from "./pages/expedicao/Estoque";
-import EntregadorDashboard from "./pages/entregador/Dashboard";
-
-import FinanceiroFaturamento from "./pages/financeiro/Faturamento";
+const FinanceiroFaturamento = lazy(() => import("./pages/financeiro/Faturamento"));
 import AceiteAfiliacao from "./pages/AceiteAfiliacao";
 import ScrollToTopButton from "./components/ui/ScrollToTopButton";
 
