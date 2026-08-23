@@ -173,7 +173,8 @@
         "titulo": { "type": "string" },
         "texto": { "type": "string" },
         "status": { "type": "string", "enum": ["em_revisao", "publicado", "rejeitado"] },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "condominio", "bairro", "titulo", "texto", "status"]
     },

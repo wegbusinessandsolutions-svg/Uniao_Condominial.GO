@@ -147,7 +147,7 @@ service cloud.firestore {
     match /muralNotices/{id} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update, delete: if isStaff();
+      allow update, delete: if isStaff() || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid);
 
       match /respostas/{respId} {
         allow read: if true;

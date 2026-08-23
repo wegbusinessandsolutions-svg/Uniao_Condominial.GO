@@ -4,6 +4,7 @@ import { ShoppingCart, Menu, Search, User } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { LegalModal } from "../common/LegalModal";
+import { CustomerNotificationBell } from "../cliente/CustomerNotificationBell";
 
 export default function ShopLayout() {
   const { profile } = useAuth();
@@ -72,22 +73,25 @@ export default function ShopLayout() {
           {/* User actions / Cart */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {profile ? (
-              <Link
-                to="/minha-conta"
-                className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 hover:text-brand-dark transition-colors py-1.5 px-2 sm:px-2.5 rounded-xl hover:bg-slate-50 shrink-0"
-              >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center font-bold text-xs sm:text-sm shrink-0">
-                  <User size={16} />
-                </div>
-                <div className="text-left leading-tight hidden xs:block">
-                  <p className="font-bold text-slate-900 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[140px]">
-                    Olá, {profile.displayName?.split(" ")[0] || "Cliente"}
-                  </p>
-                  <p className="text-[10px] sm:text-[11px] text-brand-dark font-semibold">
-                    Nível {profile.level}
-                  </p>
-                </div>
-              </Link>
+              <>
+                <CustomerNotificationBell isCompact={true} />
+                <Link
+                  to="/minha-conta"
+                  className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 hover:text-brand-dark transition-colors py-1.5 px-2 sm:px-2.5 rounded-xl hover:bg-slate-50 shrink-0"
+                >
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center font-bold text-xs sm:text-sm shrink-0">
+                    <User size={16} />
+                  </div>
+                  <div className="text-left leading-tight hidden xs:block">
+                    <p className="font-bold text-slate-900 text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[140px]">
+                      Olá, {profile.displayName?.split(" ")[0] || "Cliente"}
+                    </p>
+                    <p className="text-[10px] sm:text-[11px] text-brand-dark font-semibold">
+                      Nível {profile.level}
+                    </p>
+                  </div>
+                </Link>
+              </>
             ) : (
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 <Link

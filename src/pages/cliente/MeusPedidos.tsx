@@ -1,23 +1,36 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingBag, Search, Calendar, MapPin, CreditCard, ChevronDown, ChevronUp, Clock, CheckCircle, X, RefreshCw, Clipboard, QrCode, FileText } from "lucide-react";
+import { 
+  ShoppingBag, Search, Calendar, MapPin, CreditCard, ChevronDown, ChevronUp, 
+  Clock, CheckCircle, X, RefreshCw, Clipboard, QrCode, FileText, Truck, 
+  Package, ExternalLink, Printer, ShieldCheck, ArrowRight, Banknote, 
+  AlertCircle, ChevronRight, Eye, Check, Tag, Bell, Volume2, Sparkles
+} from "lucide-react";
 import { collection, onSnapshot, query, getDocs, where } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { isStaffRole } from "../../lib/permissions";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
+import { useToast } from "../../context/ToastContext";
+import { useNotifications } from "../../context/NotificationContext";
 import { CONFIG } from "../../lib/ecommerceFlow";
 import { getMercadoPagoConfig, MercadoPagoConfig } from "../../lib/mercadoPago";
 import { gerarPixCopiaECola } from "../../lib/documentValidators";
 
 export default function MeusPedidos() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const navigate = useNavigate();
   const { addMultipleToCart } = useCart();
+  const { addToast, addOrderToast } = useToast();
+  const { permission, requestPermission } = useNotifications();
   const [pedidos, setPedidos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedPedidoId, setExpandedPedidoId] = useState<string | null>(null);
+  const [selectedPedidoModal, setSelectedPedidoModal] = useState<any | null>(null);
   const [repeatingOrderId, setRepeatingOrderId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("todos");
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Mercado Pago states
   const [mpConfig, setMpConfig] = useState<MercadoPagoConfig | null>(null);
@@ -66,6 +79,30 @@ export default function MeusPedidos() {
     return () => unsubscribe();
   }, [profile]);
 
+  // Filtered orders
+  const filteredPedidos = useMemo(() => {
+    return pedidos.filter((pedido) => {
+      const orderId = (pedido.id_externo || `PED-${pedido.numero}` || "").toLowerCase();
+      const clientName = (pedido.cliente?.nome || "").toLowerCase();
+      const itemsMatch = pedido.itens?.some((it: any) => 
+        (it.descricao || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (it.codigo || "").toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      const matchesSearch = orderId.includes(searchTerm.toLowerCase()) || 
+                            clientName.includes(searchTerm.toLowerCase()) ||
+                            itemsMatch;
+
+      if (!matchesSearch) return false;
+
+      if (statusFilter === "todos") return true;
+      if (statusFilter === "aguardando") return pedido.status === CONFIG.STATUS.NOVO;
+      if (statusFilter === "separacao") return pedido.status === CONFIG.STATUS.EM_CONFERENCIA || pedido.status === CONFIG.STATUS.CONFERIDO;
+      if (statusFilter === "faturado") return pedido.status === CONFIG.STATUS.FATURADO;
+      if (statusFilter === "despachado") return pedido.status === CONFIG.STATUS.DESPACHADO;
+      return true;
+    });
+  }, [pedidos, searchTerm, statusFilter]);
+
   const handlePayWithMercadoPago = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!payingPedido || !mpConfig) return;
@@ -92,9 +129,6 @@ export default function MeusPedidos() {
     setIsProcessing(true);
 
     try {
-      const totalAmount = payingPedido.totais?.totalPedido || payingPedido.pagamento?.valor || 0;
-      const metName = paymentMethod === "17" ? "PIX via Mercado Pago (Retroativo)" : "Cartão de Crédito via Mercado Pago (Retroativo)";
-      
       // In a real environment, the payment gateway webhook would trigger backend logic.
       const success = true; // Simulated success
       if (success) {
@@ -181,18 +215,24 @@ export default function MeusPedidos() {
     setExpandedPedidoId(expandedPedidoId === id ? null : id);
   };
 
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(id);
+    setTimeout(() => setCopiedKey(null), 2500);
+  };
+
   const getStatusLabel = (status: string) => {
     switch (status) {
       case CONFIG.STATUS.NOVO:
         return "Aguardando Confirmação";
       case CONFIG.STATUS.EM_CONFERENCIA:
-        return "Em Separação / Conferência";
+        return "Em Separação";
       case CONFIG.STATUS.CONFERIDO:
-        return "Aprovado para Faturamento";
+        return "Aprovado p/ Faturamento";
       case CONFIG.STATUS.FATURADO:
         return "Faturado (Nota Fiscal Emitida)";
       case CONFIG.STATUS.DESPACHADO:
-        return "Despachado / Em Rota de Entrega";
+        return "Despachado / Em Rota";
       default:
         return status || "Em processamento";
     }
@@ -201,15 +241,15 @@ export default function MeusPedidos() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case CONFIG.STATUS.NOVO:
-        return "bg-slate-100 text-slate-700 border-slate-200";
+        return "bg-amber-50 text-amber-700 border-amber-200";
       case CONFIG.STATUS.EM_CONFERENCIA:
-        return "bg-amber-100 text-amber-700 border-amber-200";
+        return "bg-purple-50 text-purple-700 border-purple-200";
       case CONFIG.STATUS.CONFERIDO:
-        return "bg-teal-100 text-teal-700 border-teal-200";
+        return "bg-teal-50 text-teal-700 border-teal-200";
       case CONFIG.STATUS.FATURADO:
-        return "bg-blue-100 text-blue-700 border-blue-200";
+        return "bg-blue-50 text-blue-700 border-blue-200";
       case CONFIG.STATUS.DESPACHADO:
-        return "bg-emerald-100 text-emerald-700 border-emerald-200";
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
       default:
         return "bg-slate-100 text-slate-700 border-slate-200";
     }
@@ -218,244 +258,505 @@ export default function MeusPedidos() {
   const getPaymentLabel = (forma: string) => {
     switch (forma) {
       case "17":
-        return "PIX";
+        return "PIX (Instantâneo)";
       case "15":
         return "Boleto Bancário";
       case "03":
         return "Cartão de Crédito";
+      case "01":
+        return "Dinheiro";
       default:
         return "Faturamento Direto";
     }
   };
 
+  const getPaymentIcon = (forma: string) => {
+    switch (forma) {
+      case "17":
+        return <QrCode size={15} className="text-emerald-600" />;
+      case "15":
+        return <FileText size={15} className="text-amber-600" />;
+      case "03":
+        return <CreditCard size={15} className="text-[#0071e3]" />;
+      default:
+        return <Banknote size={15} className="text-slate-600" />;
+    }
+  };
+
+  const getFreteValor = (pedido: any) => {
+    if (pedido.frete?.valor !== undefined) return Number(pedido.frete.valor);
+    if (pedido.totais?.totalFrete !== undefined) return Number(pedido.totais.totalFrete);
+    return 0;
+  };
+
+  const getSubtotalProdutos = (pedido: any) => {
+    if (pedido.totais?.totalProdutos !== undefined) return Number(pedido.totais.totalProdutos);
+    if (pedido.itens && Array.isArray(pedido.itens)) {
+      return pedido.itens.reduce((sum: number, it: any) => sum + (it.valorTotal || (it.quantidade * it.valorUnitario) || 0), 0);
+    }
+    return 0;
+  };
+
+  const getTotalGeral = (pedido: any) => {
+    if (pedido.totais?.totalPedido !== undefined) return Number(pedido.totais.totalPedido);
+    if (pedido.pagamento?.valor !== undefined) return Number(pedido.pagamento.valor);
+    const subtotal = getSubtotalProdutos(pedido);
+    const frete = getFreteValor(pedido);
+    return subtotal + frete;
+  };
+
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto py-12 text-center text-slate-500">
-        Carregando seus pedidos...
+      <div className="max-w-5xl mx-auto py-16 text-center text-slate-500 space-y-3">
+        <div className="w-10 h-10 border-4 border-[#0071e3] border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="font-semibold text-slate-600">Carregando seus pedidos...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#0071e3] text-white flex items-center justify-center shadow-xs">
-            <ShoppingBag className="w-6 h-6" />
+    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+      {/* Header */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div className="p-6 sm:p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-50 via-white to-sky-50/30">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#0071e3] text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+              <ShoppingBag className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900">Meus Pedidos</h1>
+                <span className="bg-blue-100 text-[#0071e3] text-xs font-bold px-2 py-0.5 rounded-full">
+                  {pedidos.length}
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Consulte itens comprados, valores de frete, método de pagamento e histórico de entregas.
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Meus Pedidos</h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-              Acompanhe suas compras e notas fiscais na União Condominial.<span className="text-emerald-600 font-semibold">GO</span>.
-            </p>
+
+          <Link 
+            to="/produtos"
+            className="inline-flex items-center justify-center gap-2 bg-[#0071e3] hover:bg-[#005bb5] text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
+          >
+            <ShoppingBag size={15} />
+            Novo Pedido
+          </Link>
+        </div>
+
+        {/* Real-time Order Notification Status & Live Simulator Bar */}
+        <div className="px-6 py-3.5 bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-emerald-50/60 border-b border-blue-100 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5 text-slate-700">
+            <div className="w-7 h-7 rounded-xl bg-blue-600/10 text-[#0071e3] flex items-center justify-center shrink-0">
+              <Bell size={15} className="animate-pulse" />
+            </div>
+            <div>
+              <span className="font-extrabold text-slate-900 block leading-tight">
+                Notificações em Tempo Real Ativas
+              </span>
+              <span className="text-[11px] text-slate-500">
+                Você recebe alertas instantâneos de Toast e Notificações Push sobre qualquer mudança de status no seu pedido.
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            {permission !== "granted" && (
+              <button
+                onClick={async () => {
+                  const res = await requestPermission();
+                  if (res === "granted") {
+                    addToast("Notificações Push no navegador ativadas com sucesso!", "success");
+                  }
+                }}
+                className="bg-[#0071e3] hover:bg-[#005bb5] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-3xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+              >
+                <Volume2 size={13} />
+                Ativar Push no Navegador
+              </button>
+            )}
+
+            <div className="flex items-center gap-1 bg-white/80 p-1 rounded-xl border border-blue-200/70 shadow-3xs">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1.5">
+                Testar:
+              </span>
+              <button
+                onClick={() => {
+                  const sampleNum = pedidos[0]?.id_externo || pedidos[0]?.numero || "PED-8492";
+                  addOrderToast({
+                    title: "🚚 Pedido Despachado!",
+                    message: `Seu pedido #${sampleNum} foi despachado pela expedição e está a caminho do seu condomínio!`,
+                    orderNumber: `#${sampleNum}`,
+                    status: "Em Rota de Entrega",
+                    actionUrl: "/cliente/pedidos",
+                    actionLabel: "Rastrear Entrega",
+                    duration: 8000
+                  });
+                }}
+                className="bg-sky-50 hover:bg-sky-100 text-[#0071e3] border border-sky-200 px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1"
+                title="Testar alerta de Pedido Enviado"
+              >
+                <Truck size={12} /> Enviado
+              </button>
+
+              <button
+                onClick={() => {
+                  const sampleNum = pedidos[0]?.id_externo || pedidos[0]?.numero || "PED-8492";
+                  addOrderToast({
+                    title: "✅ Pedido Entregue!",
+                    message: `Seu pedido #${sampleNum} foi entregue com sucesso e recebido na portaria do condomínio!`,
+                    orderNumber: `#${sampleNum}`,
+                    status: "Entregue",
+                    actionUrl: "/cliente/pedidos",
+                    actionLabel: "Ver Comprovante",
+                    duration: 8000
+                  });
+                }}
+                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1"
+                title="Testar alerta de Pedido Entregue"
+              >
+                <CheckCircle size={12} /> Entregue
+              </button>
+            </div>
           </div>
         </div>
 
-        {pedidos.length === 0 ? (
+        {/* Search & Filter Bar */}
+        <div className="p-4 sm:p-6 bg-slate-50/60 border-b border-slate-100 flex flex-col md:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input
+              type="text"
+              placeholder="Buscar por número do pedido ou produto..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+            {[
+              { id: "todos", label: "Todos" },
+              { id: "aguardando", label: "Aguardando" },
+              { id: "separacao", label: "Em Separação" },
+              { id: "faturado", label: "Faturados" },
+              { id: "despachado", label: "Em Rota" }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setStatusFilter(tab.id)}
+                className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  statusFilter === tab.id
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Orders List */}
+        {filteredPedidos.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
-            <div className="max-w-md mx-auto p-6 bg-slate-50 rounded-2xl border border-slate-100">
-              <p className="font-semibold text-slate-700 mb-1">Você ainda não tem compras registradas.</p>
-              <p className="text-xs text-slate-400 mb-4">Visite nosso catálogo de produtos e faça seu primeiro pedido.</p>
+            <div className="max-w-md mx-auto p-8 bg-slate-50 rounded-3xl border border-slate-100 text-center space-y-3">
+              <Package className="w-12 h-12 text-slate-300 mx-auto" />
+              <div>
+                <p className="font-bold text-slate-800 text-base">Nenhum pedido encontrado</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  {searchTerm || statusFilter !== "todos"
+                    ? "Tente ajustar seus termos de busca ou filtros aplicados."
+                    : "Você ainda não realizou compras. Explore nosso catálogo de produtos condominiais."}
+                </p>
+              </div>
               <Link 
                 to="/produtos" 
-                className="inline-flex text-xs bg-[#0071e3] text-white font-bold px-4 py-2 rounded-lg"
+                className="inline-flex items-center gap-2 text-xs bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold px-5 py-2.5 rounded-xl shadow-xs transition-all"
               >
-                Ir para o Catálogo
+                Ir para o Catálogo de Produtos
               </Link>
             </div>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {pedidos.map((pedido) => {
+            {filteredPedidos.map((pedido) => {
               const isExpanded = expandedPedidoId === pedido.firebaseId;
               const dateObj = new Date(pedido.dataHora);
               const formattedDate = dateObj.toLocaleDateString("pt-BR");
               const formattedTime = dateObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+              const freteVal = getFreteValor(pedido);
+              const subtotalProd = getSubtotalProdutos(pedido);
+              const totalGeral = getTotalGeral(pedido);
+              const totalQtdItens = pedido.itens?.reduce((acc: number, item: any) => acc + (Number(item.quantidade) || 0), 0) || 0;
 
               return (
-                <div key={pedido.firebaseId} className="p-4 sm:p-6 transition-colors hover:bg-slate-50/50">
-                  {/* Order summary header */}
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-3">
-                        <span className="font-extrabold text-slate-900 text-sm sm:text-base">
+                <div key={pedido.firebaseId} className={`p-4 sm:p-6 transition-colors ${isExpanded ? "bg-slate-50/70" : "hover:bg-slate-50/40"}`}>
+                  {/* Order Main Header */}
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    {/* Left: Identifier, Date, Status */}
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <span className="font-black text-slate-900 text-base tracking-tight">
                           {pedido.id_externo || `PED-${pedido.numero}`}
                         </span>
-                        <span className={`text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-full border ${getStatusColor(pedido.status)}`}>
+                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${getStatusColor(pedido.status)}`}>
                           {getStatusLabel(pedido.status)}
                         </span>
+                        {pedido.pagamento?.status === "Aprovado" && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                            <Check size={11} /> Pago
+                          </span>
+                        )}
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400 font-medium">
+
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 font-medium">
                         <span className="flex items-center gap-1">
-                          <Calendar size={12} />
+                          <Calendar size={13} className="text-slate-400" />
                           {formattedDate} às {formattedTime}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Clock size={12} />
-                          {pedido.itens?.reduce((acc: number, item: any) => acc + item.quantidade, 0) || 0} itens
+                          <Package size={13} className="text-slate-400" />
+                          {totalQtdItens} {totalQtdItens === 1 ? "item" : "itens"}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between md:justify-end gap-6">
-                      <div className="text-left md:text-right">
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Valor Total</p>
-                        <p className="font-black text-slate-900 text-base sm:text-lg">
-                          R$ {(pedido.totais?.totalPedido || pedido.pagamento?.valor || 0).toFixed(2)}
+                    {/* Middle: Badges for Frete & Método de Pagamento */}
+                    <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
+                      {/* Frete Badge */}
+                      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-3xs">
+                        <Truck size={15} className="text-[#0071e3] shrink-0" />
+                        <div className="text-left">
+                          <span className="block text-[9px] uppercase font-bold text-slate-400 leading-none">Frete</span>
+                          <span className="text-xs font-bold text-slate-800">
+                            {freteVal === 0 ? "Grátis" : `R$ ${freteVal.toFixed(2)}`}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Pagamento Badge */}
+                      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-3xs">
+                        {getPaymentIcon(pedido.pagamento?.forma)}
+                        <div className="text-left">
+                          <span className="block text-[9px] uppercase font-bold text-slate-400 leading-none">Pagamento</span>
+                          <span className="text-xs font-bold text-slate-800 truncate max-w-[110px]">
+                            {getPaymentLabel(pedido.pagamento?.forma).split(" ")[0]}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Total Value & Expand/Modal Controls */}
+                    <div className="flex items-center justify-between lg:justify-end gap-3 pt-2 lg:pt-0 border-t border-slate-100 lg:border-t-0">
+                      <div className="text-left lg:text-right">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total do Pedido</p>
+                        <p className="font-black text-slate-900 text-lg sm:text-xl text-[#0071e3]">
+                          R$ {totalGeral.toFixed(2)}
                         </p>
                       </div>
 
-                      <button
-                        onClick={() => toggleExpand(pedido.firebaseId)}
-                        className="p-2 border border-slate-200 rounded-xl hover:bg-slate-100 text-slate-500 transition-all flex items-center justify-center"
-                      >
-                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {/* Open Complete Details Modal */}
+                        <button
+                          onClick={() => setSelectedPedidoModal(pedido)}
+                          title="Ver Detalhes Completos em Janela"
+                          className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-all flex items-center gap-1.5 shadow-3xs cursor-pointer active:scale-95"
+                        >
+                          <Eye size={14} className="text-[#0071e3]" />
+                          <span className="hidden sm:inline">Detalhes</span>
+                        </button>
+
+                        {/* Inline Expand Accordion */}
+                        <button
+                          onClick={() => toggleExpand(pedido.firebaseId)}
+                          aria-label={isExpanded ? "Recolher detalhes" : "Expandir detalhes"}
+                          className={`p-2 rounded-xl border transition-all flex items-center justify-center cursor-pointer ${
+                            isExpanded
+                              ? "bg-slate-900 border-slate-900 text-white shadow-xs"
+                              : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+                          }`}
+                        >
+                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Expanded Order Details */}
+                  {/* Inline Expandable Panel (Painel Expansível) */}
                   {isExpanded && (
-                    <div className="mt-6 pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-slate-600 animate-fadeIn">
-                      {/* Column 1: Items List */}
-                      <div className="md:col-span-2 space-y-3.5">
-                        <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Itens do Pedido</h4>
-                        <div className="space-y-2">
-                          {pedido.itens?.map((item: any, idx: number) => (
-                            <div key={idx} className="flex justify-between items-center bg-slate-50 border border-slate-100 p-3 rounded-xl">
-                              <div className="min-w-0 pr-2">
-                                <p className="font-semibold text-slate-800 text-xs sm:text-sm truncate">{item.descricao}</p>
-                                <p className="text-[10px] text-slate-400">Qtd: {item.quantidade} x R$ {item.valorUnitario.toFixed(2)}</p>
+                    <div className="mt-5 pt-5 border-t border-slate-200/80 space-y-6 animate-fadeIn">
+                      {/* Grid with 3 Pillars: Itens Comprados, Frete & Entrega, Método de Pagamento */}
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                        
+                        {/* PILLAR 1: Itens Comprados (Spans 2 columns on large screens) */}
+                        <div className="lg:col-span-2 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
+                              <Package size={15} className="text-[#0071e3]" />
+                              Itens Comprados ({pedido.itens?.length || 0})
+                            </h4>
+                            <span className="text-[11px] font-semibold text-slate-500">
+                              Subtotal: R$ {subtotalProd.toFixed(2)}
+                            </span>
+                          </div>
+
+                          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                            {pedido.itens?.map((item: any, idx: number) => (
+                              <div 
+                                key={idx} 
+                                className="flex items-center justify-between gap-3 bg-white border border-slate-200/80 p-3 sm:p-3.5 rounded-2xl shadow-3xs hover:border-slate-300 transition-colors"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 font-black text-xs flex items-center justify-center shrink-0">
+                                    #{idx + 1}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-bold text-slate-900 text-xs sm:text-sm truncate" title={item.descricao}>
+                                      {item.descricao}
+                                    </p>
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500 mt-0.5">
+                                      <span>Código: <strong className="text-slate-700 font-mono">{item.codigo || "N/A"}</strong></span>
+                                      <span>•</span>
+                                      <span>Qtd: <strong className="text-slate-700">{item.quantidade} {item.unidade || "UN"}</strong></span>
+                                      <span>•</span>
+                                      <span>Unitário: <strong className="text-slate-700">R$ {Number(item.valorUnitario || 0).toFixed(2)}</strong></span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <span className="font-black text-slate-900 text-xs sm:text-sm block">
+                                    R$ {(item.valorTotal || (item.quantidade * item.valorUnitario) || 0).toFixed(2)}
+                                  </span>
+                                </div>
                               </div>
-                              <span className="font-bold text-slate-800 text-xs sm:text-sm flex-shrink-0">
-                                R$ {item.valorTotal?.toFixed(2) || (item.quantidade * item.valorUnitario).toFixed(2)}
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* PILLAR 2 & 3 (Sidebar Column): Frete & Pagamento Breakdown */}
+                        <div className="space-y-4">
+                          {/* Shipping Card */}
+                          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-3xs space-y-3">
+                            <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                              <Truck size={15} className="text-[#0071e3]" />
+                              Valor Total do Frete & Entrega
+                            </h4>
+                            
+                            <div className="flex items-center justify-between bg-sky-50/60 border border-blue-100 p-2.5 rounded-xl">
+                              <span className="text-xs font-bold text-slate-700">Valor do Frete:</span>
+                              <span className={`text-xs font-extrabold ${freteVal === 0 ? "text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md" : "text-[#0071e3]"}`}>
+                                {freteVal === 0 ? "FRETE GRÁTIS" : `R$ ${freteVal.toFixed(2)}`}
                               </span>
                             </div>
-                          ))}
-                        </div>
-                      </div>
 
-                      {/* Column 2: Delivery & Shipping */}
-                      <div className="space-y-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100/80">
-                        <div className="space-y-1.5">
-                          <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1">
-                            <MapPin size={12} className="text-[#0071e3]" />
-                            Entrega
-                          </h4>
-                          <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                            {pedido.cliente?.nome} <br />
-                            {pedido.cliente?.endereco?.logradouro}, {pedido.cliente?.endereco?.numero} <br />
-                            {pedido.cliente?.endereco?.complemento && <>{pedido.cliente?.endereco?.complemento} <br /></>}
-                            {pedido.cliente?.endereco?.bairro} <br />
-                            {pedido.cliente?.endereco?.municipio} - {pedido.cliente?.endereco?.uf} <br />
-                            CEP: {pedido.cliente?.endereco?.cep}
-                          </p>
-                        </div>
-
-                        <div className="space-y-1.5 border-t border-slate-200/60 pt-3">
-                          <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1">
-                            <CreditCard size={12} className="text-[#0071e3]" />
-                            Pagamento
-                          </h4>
-                          <div className="text-xs text-slate-600 font-medium space-y-1">
-                            <p>Forma: {getPaymentLabel(pedido.pagamento?.forma)}</p>
-                            <p>Frete: {pedido.frete?.valor === 0 ? "Grátis" : `R$ ${pedido.frete?.valor?.toFixed(2)}`}</p>
-                            <div className="pt-1 flex items-center gap-1.5">
-                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Status:</span>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                pedido.pagamento?.status === "Aprovado" 
-                                  ? "bg-emerald-100 text-emerald-800" 
-                                  : "bg-amber-100 text-amber-800"
-                              }`}>
-                                {pedido.pagamento?.status === "Aprovado" ? "✓ Pago e Conciliado" : "Aguardando Pagamento"}
-                              </span>
+                            <div className="text-xs text-slate-600 font-medium space-y-1">
+                              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Endereço de Destino:</p>
+                              <p className="leading-tight text-slate-800 font-semibold">{pedido.cliente?.nome}</p>
+                              <p className="text-slate-600 text-[11px] leading-relaxed">
+                                {pedido.cliente?.endereco?.logradouro}, {pedido.cliente?.endereco?.numero}
+                                {pedido.cliente?.endereco?.complemento && ` - ${pedido.cliente?.endereco?.complemento}`} <br />
+                                {pedido.cliente?.endereco?.bairro} • {pedido.cliente?.endereco?.municipio}/{pedido.cliente?.endereco?.uf} <br />
+                                <span className="font-mono text-slate-500">CEP: {pedido.cliente?.endereco?.cep}</span>
+                              </p>
                             </div>
                           </div>
 
-                          {pedido.pagamento?.status !== "Aprovado" && mpConfig && (
-                            <button
-                              onClick={() => {
-                                setPayingPedido(pedido);
-                                setPaymentMethod("17"); // default to PIX
-                              }}
-                              className="w-full mt-3 bg-[#0071e3] hover:bg-[#0071e3]/90 text-white font-bold py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
-                            >
-                              <CreditCard size={13} />
-                              Pagar com Mercado Pago
-                            </button>
-                          )}
+                          {/* Payment Method & Financial Breakdown */}
+                          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-3xs space-y-3">
+                            <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                              <CreditCard size={15} className="text-[#0071e3]" />
+                              Método de Pagamento Utilizado
+                            </h4>
+
+                            <div className="space-y-2 text-xs">
+                              <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+                                <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                                  {getPaymentIcon(pedido.pagamento?.forma)}
+                                  Método:
+                                </span>
+                                <span className="font-bold text-slate-900">{getPaymentLabel(pedido.pagamento?.forma)}</span>
+                              </div>
+
+                              <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+                                <span className="text-slate-600 font-medium">Status do Pagamento:</span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  pedido.pagamento?.status === "Aprovado" 
+                                    ? "bg-emerald-100 text-emerald-800" 
+                                    : "bg-amber-100 text-amber-800"
+                                }`}>
+                                  {pedido.pagamento?.status === "Aprovado" ? "✓ Liquidado / Aprovado" : "⏳ Aguardando Pagamento"}
+                                </span>
+                              </div>
+
+                              {/* Summary calculation */}
+                              <div className="border-t border-slate-100 pt-2 space-y-1 text-xs">
+                                <div className="flex justify-between text-slate-500">
+                                  <span>Subtotal dos Produtos:</span>
+                                  <span>R$ {subtotalProd.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-slate-500">
+                                  <span>Frete:</span>
+                                  <span>{freteVal === 0 ? "Grátis" : `R$ ${freteVal.toFixed(2)}`}</span>
+                                </div>
+                                <div className="flex justify-between font-black text-slate-900 text-sm pt-1 border-t border-slate-100">
+                                  <span>Total a Pagar:</span>
+                                  <span className="text-[#0071e3]">R$ {totalGeral.toFixed(2)}</span>
+                                </div>
+                              </div>
+
+                              {/* Action to pay if pending */}
+                              {pedido.pagamento?.status !== "Aprovado" && mpConfig && (
+                                <button
+                                  onClick={() => {
+                                    setPayingPedido(pedido);
+                                    setPaymentMethod("17");
+                                  }}
+                                  className="w-full mt-2 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold py-2.5 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                                >
+                                  <CreditCard size={13} />
+                                  Pagar com Mercado Pago
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Footer Actions of the Expandable Panel */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200/60">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setSelectedPedidoModal(pedido)}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0071e3] hover:text-[#005bb5] hover:underline cursor-pointer"
+                          >
+                            <Eye size={14} />
+                            Ver em Modal com Histórico e Nota Fiscal
+                          </button>
                         </div>
 
-                        <div className="border-t border-slate-200/60 pt-3">
+                        <div className="flex items-center gap-2.5">
                           <button
                             onClick={() => handleRepeatOrder(pedido)}
                             disabled={repeatingOrderId !== null}
-                            className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 px-4 rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
                           >
                             {repeatingOrderId === pedido.firebaseId ? (
                               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                             ) : (
                               <RefreshCw className="w-3.5 h-3.5" />
                             )}
-                            {repeatingOrderId === pedido.firebaseId ? "Repetindo Pedido..." : "Repetir Pedido (Comprar Novamente)"}
+                            <span>Comprar Novamente</span>
                           </button>
-                        </div>
-                        
-                        {pedido.nfe && (
-                          <div className="space-y-1 border-t border-slate-200/60 pt-3 bg-blue-50/50 -mx-4 -mb-4 p-4 rounded-b-2xl border-b border-l border-r border-blue-100/50">
-                            <p className="text-[10px] font-black text-[#0071e3] uppercase tracking-wider">Nota Fiscal Emitida</p>
-                            <p className="text-xs text-slate-700 font-bold">NFe Nº {pedido.nfe.numero}</p>
-                            <p className="text-[9px] text-slate-400 font-mono break-all leading-tight">Chave: {pedido.nfe.chaveAccess || pedido.nfe.chaveAcesso}</p>
-                          </div>
-                        )}
-                      </div>
-                      {/* Order History */}
-                      <div className="md:col-span-3 mt-4">
-                        <div className="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                          <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1">
-                            <FileText size={12} className="text-[#0071e3]" />
-                            Histórico do Pedido
-                          </h4>
-                          <div className="relative pl-4 space-y-4 before:absolute before:inset-y-0 before:left-[7px] before:w-[2px] before:bg-slate-200">
-                            {(pedido.historico || []).map((evento: any, idx: number) => (
-                              <div key={idx} className="relative">
-                                <div className="absolute -left-[21px] w-4 h-4 rounded-full bg-blue-100 border-[3px] border-white flex items-center justify-center">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
-                                </div>
-                                <div className="ml-2">
-                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-0.5">
-                                    <span className="font-bold text-slate-900 text-[13px]">
-                                      {evento.statusAnterior ? (
-                                        <>
-                                          <span className="text-slate-500 font-medium">{evento.statusAnterior}</span>
-                                          <span className="mx-1.5 text-slate-400">→</span>
-                                          <span>{evento.novoStatus || evento.status || evento.evento}</span>
-                                        </>
-                                      ) : (
-                                        evento.status || evento.evento
-                                      )}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400 font-medium bg-white px-1.5 py-0.5 rounded shadow-sm border border-slate-100">
-                                      {new Date(evento.dataHora || evento.data).toLocaleString("pt-BR")}
-                                    </span>
-                                  </div>
-                                  {(evento.observacao || evento.descricao) && (
-                                    <p className="text-xs text-slate-600 leading-relaxed mt-1">
-                                      {evento.observacao || evento.descricao}
-                                    </p>
-                                  )}
-                                  {evento.usuario && (
-                                    <p className="text-[10px] text-slate-400 mt-1">
-                                      Responsável: {evento.usuario}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                            {(!pedido.historico || pedido.historico.length === 0) && (
-                              <p className="text-xs text-slate-500 italic pl-2">Nenhum histórico registrado.</p>
-                            )}
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -467,9 +768,261 @@ export default function MeusPedidos() {
         )}
       </div>
 
+      {/* ============================================================
+          DETAILED ORDER MODAL (Modal Completo de Detalhes do Pedido)
+          ============================================================ */}
+      {selectedPedidoModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh] animate-scale-up">
+            
+            {/* Modal Header */}
+            <div className="p-5 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-sky-50/40">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-[#0071e3] text-white rounded-2xl shadow-xs">
+                  <FileText size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-slate-950 text-base sm:text-lg">
+                      {selectedPedidoModal.id_externo || `PED-${selectedPedidoModal.numero}`}
+                    </h3>
+                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${getStatusColor(selectedPedidoModal.status)}`}>
+                      {getStatusLabel(selectedPedidoModal.status)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Realizado em {new Date(selectedPedidoModal.dataHora).toLocaleString("pt-BR")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => window.print()}
+                  title="Imprimir Pedido"
+                  className="p-2 hover:bg-slate-200/70 rounded-xl text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                >
+                  <Printer size={18} />
+                </button>
+                <button 
+                  onClick={() => setSelectedPedidoModal(null)}
+                  className="p-2 hover:bg-slate-200/70 rounded-xl text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-6 text-slate-700">
+              
+              {/* Section 1: Itens Comprados */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <Package size={14} className="text-[#0071e3]" />
+                    Itens Comprados ({selectedPedidoModal.itens?.length || 0})
+                  </h4>
+                  <span className="text-xs font-semibold text-slate-500">
+                    Subtotal: R$ {getSubtotalProdutos(selectedPedidoModal).toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden bg-slate-50/30">
+                  {selectedPedidoModal.itens?.map((item: any, idx: number) => (
+                    <div key={idx} className="p-3 sm:p-3.5 flex items-center justify-between gap-3 hover:bg-white transition-colors">
+                      <div className="min-w-0 pr-2">
+                        <p className="font-bold text-slate-900 text-xs sm:text-sm truncate">{item.descricao}</p>
+                        <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-slate-500 mt-0.5">
+                          <span>SKU/Código: <strong className="font-mono text-slate-700">{item.codigo || "N/A"}</strong></span>
+                          <span>•</span>
+                          <span>Qtd: <strong>{item.quantidade} {item.unidade || "UN"}</strong></span>
+                          <span>•</span>
+                          <span>Unitário: <strong>R$ {Number(item.valorUnitario || 0).toFixed(2)}</strong></span>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="font-black text-slate-900 text-xs sm:text-sm">
+                          R$ {(item.valorTotal || (item.quantidade * item.valorUnitario) || 0).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section 2: Frete & Entrega */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                  <Truck size={14} className="text-[#0071e3]" />
+                  Valor Total do Frete & Detalhes da Entrega
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70 space-y-1.5">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Custo do Frete</p>
+                    <p className="text-base font-black text-slate-900">
+                      {getFreteValor(selectedPedidoModal) === 0 ? (
+                        <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">FRETE GRÁTIS</span>
+                      ) : (
+                        `R$ ${getFreteValor(selectedPedidoModal).toFixed(2)}`
+                      )}
+                    </p>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      Entrega expressa e agendada para Grande Goiânia
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70 space-y-1">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Endereço de Destino</p>
+                    <p className="text-xs font-bold text-slate-900 leading-tight">{selectedPedidoModal.cliente?.nome}</p>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      {selectedPedidoModal.cliente?.endereco?.logradouro}, {selectedPedidoModal.cliente?.endereco?.numero}
+                      {selectedPedidoModal.cliente?.endereco?.complemento && ` - ${selectedPedidoModal.cliente?.endereco?.complemento}`} <br />
+                      {selectedPedidoModal.cliente?.endereco?.bairro} • {selectedPedidoModal.cliente?.endereco?.municipio}/{selectedPedidoModal.cliente?.endereco?.uf} <br />
+                      <span className="font-mono text-slate-500">CEP: {selectedPedidoModal.cliente?.endereco?.cep}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Método de Pagamento & Totais */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                  <CreditCard size={14} className="text-[#0071e3]" />
+                  Método de Pagamento & Resumo Financeiro
+                </h4>
+
+                <div className="p-4 bg-sky-50/40 rounded-2xl border border-blue-100 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-blue-100/70">
+                    <div className="flex items-center gap-2">
+                      {getPaymentIcon(selectedPedidoModal.pagamento?.forma)}
+                      <span className="font-bold text-slate-800 text-xs sm:text-sm">
+                        {getPaymentLabel(selectedPedidoModal.pagamento?.forma)}
+                      </span>
+                    </div>
+
+                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                      selectedPedidoModal.pagamento?.status === "Aprovado" 
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200" 
+                        : "bg-amber-100 text-amber-800 border border-amber-200"
+                    }`}>
+                      {selectedPedidoModal.pagamento?.status === "Aprovado" ? "✓ Liquidado e Aprovado" : "⏳ Aguardando Pagamento"}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs text-slate-600">
+                    <div className="flex justify-between">
+                      <span>Subtotal dos Produtos:</span>
+                      <span className="font-semibold text-slate-800">R$ {getSubtotalProdutos(selectedPedidoModal).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Valor do Frete:</span>
+                      <span className="font-semibold text-slate-800">
+                        {getFreteValor(selectedPedidoModal) === 0 ? "Grátis" : `R$ ${getFreteValor(selectedPedidoModal).toFixed(2)}`}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-blue-100">
+                      <span>Valor Total:</span>
+                      <span className="text-[#0071e3]">R$ {getTotalGeral(selectedPedidoModal).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 4: NF-e se emitida */}
+              {selectedPedidoModal.nfe && (
+                <div className="p-4 bg-emerald-50/50 border border-emerald-200/80 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1">
+                      <FileText size={13} /> Nota Fiscal Eletrônica Emitida
+                    </span>
+                    <span className="text-xs font-bold text-emerald-900">
+                      NFe Nº {selectedPedidoModal.nfe.numero}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-emerald-100">
+                    <span className="text-[10px] font-mono text-slate-600 break-all">
+                      Chave: {selectedPedidoModal.nfe.chaveAccess || selectedPedidoModal.nfe.chaveAcesso}
+                    </span>
+                    <button
+                      onClick={() => copyToClipboard(selectedPedidoModal.nfe.chaveAccess || selectedPedidoModal.nfe.chaveAcesso, "nfe")}
+                      className="text-xs font-bold text-[#0071e3] hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
+                    >
+                      {copiedKey === "nfe" ? <Check size={12} /> : <Clipboard size={12} />}
+                      <span>{copiedKey === "nfe" ? "Copiado!" : "Copiar"}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Section 5: Histórico do Pedido */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                  <Clock size={14} className="text-[#0071e3]" />
+                  Histórico e Rastreamento
+                </h4>
+                
+                <div className="relative pl-4 space-y-3 before:absolute before:inset-y-0 before:left-[7px] before:w-[2px] before:bg-slate-200">
+                  {(selectedPedidoModal.historico || []).map((evento: any, idx: number) => (
+                    <div key={idx} className="relative">
+                      <div className="absolute -left-[21px] w-4 h-4 rounded-full bg-blue-100 border-[3px] border-white flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0071e3]"></div>
+                      </div>
+                      <div className="ml-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-0.5">
+                          <span className="font-bold text-slate-900 text-xs">
+                            {evento.novoStatus || evento.status || evento.evento}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {new Date(evento.dataHora || evento.data).toLocaleString("pt-BR")}
+                          </span>
+                        </div>
+                        {(evento.observacao || evento.descricao) && (
+                          <p className="text-xs text-slate-600 mt-0.5">
+                            {evento.observacao || evento.descricao}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {(!selectedPedidoModal.historico || selectedPedidoModal.historico.length === 0) && (
+                    <p className="text-xs text-slate-400 italic">Nenhum evento registrado ainda.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 sm:p-5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
+              <button
+                onClick={() => setSelectedPedidoModal(null)}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all cursor-pointer"
+              >
+                Fechar
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const ped = selectedPedidoModal;
+                    setSelectedPedidoModal(null);
+                    handleRepeatOrder(ped);
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw size={13} />
+                  Comprar Novamente
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mercado Pago Payment Modal */}
       {payingPedido && mpConfig && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh] animate-scale-up">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <div className="flex items-center gap-2">
@@ -503,7 +1056,7 @@ export default function MeusPedidos() {
               <div className="flex justify-between items-baseline bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Valor a Pagar:</span>
                 <span className="text-xl font-black text-[#0071e3]">
-                  R$ {(payingPedido.totais?.totalPedido || payingPedido.pagamento?.valor || 0).toFixed(2)}
+                  R$ {getTotalGeral(payingPedido).toFixed(2)}
                 </span>
               </div>
 
@@ -548,7 +1101,7 @@ export default function MeusPedidos() {
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
                           gerarPixCopiaECola({
                             chave: "63680806-d418-4b0b-9ef4-6562cde069d9",
-                            valor: payingPedido.totais?.totalPedido || payingPedido.pagamento?.valor || 0,
+                            valor: getTotalGeral(payingPedido),
                             nomeRecebedor: "Uniao Condominial",
                             cidadeRecebedor: "Goiania",
                             txid: "MPED" + (payingPedido.id_externo || payingPedido.id || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 10)
@@ -566,7 +1119,7 @@ export default function MeusPedidos() {
                         onClick={() => {
                           const code = gerarPixCopiaECola({
                             chave: "63680806-d418-4b0b-9ef4-6562cde069d9",
-                            valor: payingPedido.totais?.totalPedido || payingPedido.pagamento?.valor || 0,
+                            valor: getTotalGeral(payingPedido),
                             nomeRecebedor: "Uniao Condominial",
                             cidadeRecebedor: "Goiania",
                             txid: "MPED" + (payingPedido.id_externo || payingPedido.id || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 10)
@@ -574,7 +1127,7 @@ export default function MeusPedidos() {
                           navigator.clipboard.writeText(code);
                           alert("Código PIX Copia e Cola copiado com sucesso!");
                         }}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0071e3] hover:underline bg-white py-2 px-4 rounded-xl border border-slate-200 shadow-3xs transition-all active:scale-95"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0071e3] hover:underline bg-white py-2 px-4 rounded-xl border border-slate-200 shadow-3xs transition-all active:scale-95 cursor-pointer"
                       >
                         <Clipboard size={12} />
                         Copiar código PIX Copia e Cola
@@ -655,7 +1208,7 @@ export default function MeusPedidos() {
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className="w-full bg-[#0071e3] hover:bg-[#0071e3]/90 text-white font-bold py-3.5 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50 cursor-pointer mt-4"
+                  className="w-full bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold py-3.5 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50 cursor-pointer mt-4"
                 >
                   {isProcessing ? (
                     "Processando e Conciliando..."

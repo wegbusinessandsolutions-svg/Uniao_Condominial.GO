@@ -7,7 +7,9 @@ import {
   where, 
   orderBy, 
   onSnapshot, 
-  serverTimestamp 
+  serverTimestamp,
+  doc,
+  updateDoc
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { 
@@ -24,9 +26,12 @@ import {
   Building2, 
   User, 
   Sparkles,
-  Share2
+  Share2,
+  Edit3,
+  CheckCircle2
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
+import { isAdminRole } from "../../lib/permissions";
 
 export interface Notice {
   id: string;
@@ -37,6 +42,7 @@ export interface Notice {
   texto: string;
   status: "em_revisao" | "publicado" | "rejeitado";
   createdAt: any;
+  updatedAt?: any;
   userId?: string;
   respostasCount?: number;
 }
@@ -81,7 +87,7 @@ export default function MuralCondominial() {
   const { addToast } = useToast();
   const [notices, setNotices] = useState<Notice[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<"todos" | "comunicado" | "duvida">("todos");
+  const [filterType, setFilterType] = useState<"todos" | "comunicado" | "duvida" | "meus">("todos");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialModalType, setInitialModalType] = useState<"comunicado" | "duvida">("comunicado");
   const [loading, setLoading] = useState(true);
@@ -94,6 +100,16 @@ export default function MuralCondominial() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // Edit notice state
+  const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    tipo: "comunicado" as "comunicado" | "duvida",
+    titulo: "",
+    texto: ""
+  });
+  const [submittingEdit, setSubmittingEdit] = useState(false);
+
   // Selected Notice for viewing answers / replying
   const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
   const [answers, setAnswers] = useState<NoticeAnswer[]>([]);
@@ -102,28 +118,67 @@ export default function MuralCondominial() {
   const [newAnswerText, setNewAnswerText] = useState("");
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
 
+  // Check if current user is author of notice or an administrator
+  const canEditNotice = (notice?: Notice | null): boolean => {
+    if (!notice || !profile) return false;
+    const isAdmin = isAdminRole(profile.role) || profile.email === "wegbusinessandsolutions@gmail.com";
+    const isAuthor = !!notice.userId && (notice.userId === profile.uid || notice.userId === (profile as any).id);
+    return isAdmin || isAuthor;
+  };
+
   useEffect(() => {
-    // Only fetch published notices
-    const q = query(
+    // Fetch published notices
+    const qPub = query(
       collection(db, "muralNotices"),
       where("status", "==", "publicado"),
       orderBy("createdAt", "desc")
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedNotices: Notice[] = [];
-      snapshot.forEach((doc) => {
-        fetchedNotices.push({ id: doc.id, ...doc.data() } as Notice);
+    const unsubscribePub = onSnapshot(qPub, (snapshot) => {
+      const pubNotices: Notice[] = [];
+      snapshot.forEach((docSnap) => {
+        pubNotices.push({ id: docSnap.id, ...docSnap.data() } as Notice);
       });
-      setNotices(fetchedNotices);
-      setLoading(false);
+
+      // If user is logged in, also fetch user's own notices (including em_revisao/rejeitado)
+      if (profile?.uid) {
+        const qMine = query(
+          collection(db, "muralNotices"),
+          where("userId", "==", profile.uid)
+        );
+        onSnapshot(qMine, (mySnap) => {
+          const myNotices: Notice[] = [];
+          mySnap.forEach((d) => {
+            myNotices.push({ id: d.id, ...d.data() } as Notice);
+          });
+
+          const map = new Map<string, Notice>();
+          pubNotices.forEach(n => map.set(n.id, n));
+          myNotices.forEach(n => map.set(n.id, n));
+
+          const allList = Array.from(map.values()).sort((a, b) => {
+            const timeA = a.createdAt?.seconds || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+            const timeB = b.createdAt?.seconds || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+            return timeB - timeA;
+          });
+          setNotices(allList);
+          setLoading(false);
+        }, (err) => {
+          console.warn("Error fetching user notices:", err);
+          setNotices(pubNotices);
+          setLoading(false);
+        });
+      } else {
+        setNotices(pubNotices);
+        setLoading(false);
+      }
     }, (error) => {
       console.error("Error fetching notices:", error);
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, []);
+    return () => unsubscribePub();
+  }, [profile?.uid]);
 
   // Listen to answers counts for published notices
   useEffect(() => {
@@ -183,7 +238,11 @@ export default function MuralCondominial() {
   const filteredNotices = useMemo(() => {
     return notices.filter((notice) => {
       const noticeType = notice.tipo || "comunicado";
-      if (filterType !== "todos" && noticeType !== filterType) {
+      if (filterType === "meus") {
+        if (!profile?.uid || notice.userId !== profile.uid) {
+          return false;
+        }
+      } else if (filterType !== "todos" && noticeType !== filterType) {
         return false;
       }
       if (!searchTerm.trim()) return true;
@@ -197,14 +256,15 @@ export default function MuralCondominial() {
         : "comunicado informativo aviso".includes(term);
       return tituloMatch || textoMatch || condMatch || bairroMatch || typeMatch;
     });
-  }, [notices, searchTerm, filterType]);
+  }, [notices, searchTerm, filterType, profile?.uid]);
 
   const countsByType = useMemo(() => {
     const total = notices.length;
     const comunicados = notices.filter(n => (n.tipo || "comunicado") === "comunicado").length;
     const duvidas = notices.filter(n => n.tipo === "duvida").length;
-    return { total, comunicados, duvidas };
-  }, [notices]);
+    const meus = profile?.uid ? notices.filter(n => n.userId === profile.uid).length : 0;
+    return { total, comunicados, duvidas, meus };
+  }, [notices, profile?.uid]);
 
   const handleOpenModal = (tipo: "comunicado" | "duvida" = "comunicado") => {
     setFormData({
@@ -214,6 +274,74 @@ export default function MuralCondominial() {
     });
     setInitialModalType(tipo);
     setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (notice: Notice) => {
+    if (!canEditNotice(notice)) {
+      addToast("Apenas o autor do comunicado e o administrador podem alterá-lo.", "error");
+      return;
+    }
+    setEditingNotice(notice);
+    setEditFormData({
+      tipo: notice.tipo || "comunicado",
+      titulo: notice.titulo || "",
+      texto: notice.texto || ""
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateNotice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingNotice) return;
+    
+    if (!canEditNotice(editingNotice)) {
+      addToast("Você não tem permissão para alterar este comunicado.", "error");
+      return;
+    }
+
+    if (!editFormData.titulo.trim() || !editFormData.texto.trim()) {
+      addToast("Preencha todos os campos.", "error");
+      return;
+    }
+
+    if (editFormData.titulo.length > 200) {
+      addToast("O título deve ter no máximo 200 caracteres.", "error");
+      return;
+    }
+
+    if (editFormData.texto.length > 800) {
+      addToast("O texto deve ter no máximo 800 caracteres.", "error");
+      return;
+    }
+
+    setSubmittingEdit(true);
+    try {
+      const noticeRef = doc(db, "muralNotices", editingNotice.id);
+      await updateDoc(noticeRef, {
+        tipo: editFormData.tipo || "comunicado",
+        titulo: editFormData.titulo.trim(),
+        texto: editFormData.texto.trim(),
+        updatedAt: serverTimestamp()
+      });
+
+      addToast("Comunicado alterado com sucesso!", "success");
+      setIsEditModalOpen(false);
+
+      if (selectedNotice && selectedNotice.id === editingNotice.id) {
+        setSelectedNotice((prev) => prev ? {
+          ...prev,
+          tipo: editFormData.tipo,
+          titulo: editFormData.titulo.trim(),
+          texto: editFormData.texto.trim()
+        } : null);
+      }
+      setEditingNotice(null);
+    } catch (error) {
+      console.error("Error updating notice: ", error);
+      addToast("Erro ao alterar comunicado. Tente novamente.", "error");
+    } finally {
+      setSubmittingEdit(false);
+    }
   };
 
   const handleSubmitNotice = async (e: React.FormEvent) => {
@@ -386,6 +514,24 @@ export default function MuralCondominial() {
                 {countsByType.comunicados}
               </span>
             </button>
+            {profile?.uid && (
+              <button
+                onClick={() => setFilterType("meus")}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  filterType === "meus"
+                    ? "bg-emerald-600 text-white shadow-2xs font-bold"
+                    : "text-slate-600 hover:text-emerald-700"
+                }`}
+              >
+                <User size={13} />
+                <span>Minhas Publicações</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  filterType === "meus" ? "bg-emerald-700 text-white" : "bg-emerald-100 text-emerald-800"
+                }`}>
+                  {countsByType.meus}
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -441,6 +587,7 @@ export default function MuralCondominial() {
             {filteredNotices.map((notice, index) => {
               const isDuvida = notice.tipo === "duvida";
               const answersCount = answersCounts[notice.id] || 0;
+              const hasEditPermission = canEditNotice(notice);
 
               return (
                 <div 
@@ -461,20 +608,52 @@ export default function MuralCondominial() {
                   <div>
                     {/* Top Badges */}
                     <div className="flex flex-wrap items-center justify-between gap-1.5 mb-3 mt-1">
-                      <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider line-clamp-1" title={notice.condominio}>
-                        {notice.condominio}
-                      </span>
-                      {isDuvida ? (
-                        <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                          <HelpCircle size={12} className="text-amber-600" />
-                          <span>Dúvida / Pergunta</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider line-clamp-1" title={notice.condominio}>
+                          {notice.condominio}
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                          <Megaphone size={12} className="text-blue-600" />
-                          <span>Comunicado</span>
-                        </span>
-                      )}
+                        {notice.status === "em_revisao" && (
+                          <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                            <Clock size={10} />
+                            <span>Em Revisão</span>
+                          </span>
+                        )}
+                        {notice.status === "rejeitado" && (
+                          <span className="bg-red-100 text-red-800 border border-red-300 text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                            Rejeitado
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5">
+                        {isDuvida ? (
+                          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            <HelpCircle size={12} className="text-amber-600" />
+                            <span>Dúvida</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            <Megaphone size={12} className="text-blue-600" />
+                            <span>Comunicado</span>
+                          </span>
+                        )}
+
+                        {/* Edit Button - Visible ONLY to the creator of the notice and administrators */}
+                        {hasEditPermission && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEditModal(notice);
+                            }}
+                            title="Alterar este comunicado"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 transition-all cursor-pointer shadow-2xs active:scale-95"
+                          >
+                            <Edit3 size={11} className="text-amber-700" />
+                            <span>Alterar</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <h3 className="font-bold text-slate-900 text-base sm:text-lg mb-2 leading-tight">
@@ -490,6 +669,9 @@ export default function MuralCondominial() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-500 text-[11px] font-medium font-mono">
                         {formatNoticeDate(notice.createdAt)}
+                        {notice.updatedAt && (
+                          <span className="ml-1 text-[10px] text-amber-600 font-normal italic">(editado)</span>
+                        )}
                       </span>
                       <span className="text-slate-400 text-[11px] font-medium italic">
                         {notice.bairro}
@@ -769,7 +951,7 @@ export default function MuralCondominial() {
           <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border border-slate-100">
             {/* Header */}
             <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {selectedNotice.tipo === "duvida" ? (
                   <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full border border-amber-200">
                     <HelpCircle size={15} className="text-amber-600" />
@@ -784,6 +966,18 @@ export default function MuralCondominial() {
                 <span className="text-xs font-semibold text-slate-500">
                   {answers.length} {answers.length === 1 ? "resposta" : "respostas"}
                 </span>
+
+                {canEditNotice(selectedNotice) && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditModal(selectedNotice)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition-all shadow-2xs cursor-pointer ml-1"
+                    title="Alterar este comunicado"
+                  >
+                    <Edit3 size={13} className="text-amber-700" />
+                    <span>Alterar Comunicado</span>
+                  </button>
+                )}
               </div>
 
               <button
@@ -934,6 +1128,174 @@ export default function MuralCondominial() {
                 className="px-5 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
               >
                 Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: EDIT NOTICE (Only available to creator and admin) */}
+      {isEditModalOpen && editingNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/70">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Edit3 className="text-amber-600 w-5 h-5" />
+                <span>Alterar Publicação no Mural</span>
+              </h3>
+              <button 
+                onClick={() => { setIsEditModalOpen(false); setEditingNotice(null); }}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1 text-base font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-5 overflow-y-auto space-y-4">
+              {/* Type Selector (Comunicado vs Dúvida) */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">
+                  Tipo da Publicação
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditFormData({ ...editFormData, tipo: "duvida" })}
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      editFormData.tipo === "duvida"
+                        ? "border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20"
+                        : "border-slate-200 hover:bg-slate-50 text-slate-600"
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg shrink-0 ${
+                      editFormData.tipo === "duvida" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-500"
+                    }`}>
+                      <HelpCircle size={18} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900">Dúvida / Pergunta</div>
+                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
+                        Para outros síndicos responderem e trocarem experiências.
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEditFormData({ ...editFormData, tipo: "comunicado" })}
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      editFormData.tipo === "comunicado"
+                        ? "border-brand-dark bg-brand-light/10 ring-2 ring-brand-dark/20"
+                        : "border-slate-200 hover:bg-slate-50 text-slate-600"
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg shrink-0 ${
+                      editFormData.tipo === "comunicado" ? "bg-brand-dark text-white" : "bg-slate-100 text-slate-500"
+                    }`}>
+                      <Megaphone size={18} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900">Comunicado</div>
+                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
+                        Informação geral, aviso ou recomendação de serviço.
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <form id="editNoticeForm" onSubmit={handleUpdateNotice} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                      Condomínio
+                    </label>
+                    <input
+                      type="text"
+                      disabled
+                      value={editingNotice.condominio || ""}
+                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 text-slate-500 rounded-lg cursor-not-allowed text-xs font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                      Setor / Bairro
+                    </label>
+                    <input
+                      type="text"
+                      disabled
+                      value={editingNotice.bairro || ""}
+                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 text-slate-500 rounded-lg cursor-not-allowed text-xs font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="flex justify-between text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                    <span>{editFormData.tipo === "duvida" ? "Título da Dúvida" : "Título do Comunicado"}</span>
+                    <span className={editFormData.titulo.length > 200 ? "text-red-500" : "text-slate-400"}>
+                      {editFormData.titulo.length}/200
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={200}
+                    value={editFormData.titulo}
+                    onChange={(e) => setEditFormData({...editFormData, titulo: e.target.value})}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-sm"
+                    placeholder="Título da publicação"
+                  />
+                </div>
+
+                <div>
+                  <label className="flex justify-between text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                    <span>{editFormData.tipo === "duvida" ? "Detalhes da Dúvida / Pergunta" : "Texto do Informativo"}</span>
+                    <span className={editFormData.texto.length > 800 ? "text-red-500" : "text-slate-400"}>
+                      {editFormData.texto.length}/800
+                    </span>
+                  </label>
+                  <textarea
+                    required
+                    maxLength={800}
+                    rows={5}
+                    value={editFormData.texto}
+                    onChange={(e) => setEditFormData({...editFormData, texto: e.target.value})}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-sm resize-none"
+                    placeholder="Descreva as alterações no conteúdo..."
+                  />
+                </div>
+              </form>
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
+              <button
+                type="button"
+                onClick={() => { setIsEditModalOpen(false); setEditingNotice(null); }}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                disabled={submittingEdit}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                form="editNoticeForm"
+                disabled={submittingEdit}
+                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2 disabled:opacity-70 shadow-md cursor-pointer"
+              >
+                {submittingEdit ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    <span>Salvando...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={16} />
+                    <span>Salvar Alterações</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

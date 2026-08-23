@@ -6,6 +6,7 @@ import { Home, FileText, User, ShoppingBag, MapPin, Package, Tag, Heart, CreditC
 import { getAuth } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import { CustomerNotificationBell } from "../cliente/CustomerNotificationBell";
 
 export default function CustomerLayout() {
   const { profile, loading } = useAuth();
@@ -124,13 +125,14 @@ export default function CustomerLayout() {
         >
           <Menu size={24} />
         </button>
-        <div className="text-center flex-1 pt-1">
+        <div className="text-center flex-1 pt-1 px-2">
           <span className="font-bold text-slate-800 text-[17px] block leading-none notranslate" translate="no">
             União Condominial.<span className="text-emerald-600">GO</span>
           </span>
           <span className="text-[13px] text-[#0071e3] font-semibold mt-1 block leading-none">Área do Cliente</span>
         </div>
         <div className="flex items-center">
+          <CustomerNotificationBell isCompact={true} />
         </div>
       </header>
 
@@ -160,6 +162,7 @@ export default function CustomerLayout() {
             </p>
           </div>
           <div className="hidden md:flex">
+            <CustomerNotificationBell />
           </div>
         </div>
 

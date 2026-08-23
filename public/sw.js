@@ -1,9 +1,10 @@
 // Service Worker - Estratégia de Cache Persistente para Imagens e Suporte a Notificações Push
-const CACHE_NAME = 'uniao-condominial-v3';
-const IMAGE_CACHE_NAME = 'uniao-condominial-images-v3';
+const CACHE_NAME = 'uniao-condominial-v4';
+const IMAGE_CACHE_NAME = 'uniao-condominial-images-v4';
 
 const PRECACHE_ASSETS = [
   '/',
+  '/Cond_Vert_Horiz_UC.jpg',
   '/Cond_vert_Horiz_UC.jpg',
   '/cond_vert_horiz_uc_final.jpg',
   '/images/Cond_vert_Horiz_UC.jpg',
@@ -14,6 +15,7 @@ const PRECACHE_ASSETS = [
   '/cartao-bg.png',
   '/servicos-condominiais-banner.jpg',
   '/servicos-rotineiros-oficial.jpg',
+  '/servicos-rotineiros-oficial.jpeg',
   '/uniao-condominial-logo.png',
   '/img_end_page.png',
   '/images/badge_bronze_1787100127454.jpg',

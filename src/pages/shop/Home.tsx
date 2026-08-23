@@ -96,13 +96,28 @@ export default function Home() {
             Por que nos escolher?
           </h2>
           
-          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md w-full bg-slate-50">
-            <img
-              src="/Cond_Vert_Horiz_UC.jpg"
-              alt="Goiânia é feita de grandes condomínios. Verticais e horizontais. Todos precisam de soluções. Todos podem ganhar juntos."
-              className="w-full h-auto block"
-              loading="eager"
-            />
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md w-full bg-slate-100 aspect-[1691/930]">
+            <picture className="w-full h-full block">
+              <source
+                srcSet="/Cond_Vert_Horiz_UC.jpg 1691w, /cond_vert_horiz_uc_final.jpg 1691w"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1200px"
+              />
+              <img
+                src="/Cond_Vert_Horiz_UC.jpg"
+                alt="Goiânia é feita de grandes condomínios. Verticais e horizontais. Todos precisam de soluções. Todos podem ganhar juntos."
+                className="w-full h-full object-contain sm:object-cover block"
+                loading="eager"
+                decoding="async"
+                width={1691}
+                height={930}
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.includes("cond_vert_horiz_uc_final.jpg")) {
+                    target.src = "/cond_vert_horiz_uc_final.jpg";
+                  }
+                }}
+              />
+            </picture>
           </div>
         </div>
 
@@ -195,19 +210,28 @@ export default function Home() {
 
             {/* Right Banner Image */}
             <div className="w-full lg:w-[480px] xl:w-[520px] shrink-0 self-center lg:self-start">
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white">
-                <img
-                  src="/servicos-rotineiros-oficial.jpeg"
-                  alt="São mais de 10 Serviços a disposição - União Condominial"
-                  className="w-full h-auto object-contain block"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (!target.src.includes("banner-servicos-condominiais.jpg")) {
-                      target.src = "/banner-servicos-condominiais.jpg";
-                    }
-                  }}
-                />
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white aspect-[1200/896]">
+                <picture className="w-full h-full block">
+                  <source
+                    srcSet="/servicos-rotineiros-oficial.jpg 1200w, /banner-servicos-condominiais.jpg 1200w"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 520px"
+                  />
+                  <img
+                    src="/servicos-rotineiros-oficial.jpg"
+                    alt="São mais de 10 Serviços a disposição - União Condominial"
+                    className="w-full h-full object-contain sm:object-cover block"
+                    loading="lazy"
+                    decoding="async"
+                    width={1200}
+                    height={896}
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.src.includes("banner-servicos-condominiais.jpg")) {
+                        target.src = "/banner-servicos-condominiais.jpg";
+                      }
+                    }}
+                  />
+                </picture>
               </div>
             </div>
           </div>
@@ -391,19 +415,55 @@ export default function Home() {
       </section>
 
       {/* About the Union CTA */}
-      <section className="bg-brand-dark rounded-[2rem] p-6 sm:p-10 md:p-12 border border-brand-dark shadow-sm mt-8 mb-8 text-center">
-        <h2 className="text-2xl sm:text-3xl font-black text-white !text-white tracking-tight mb-4" style={{ color: "#ffffff" }}>
-          A união que transforma a gestão condominial na Grande Goiânia
-        </h2>
-        <p className="text-slate-300 text-base sm:text-lg max-w-3xl mx-auto mb-8">
-          Descubra como a força coletiva está gerando economia, qualidade e eficiência para os condomínios da nossa região.
-        </p>
-        <Link
-          to="/sobre"
-          className="inline-flex items-center gap-2 bg-white text-brand-dark hover:bg-slate-100 px-8 py-3.5 rounded-xl font-bold transition-all shadow-sm active:scale-95"
-        >
-          Conheça a União Condominial <ArrowRight size={18} />
-        </Link>
+      <section className="bg-white rounded-[2rem] p-6 sm:p-10 md:p-12 border border-slate-200/80 shadow-sm mt-8 mb-8 overflow-hidden">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
+          <div className="flex-1 space-y-4">
+            <div className="inline-flex items-center gap-2 bg-sky-50 text-[#0071e3] px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase border border-blue-100 shadow-2xs">
+              <span>União Condominial.<span className="text-emerald-600">GO</span></span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+              A união que transforma a gestão condominial na Grande Goiânia
+            </h2>
+            <p className="text-slate-600 text-base sm:text-lg leading-relaxed text-justify">
+              Descubra como a força coletiva está gerando economia, qualidade e eficiência para os condomínios da nossa região. Conectamos o seu condomínio a produtos de alta qualidade com preços direto de fornecedores e prestadores de serviços qualificados.
+            </p>
+            <div className="pt-2">
+              <Link
+                to="/sobre"
+                className="inline-flex items-center gap-2 bg-[#0071e3] hover:bg-[#005bb5] text-white px-7 py-3.5 rounded-xl font-bold transition-all shadow-md active:scale-95 text-sm sm:text-base cursor-pointer"
+              >
+                Conheça a União Condominial <ArrowRight size={18} />
+              </Link>
+            </div>
+          </div>
+          <div className="flex-1 w-full max-w-lg lg:max-w-none relative">
+            <div className="aspect-[4/3] sm:aspect-[16/10] md:aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border border-slate-100 bg-slate-50 relative">
+              <picture className="w-full h-full block">
+                <source
+                  srcSet="/img_end_page.png 350w, /images/uniao_condominial_illustrative_1786572811824.jpg 1024w"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 500px"
+                />
+                <img 
+                  src="/img_end_page.png" 
+                  alt="A união que transforma a gestão condominial na Grande Goiânia"
+                  className="w-full h-full object-cover sm:object-contain md:object-cover block"
+                  loading="lazy"
+                  decoding="async"
+                  width={350}
+                  height={276}
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.includes("uniao_condominial_illustrative_1786572811824.jpg")) {
+                      target.src = "/images/uniao_condominial_illustrative_1786572811824.jpg";
+                    }
+                  }}
+                />
+              </picture>
+            </div>
+            <div className="absolute -bottom-4 -right-4 h-24 w-24 bg-blue-500/10 rounded-full blur-2xl -z-10"></div>
+            <div className="absolute -top-4 -left-4 h-32 w-32 bg-emerald-500/10 rounded-full blur-2xl -z-10"></div>
+          </div>
+        </div>
       </section>
     </div>
   );
