@@ -543,17 +543,24 @@ export default function Cart() {
 
     try {
       // Map local cart items to the website order format required by ecommerceFlow
-      const orderItems = cartItems.map((item) => ({
-        codigo: item.sku || item.id,
-        descricao: item.nome,
-        ncm: item.sku ? "34022000" : "34022000", // Standard cleaning product NCM
-        unidade: "UN",
-        quantidade: item.quantidade,
-        valorUnitario: item.precoAplicado,
-        ean: "SEM GTIN",
-      }));
+      const orderItems = cartItems.map((item) => {
+        const unitPrice = Number(item.precoAplicado || item.precoOriginal || 0);
+        const qty = Number(item.quantidade || 1);
+        return {
+          id: item.id,
+          codigo: item.sku || item.id,
+          descricao: item.nome,
+          ncm: item.sku ? "34022000" : "34022000", // Standard cleaning product NCM
+          unidade: "UN",
+          quantidade: qty,
+          valorUnitario: unitPrice,
+          valorTotal: Math.round(unitPrice * qty * 100) / 100,
+          ean: "SEM GTIN",
+        };
+      });
 
       const websiteOrder = {
+        clienteId: profile?.uid || null,
         cliente: {
           nome: nome.trim(),
           cpfCnpj: cpfCnpj.trim(),
@@ -575,11 +582,11 @@ export default function Cart() {
         frete: {
           modalidade: "0",
           transportadora: "União Logística",
-          valor: shippingCost,
+          valor: Number(shippingCost || 0),
         },
         pagamento: {
           forma: formaPagamento,
-          valor: finalTotal,
+          valor: Number(finalTotal || 0),
         }
       };
 

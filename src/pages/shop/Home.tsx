@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Star, ShieldCheck, Truck, MapPin, Zap, Award, Users, Droplets, Sprout, HandCoins, Building, Wrench } from "lucide-react";
-import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { ArrowRight, Star, ShieldCheck, Truck, MapPin, Zap, Award, Users, Droplets, Sprout, HandCoins, Building, Wrench, Tag, Calendar, Heart, Lightbulb, X } from "lucide-react";
+import { collection, getDocs, query, where, limit, addDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../context/AuthContext";
 import OptimizedImage from "../../components/ui/OptimizedImage";
@@ -9,10 +9,16 @@ import OptimizedImage from "../../components/ui/OptimizedImage";
 
 
 export default function Home() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [categories, setCategories] = useState<any[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Modals state
+  const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
+  const [isAuthPromptOpen, setIsAuthPromptOpen] = useState(false);
+  const [suggestionText, setSuggestionText] = useState("");
+  const [isSubmittingSuggestion, setIsSubmittingSuggestion] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,6 +40,42 @@ export default function Home() {
     };
     fetchData();
   }, []);
+
+  const handleSuggestionClick = () => {
+    if (user) {
+      setIsSuggestionModalOpen(true);
+    } else {
+      setIsAuthPromptOpen(true);
+    }
+  };
+
+  const handleSubmitSuggestion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!suggestionText.trim()) return;
+    
+    setIsSubmittingSuggestion(true);
+    try {
+      await addDoc(collection(db, "sugestoes"), {
+        userId: user?.uid,
+        condominio: profile?.nomeCondominio || profile?.condominio || profile?.razaoSocial || "",
+        sindico: profile?.nome || profile?.sindico || "",
+        telefone: profile?.telefone || "",
+        email: profile?.email || user?.email || "",
+        titulo: "Sugestão",
+        mensagem: suggestionText,
+        status: "Nova",
+        createdAt: new Date(),
+      });
+      alert("Sugestão enviada com sucesso! Muito obrigado.");
+      setIsSuggestionModalOpen(false);
+      setSuggestionText("");
+    } catch (error) {
+      console.error("Erro ao enviar sugestão:", error);
+      alert("Ocorreu um erro ao enviar sua sugestão. Tente novamente.");
+    } finally {
+      setIsSubmittingSuggestion(false);
+    }
+  };
 
   const getPriceDisplay = (product: any) => {
     if (!profile) {
@@ -98,24 +140,12 @@ export default function Home() {
           
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md w-full bg-slate-100 aspect-[1691/930]">
             <picture className="w-full h-full block">
-              <source
-                srcSet="/Cond_Vert_Horiz_UC.jpg 1691w, /cond_vert_horiz_uc_final.jpg 1691w"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1200px"
-              />
               <img
-                src="/Cond_Vert_Horiz_UC.jpg"
+                src="/Cond_Vert_Horiz_UC.png"
                 alt="Goiânia é feita de grandes condomínios. Verticais e horizontais. Todos precisam de soluções. Todos podem ganhar juntos."
                 className="w-full h-full object-contain sm:object-cover block"
                 loading="eager"
                 decoding="async"
-                width={1691}
-                height={930}
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  if (!target.src.includes("cond_vert_horiz_uc_final.jpg")) {
-                    target.src = "/cond_vert_horiz_uc_final.jpg";
-                  }
-                }}
               />
             </picture>
           </div>
@@ -134,31 +164,31 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
           <div className="bg-slate-50/70 p-6 sm:p-8 rounded-3xl border border-slate-100 flex flex-col">
             <div className="h-12 w-12 sm:h-14 sm:w-14 bg-sky-50 text-[#0071e3] rounded-2xl flex items-center justify-center mb-5 shrink-0 shadow-xs">
-              <MapPin size={24} />
+              <Tag size={24} />
             </div>
-            <h4 className="text-lg sm:text-2xl font-bold text-slate-900 mb-2.5">Fornecedores do Nosso Estado</h4>
+            <h4 className="text-lg sm:text-2xl font-bold text-slate-900 mb-2.5">Economia Coletiva</h4>
             <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed text-justify">
-              Valorizamos o mercado local com produtos de qualidade de parceiros da nossa região.
+              Ao se afiliar, seu condomínio se une a outros da Grande Goiânia para conquistar condições que sozinho não conseguiria — até 50% mais barato que o mercado local.
             </p>
           </div>
           
           <div className="bg-slate-50/70 p-6 sm:p-8 rounded-3xl border border-slate-100 flex flex-col">
             <div className="h-12 w-12 sm:h-14 sm:w-14 bg-sky-50 text-[#0071e3] rounded-2xl flex items-center justify-center mb-5 shrink-0 shadow-xs">
-              <Zap size={24} />
+              <Calendar size={24} />
             </div>
-            <h4 className="text-lg sm:text-2xl font-bold text-slate-900 mb-2.5">Entrega mais rápida</h4>
+            <h4 className="text-lg sm:text-2xl font-bold text-slate-900 mb-2.5">Serviços Agendados, Sem Imprevistos</h4>
             <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed text-justify">
-              Aliamos melhores preços a uma logística ágil. Seu condomínio recebe o que precisa na hora certa.
+              Equipe própria com dia e hora marcada para as demandas rotineiras do seu condomínio. Chega de imprevisto e de 'quebra-galho'.
             </p>
           </div>
 
           <div className="bg-slate-50/70 p-6 sm:p-8 rounded-3xl border border-slate-100 flex flex-col">
             <div className="h-12 w-12 sm:h-14 sm:w-14 bg-sky-50 text-[#0071e3] rounded-2xl flex items-center justify-center mb-5 shrink-0 shadow-xs">
-              <Award size={24} />
+              <Heart size={24} />
             </div>
-            <h4 className="text-lg sm:text-2xl font-bold text-slate-900 mb-2.5">Qualidade Total</h4>
+            <h4 className="text-lg sm:text-2xl font-bold text-slate-900 mb-2.5">Clube de Benefícios do Afiliado</h4>
             <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed text-justify">
-              Parcerias com fornecedores renomados e produtos que entregam o que prometem, com valores com as menores margens de lucro possíveis.
+              Mais que produtos: condomínios afiliados têm acesso a um clube de vantagens e à troca de informações da categoria em nosso mural.
             </p>
           </div>
 
@@ -166,10 +196,28 @@ export default function Home() {
             <div className="h-12 w-12 sm:h-14 sm:w-14 bg-sky-50 text-[#0071e3] rounded-2xl flex items-center justify-center mb-5 shrink-0 shadow-xs">
               <Users size={24} />
             </div>
-            <h4 className="text-lg sm:text-2xl font-bold text-slate-900 mb-2.5">Expertise Real</h4>
+            <h4 className="text-lg sm:text-2xl font-bold text-slate-900 mb-2.5">Criada por Quem Vive o Condomínio</h4>
             <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed text-justify">
-              Criada por um síndico e administrador de empresas, com profundo conhecimento condominial.
+              Desenvolvida por um síndico e administrador em atuação, que conhece de perto os entraves do dia a dia condominial.
             </p>
+          </div>
+
+          <div className="bg-slate-50/70 p-6 sm:p-8 rounded-3xl border border-slate-100 flex flex-col md:col-span-2 lg:col-span-2">
+            <div className="h-12 w-12 sm:h-14 sm:w-14 bg-sky-50 text-[#0071e3] rounded-2xl flex items-center justify-center mb-5 shrink-0 shadow-xs">
+              <Lightbulb size={24} />
+            </div>
+            <h4 className="text-lg sm:text-2xl font-bold text-slate-900 mb-2.5">Sua Sugestão, Nossa Próxima Solução</h4>
+            <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed text-justify mb-6">
+              Estamos sempre abertos a ouvir síndicos e administradores. Sugestões viram estudo, e as boas viram novos serviços — porque a União Condominial cresce junto com as necessidades reais do seu condomínio.
+            </p>
+            <div className="mt-auto self-start">
+              <button 
+                onClick={handleSuggestionClick}
+                className="inline-flex items-center gap-2 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold py-3 px-6 rounded-2xl text-sm sm:text-base transition-all shadow-sm active:scale-98"
+              >
+                Envie aqui sua Sugestão
+              </button>
+            </div>
           </div>
         </div>
 
@@ -212,24 +260,12 @@ export default function Home() {
             <div className="w-full lg:w-[480px] xl:w-[520px] shrink-0 self-center lg:self-start">
               <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white aspect-[1200/896]">
                 <picture className="w-full h-full block">
-                  <source
-                    srcSet="/servicos-rotineiros-oficial.jpg 1200w, /banner-servicos-condominiais.jpg 1200w"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 520px"
-                  />
                   <img
-                    src="/servicos-rotineiros-oficial.jpg"
+                    src="/servicos-rotineiros-oficial.png"
                     alt="São mais de 10 Serviços a disposição - União Condominial"
                     className="w-full h-full object-contain sm:object-cover block"
                     loading="lazy"
                     decoding="async"
-                    width={1200}
-                    height={896}
-                    onError={(e) => {
-                      const target = e.currentTarget;
-                      if (!target.src.includes("banner-servicos-condominiais.jpg")) {
-                        target.src = "/banner-servicos-condominiais.jpg";
-                      }
-                    }}
                   />
                 </picture>
               </div>
@@ -439,24 +475,12 @@ export default function Home() {
           <div className="flex-1 w-full max-w-lg lg:max-w-none relative">
             <div className="aspect-[4/3] sm:aspect-[16/10] md:aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border border-slate-100 bg-slate-50 relative">
               <picture className="w-full h-full block">
-                <source
-                  srcSet="/img_end_page.png 350w, /images/uniao_condominial_illustrative_1786572811824.jpg 1024w"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 500px"
-                />
                 <img 
                   src="/img_end_page.png" 
                   alt="A união que transforma a gestão condominial na Grande Goiânia"
                   className="w-full h-full object-cover sm:object-contain md:object-cover block"
                   loading="lazy"
                   decoding="async"
-                  width={350}
-                  height={276}
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (!target.src.includes("uniao_condominial_illustrative_1786572811824.jpg")) {
-                      target.src = "/images/uniao_condominial_illustrative_1786572811824.jpg";
-                    }
-                  }}
                 />
               </picture>
             </div>
@@ -465,6 +489,150 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Suggestion Modals */}
+      {isAuthPromptOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative">
+            <button 
+              onClick={() => setIsAuthPromptOpen(false)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
+            >
+              <X size={20} />
+            </button>
+            <div className="w-12 h-12 bg-sky-100 text-[#0071e3] rounded-2xl flex items-center justify-center mb-5">
+              <Lightbulb size={24} />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
+              Identifique-se para enviar sugestões
+            </h3>
+            <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-8">
+              Para enviar as sugestões, você deverá se identificar, então te convido a se cadastrar no aplicativo e teremos o maior prazer em ouví-lo. Seja bem vindo à União Condominial.GO
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button 
+                onClick={() => setIsAuthPromptOpen(false)}
+                className="flex-1 px-5 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <Link 
+                to="/minha-conta"
+                className="flex-1 px-5 py-3 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold text-center shadow-sm transition-colors"
+              >
+                Fazer Login / Cadastro
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSuggestionModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button 
+              onClick={() => setIsSuggestionModalOpen(false)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
+            >
+              <X size={20} />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-sky-100 text-[#0071e3] rounded-xl flex items-center justify-center shrink-0">
+                <Lightbulb size={20} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">
+                Envie sua Sugestão
+              </h3>
+            </div>
+
+            <form onSubmit={handleSubmitSuggestion} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">Nome do Condomínio</label>
+                  <input 
+                    type="text" 
+                    readOnly 
+                    disabled
+                    value={profile?.nomeCondominio || profile?.condominio || profile?.razaoSocial || ""}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">Nome do Síndico / Responsável</label>
+                  <input 
+                    type="text" 
+                    readOnly 
+                    disabled
+                    value={profile?.nome || profile?.sindico || ""}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">Telefone para contato</label>
+                  <input 
+                    type="text" 
+                    readOnly 
+                    disabled
+                    value={profile?.telefone || ""}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700">E-mail</label>
+                  <input 
+                    type="email" 
+                    readOnly 
+                    disabled
+                    value={profile?.email || user?.email || ""}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Título</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  disabled
+                  value="Sugestão"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Descreva abaixo a sua sugestão</label>
+                <textarea 
+                  required
+                  rows={4}
+                  value={suggestionText}
+                  onChange={(e) => setSuggestionText(e.target.value)}
+                  placeholder="Descreva abaixo a sua sugestão, iremos analisar tudo, juntaremos com as demais, estudaremos tudo e sendo em benefício a classe e viável a todos, logo ela poderá ser implementada. Muito Obrigado."
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-sm focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
+                ></textarea>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => setIsSuggestionModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmittingSuggestion || !suggestionText.trim()}
+                  className="px-6 py-2.5 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingSuggestion ? "Enviando..." : "Enviar"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

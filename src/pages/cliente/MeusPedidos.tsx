@@ -284,22 +284,43 @@ export default function MeusPedidos() {
   };
 
   const getFreteValor = (pedido: any) => {
-    if (pedido.frete?.valor !== undefined) return Number(pedido.frete.valor);
-    if (pedido.totais?.totalFrete !== undefined) return Number(pedido.totais.totalFrete);
+    if (pedido?.frete?.valor !== undefined && !isNaN(Number(pedido.frete.valor))) return Number(pedido.frete.valor);
+    if (pedido?.totais?.totalFrete !== undefined && !isNaN(Number(pedido.totais.totalFrete))) return Number(pedido.totais.totalFrete);
     return 0;
   };
 
+  const getItemUnitPrice = (item: any) => {
+    return Number(item?.valorUnitario ?? item?.precoAplicado ?? item?.preco ?? item?.precoUnitario ?? 0);
+  };
+
+  const getItemQuantity = (item: any) => {
+    return Number(item?.quantidade ?? item?.qtd ?? 1);
+  };
+
+  const getItemTotal = (item: any) => {
+    if (item?.valorTotal !== undefined && !isNaN(Number(item.valorTotal)) && Number(item.valorTotal) > 0) {
+      return Number(item.valorTotal);
+    }
+    return getItemQuantity(item) * getItemUnitPrice(item);
+  };
+
   const getSubtotalProdutos = (pedido: any) => {
-    if (pedido.totais?.totalProdutos !== undefined) return Number(pedido.totais.totalProdutos);
-    if (pedido.itens && Array.isArray(pedido.itens)) {
-      return pedido.itens.reduce((sum: number, it: any) => sum + (it.valorTotal || (it.quantidade * it.valorUnitario) || 0), 0);
+    if (pedido?.totais?.totalProdutos !== undefined && !isNaN(Number(pedido.totais.totalProdutos)) && Number(pedido.totais.totalProdutos) > 0) {
+      return Number(pedido.totais.totalProdutos);
+    }
+    if (pedido?.itens && Array.isArray(pedido.itens)) {
+      return pedido.itens.reduce((sum: number, it: any) => sum + getItemTotal(it), 0);
     }
     return 0;
   };
 
   const getTotalGeral = (pedido: any) => {
-    if (pedido.totais?.totalPedido !== undefined) return Number(pedido.totais.totalPedido);
-    if (pedido.pagamento?.valor !== undefined) return Number(pedido.pagamento.valor);
+    if (pedido?.totais?.totalPedido !== undefined && !isNaN(Number(pedido.totais.totalPedido)) && Number(pedido.totais.totalPedido) > 0) {
+      return Number(pedido.totais.totalPedido);
+    }
+    if (pedido?.pagamento?.valor !== undefined && !isNaN(Number(pedido.pagamento.valor)) && Number(pedido.pagamento.valor) > 0) {
+      return Number(pedido.pagamento.valor);
+    }
     const subtotal = getSubtotalProdutos(pedido);
     const frete = getFreteValor(pedido);
     return subtotal + frete;
@@ -611,35 +632,41 @@ export default function MeusPedidos() {
                           </div>
 
                           <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                            {pedido.itens?.map((item: any, idx: number) => (
-                              <div 
-                                key={idx} 
-                                className="flex items-center justify-between gap-3 bg-white border border-slate-200/80 p-3 sm:p-3.5 rounded-2xl shadow-3xs hover:border-slate-300 transition-colors"
-                              >
-                                <div className="flex items-center gap-3 min-w-0">
-                                  <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 font-black text-xs flex items-center justify-center shrink-0">
-                                    #{idx + 1}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="font-bold text-slate-900 text-xs sm:text-sm truncate" title={item.descricao}>
-                                      {item.descricao}
-                                    </p>
-                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500 mt-0.5">
-                                      <span>Código: <strong className="text-slate-700 font-mono">{item.codigo || "N/A"}</strong></span>
-                                      <span>•</span>
-                                      <span>Qtd: <strong className="text-slate-700">{item.quantidade} {item.unidade || "UN"}</strong></span>
-                                      <span>•</span>
-                                      <span>Unitário: <strong className="text-slate-700">R$ {Number(item.valorUnitario || 0).toFixed(2)}</strong></span>
+                            {pedido.itens?.map((item: any, idx: number) => {
+                              const uPrice = getItemUnitPrice(item);
+                              const q = getItemQuantity(item);
+                              const iTot = getItemTotal(item);
+
+                              return (
+                                <div 
+                                  key={idx} 
+                                  className="flex items-center justify-between gap-3 bg-white border border-slate-200/80 p-3 sm:p-3.5 rounded-2xl shadow-3xs hover:border-slate-300 transition-colors"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 font-black text-xs flex items-center justify-center shrink-0">
+                                      #{idx + 1}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="font-bold text-slate-900 text-xs sm:text-sm truncate" title={item.descricao}>
+                                        {item.descricao}
+                                      </p>
+                                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500 mt-0.5">
+                                        <span>Código: <strong className="text-slate-700 font-mono">{item.codigo || "N/A"}</strong></span>
+                                        <span>•</span>
+                                        <span>Qtd: <strong className="text-slate-700">{q} {item.unidade || "UN"}</strong></span>
+                                        <span>•</span>
+                                        <span>Unitário: <strong className="text-slate-700">R$ {uPrice.toFixed(2)}</strong></span>
+                                      </div>
                                     </div>
                                   </div>
+                                  <div className="text-right shrink-0">
+                                    <span className="font-black text-slate-900 text-xs sm:text-sm block">
+                                      R$ {iTot.toFixed(2)}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="text-right shrink-0">
-                                  <span className="font-black text-slate-900 text-xs sm:text-sm block">
-                                    R$ {(item.valorTotal || (item.quantidade * item.valorUnitario) || 0).toFixed(2)}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
 
@@ -829,25 +856,31 @@ export default function MeusPedidos() {
                 </div>
 
                 <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden bg-slate-50/30">
-                  {selectedPedidoModal.itens?.map((item: any, idx: number) => (
-                    <div key={idx} className="p-3 sm:p-3.5 flex items-center justify-between gap-3 hover:bg-white transition-colors">
-                      <div className="min-w-0 pr-2">
-                        <p className="font-bold text-slate-900 text-xs sm:text-sm truncate">{item.descricao}</p>
-                        <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-slate-500 mt-0.5">
-                          <span>SKU/Código: <strong className="font-mono text-slate-700">{item.codigo || "N/A"}</strong></span>
-                          <span>•</span>
-                          <span>Qtd: <strong>{item.quantidade} {item.unidade || "UN"}</strong></span>
-                          <span>•</span>
-                          <span>Unitário: <strong>R$ {Number(item.valorUnitario || 0).toFixed(2)}</strong></span>
+                  {selectedPedidoModal.itens?.map((item: any, idx: number) => {
+                    const uPrice = getItemUnitPrice(item);
+                    const q = getItemQuantity(item);
+                    const iTot = getItemTotal(item);
+
+                    return (
+                      <div key={idx} className="p-3 sm:p-3.5 flex items-center justify-between gap-3 hover:bg-white transition-colors">
+                        <div className="min-w-0 pr-2">
+                          <p className="font-bold text-slate-900 text-xs sm:text-sm truncate">{item.descricao}</p>
+                          <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-slate-500 mt-0.5">
+                            <span>SKU/Código: <strong className="font-mono text-slate-700">{item.codigo || "N/A"}</strong></span>
+                            <span>•</span>
+                            <span>Qtd: <strong>{q} {item.unidade || "UN"}</strong></span>
+                            <span>•</span>
+                            <span>Unitário: <strong>R$ {uPrice.toFixed(2)}</strong></span>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="font-black text-slate-900 text-xs sm:text-sm">
+                            R$ {iTot.toFixed(2)}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <span className="font-black text-slate-900 text-xs sm:text-sm">
-                          R$ {(item.valorTotal || (item.quantidade * item.valorUnitario) || 0).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

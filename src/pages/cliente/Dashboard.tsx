@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { ShoppingCart, Receipt, ArrowRight, BadgeCheck, HeartHandshake, Sparkles } from "lucide-react";
+import { ShoppingCart, Receipt, ArrowRight, HeartHandshake, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import PartnersCarousel from "../../components/cliente/PartnersCarousel";
 import MuralCondominial from "../../components/cliente/MuralCondominial";
 import WeatherWidget from "../../components/cliente/WeatherWidget";
+import { DashboardLiveTracker } from "../../components/cliente/DashboardLiveTracker";
 
 import badgeBronze from "../../assets/images/badge_bronze_1787100127454.jpg";
 import badgePrata from "../../assets/images/badge_prata_1787100145745.jpg";
@@ -16,7 +17,6 @@ import badgeDiamante from "../../assets/images/badge_diamante_1787100168869.jpg"
 export default function CustomerDashboard() {
   const { profile, user } = useAuth();
   const [isAfiliado, setIsAfiliado] = useState<boolean | null>(null);
-  const [afiliadoData, setAfiliadoData] = useState<any | null>(null);
   const [loadingAfiliado, setLoadingAfiliado] = useState(true);
 
   useEffect(() => {
@@ -34,7 +34,6 @@ export default function CustomerDashboard() {
         if (directSnap.exists()) {
           const data = directSnap.data();
           if (isMounted) {
-            setAfiliadoData(data);
             setIsAfiliado(data.status === "Ativo" || data.afiliado === true);
             setLoadingAfiliado(false);
           }
@@ -47,7 +46,6 @@ export default function CustomerDashboard() {
         if (!snapUser.empty) {
           const data = snapUser.docs[0].data();
           if (isMounted) {
-            setAfiliadoData(data);
             setIsAfiliado(data.status === "Ativo" || data.afiliado === true);
             setLoadingAfiliado(false);
           }
@@ -61,7 +59,6 @@ export default function CustomerDashboard() {
           if (!snapEmail.empty) {
             const data = snapEmail.docs[0].data();
             if (isMounted) {
-              setAfiliadoData(data);
               setIsAfiliado(data.status === "Ativo" || data.afiliado === true);
               setLoadingAfiliado(false);
             }
@@ -77,9 +74,6 @@ export default function CustomerDashboard() {
 
         if (isMounted) {
           setIsAfiliado(isProfAfil);
-          if (isProfAfil) {
-            setAfiliadoData(profile);
-          }
           setLoadingAfiliado(false);
         }
       } catch (err) {
@@ -98,51 +92,6 @@ export default function CustomerDashboard() {
       isMounted = false;
     };
   }, [user, profile]);
-
-  const getFormattedDataAfiliacao = () => {
-    const rawDate =
-      afiliadoData?.dataAtivacao ||
-      afiliadoData?.dataAfiliacao ||
-      afiliadoData?.dataAceite ||
-      afiliadoData?.createdAt ||
-      (profile as any)?.dataAtivacao ||
-      (profile as any)?.dataAfiliacao ||
-      (profile as any)?.createdAt ||
-      (profile as any)?.dataCadastro;
-
-    if (!rawDate) {
-      return new Date().toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-    }
-
-    if (typeof rawDate === "object" && typeof rawDate.toDate === "function") {
-      return rawDate.toDate().toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-    }
-
-    if (typeof rawDate === "string") {
-      try {
-        const d = new Date(rawDate);
-        if (!isNaN(d.getTime())) {
-          return d.toLocaleDateString("pt-BR", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          });
-        }
-      } catch {
-        // ignore
-      }
-    }
-
-    return String(rawDate);
-  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -231,66 +180,8 @@ export default function CustomerDashboard() {
         </div>
       </div>
 
-      {/* Item de Afiliação à União Condominial (Afiliado vs Não Afiliado) */}
-      {loadingAfiliado ? (
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs animate-pulse flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-slate-200 shrink-0" />
-          <div className="space-y-2 flex-1">
-            <div className="h-4 bg-slate-200 rounded w-1/3" />
-            <div className="h-3 bg-slate-100 rounded w-2/3" />
-          </div>
-        </div>
-      ) : isAfiliado ? (
-        /* Caso Afiliado: Item com Ícone de Aprovação e data de afiliação */
-        <div className="bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 rounded-3xl p-6 sm:p-7 shadow-xs relative overflow-hidden transition-all hover:shadow-md">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20 border border-emerald-400">
-                <BadgeCheck className="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-xs" />
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-3xs">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Afiliado Ativo
-                  </span>
-                </div>
-
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
-                  Você é um Afiliado à <span className="notranslate" translate="no">União Condominial</span>, desde à data de:{" "}
-                  <span className="text-emerald-700 font-extrabold underline decoration-emerald-300 decoration-2 underline-offset-4">
-                    {getFormattedDataAfiliacao()}
-                  </span>
-                </h2>
-
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed pt-0.5">
-                  Seu condomínio conta com <strong>até 50% de desconto</strong> em todos os serviços condominiais rotineiros agendados, condições diferenciadas em produtos de limpeza e acesso exclusivo aos parceiros do Clube de Benefícios.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0 pt-2 md:pt-0">
-              <Link
-                to="/cliente/servicos"
-                className="inline-flex items-center justify-center gap-2 w-full md:w-auto py-3 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs sm:text-sm shadow-sm hover:shadow transition-all active:scale-98"
-              >
-                <span>Serviços com 50% OFF</span>
-                <ArrowRight size={16} />
-              </Link>
-              <Link
-                to="/cliente/meus-dados"
-                className="inline-flex items-center justify-center py-3 px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold rounded-2xl text-xs sm:text-sm shadow-3xs transition-all whitespace-nowrap"
-                title="Ver dados do contrato"
-              >
-                Ver Detalhes
-              </Link>
-            </div>
-          </div>
-        </div>
-      ) : (
+      {/* Sugestão de Afiliação para Não Afiliados */}
+      {!loadingAfiliado && !isAfiliado && (
         /* Caso Não Afiliado: Sugestão de Afiliação com Explicação dos Descontos */
         <div className="bg-gradient-to-br from-blue-50/95 via-sky-50/40 to-white border border-blue-200/90 rounded-3xl p-6 sm:p-8 shadow-xs relative overflow-hidden transition-all hover:shadow-md">
           <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -380,41 +271,38 @@ export default function CustomerDashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80">
-          <div className="flex items-center gap-3.5 mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0071e3] flex items-center justify-center shadow-2xs">
-               <ShoppingCart className="w-6 h-6" />
-            </div>
-            <h2 className="text-xl font-bold text-slate-900">Última compra</h2>
+      {/* Principal Item: Acompanhamento em Tempo Real de Pedidos e Ordens de Serviço */}
+      <DashboardLiveTracker isAfiliado={isAfiliado ?? false} />
+
+      {/* Cartão de Cashback e Benefícios */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xs border border-slate-200/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-2xs shrink-0 border border-emerald-100">
+            <Receipt className="w-6 h-6" />
           </div>
-          <p className="text-slate-600 text-base leading-relaxed">
-            Você ainda não realizou compras conosco. Que tal <Link to="/produtos" className="text-[#0071e3] font-bold hover:underline">conhecer nossos produtos</Link>?
-          </p>
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900">Cashback Acumulado no Condomínio</h2>
+            <p className="text-slate-500 text-xs sm:text-sm mt-0.5 font-medium">
+              Saldo disponível para abater em novos pedidos de produtos ou serviços.
+            </p>
+            <div className="flex items-baseline gap-2 mt-2">
+              <span className="text-3xl sm:text-4xl font-black text-[#0071e3]">
+                R$ {profile?.cashbackBalance?.toFixed(2) || "0,00"}
+              </span>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                Disponível para Resgate
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-3.5 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-2xs">
-                 <Receipt className="w-6 h-6" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-900">Cashback acumulado</h2>
-            </div>
-            <p className="text-slate-600 text-base mb-1 font-medium">Até o momento, você tem</p>
-            <p className="text-3.5xl sm:text-4xl font-black text-[#0071e3] mb-2">
-              R$ {profile?.cashbackBalance?.toFixed(2) || "0,00"}
-            </p>
-            <p className="text-sm text-slate-500 mb-6 leading-relaxed">em cashback para compra de mercadorias e produtos dentro do nosso site.</p>
-          </div>
-          <Link
-            to="/cliente/cashback"
-            className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-5 bg-[#0071e3]/10 hover:bg-[#0071e3]/20 text-[#0071e3] font-bold rounded-2xl text-sm sm:text-base transition-all active:scale-98"
-          >
-            <span>Ver Extrato e Resgatar</span>
-            <ArrowRight size={16} />
-          </Link>
-        </div>
+        <Link
+          to="/cliente/cashback"
+          className="inline-flex items-center justify-center gap-2 w-full md:w-auto py-3.5 px-6 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold rounded-2xl text-xs sm:text-sm shadow-sm transition-all active:scale-98 shrink-0"
+        >
+          <span>Ver Extrato e Resgatar</span>
+          <ArrowRight size={16} />
+        </Link>
       </div>
 
       <MuralCondominial />

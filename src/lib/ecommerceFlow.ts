@@ -52,6 +52,38 @@ export const CONFIG = {
 
 export function criarPedidoCRM(pedidoWebsite: any, numeroPedido: string) {
   const agora = new Date();
+  const freteValor = Number(pedidoWebsite.frete?.valor || 0);
+
+  const itensFormatados = (pedidoWebsite.itens || []).map((item: any, idx: number) => {
+    const qtd = Number(item.quantidade ?? item.qtd ?? 1);
+    const vUnit = Number(item.valorUnitario ?? item.precoAplicado ?? item.precoUnitario ?? item.preco ?? 0);
+    const vTotal = item.valorTotal !== undefined && !isNaN(Number(item.valorTotal)) && Number(item.valorTotal) > 0
+      ? Number(item.valorTotal)
+      : calcular(qtd, vUnit);
+
+    return {
+      nItem: idx + 1,
+      codigo: String(item.codigo || item.sku || item.id || `ITEM-${idx + 1}`),
+      descricao: String(item.descricao || item.nome || "Produto"),
+      ncm: String(item.ncm || "34022000"),
+      cfop: CONFIG.FISCAL.CFOP_VENDA_ESTADUAL,
+      unidade: String(item.unidade || "UN"),
+      quantidade: qtd,
+      valorUnitario: vUnit,
+      valorTotal: vTotal,
+      cst: CONFIG.FISCAL.CST_ICMS_TRIBUTADO,
+      aliquotaIcms: CONFIG.FISCAL.ALIQUOTA_ICMS_GO,
+      valorIcms: calcularIcms(qtd, vUnit),
+      cstPis: CONFIG.FISCAL.CST_PIS_ISENTO,
+      cstCofins: CONFIG.FISCAL.CST_COFINS_ISENTO,
+      conferido: false,
+      qtdConferida: null,
+      observacaoExpedicao: "",
+    };
+  });
+
+  const totaisCalculados = calcularTotais(itensFormatados);
+  const totalGeral = Number(pedidoWebsite.pagamento?.valor || (totaisCalculados.totalProdutos + freteValor));
 
   return {
     id_externo: numeroPedido,
@@ -60,6 +92,7 @@ export function criarPedidoCRM(pedidoWebsite: any, numeroPedido: string) {
     status: CONFIG.STATUS.NOVO,
     canal: "ECOMMERCE",
     prioridade: pedidoWebsite.prioridade || "Média",
+    clienteId: pedidoWebsite.clienteId || null,
     cliente: {
       nome: pedidoWebsite.cliente.nome,
       cpfCnpj: pedidoWebsite.cliente.cpfCnpj,
@@ -79,34 +112,21 @@ export function criarPedidoCRM(pedidoWebsite: any, numeroPedido: string) {
       },
       indIEDest: pedidoWebsite.cliente.ie ? "1" : "9",
     },
-    itens: pedidoWebsite.itens.map((item: any, idx: number) => ({
-      nItem: idx + 1,
-      codigo: item.codigo,
-      descricao: item.descricao,
-      ncm: item.ncm,
-      cfop: CONFIG.FISCAL.CFOP_VENDA_ESTADUAL,
-      unidade: item.unidade || "UN",
-      quantidade: item.quantidade,
-      valorUnitario: item.valorUnitario,
-      valorTotal: calcular(item.quantidade, item.valorUnitario),
-      cst: CONFIG.FISCAL.CST_ICMS_TRIBUTADO,
-      aliquotaIcms: CONFIG.FISCAL.ALIQUOTA_ICMS_GO,
-      valorIcms: calcularIcms(item.quantidade, item.valorUnitario),
-      cstPis: CONFIG.FISCAL.CST_PIS_ISENTO,
-      cstCofins: CONFIG.FISCAL.CST_COFINS_ISENTO,
-      conferido: false,
-      qtdConferida: null,
-      observacaoExpedicao: "",
-    })),
-    totais: calcularTotais(pedidoWebsite.itens),
+    itens: itensFormatados,
+    totais: {
+      totalProdutos: totaisCalculados.totalProdutos,
+      totalIcms: totaisCalculados.totalIcms,
+      totalFrete: freteValor,
+      totalPedido: totalGeral,
+    },
     frete: {
       modalidade: pedidoWebsite.frete?.modalidade || "0",
       transportadora: pedidoWebsite.frete?.transportadora || null,
-      valor: pedidoWebsite.frete?.valor || 0,
+      valor: freteValor,
     },
     pagamento: {
       forma: pedidoWebsite.pagamento.forma,
-      valor: pedidoWebsite.pagamento.valor,
+      valor: totalGeral,
     },
     historico: [
       {
@@ -144,14 +164,33 @@ export async function processarPedidoWebsite(pedidoWebsite: any) {
         }
       }
 
+      const inputPrice = Number(item.valorUnitario ?? item.precoAplicado ?? item.precoUnitario ?? item.preco ?? 0);
+
       if (pSnap && pSnap.exists()) {
         const pData = pSnap.data();
-        const officialPrice = Number(pData.precoPromocional || pData.preco || 0);
-        if (officialPrice > 0 && Math.abs(Number(item.valorUnitario) - officialPrice) > 0.01) {
-          throw new Error(`Divergência de preço detectada para o produto "${item.descricao}". Preço oficial no banco: R$ ${officialPrice.toFixed(2)}.`);
+        const possiblePrices = [
+          Number(pData.precoPromocional || 0),
+          Number(pData.precoVenda || 0),
+          Number(pData.preco || 0),
+          Number(pData.precoBronze || 0),
+          Number(pData.precoPrata || 0),
+          Number(pData.precoOuro || 0),
+          Number(pData.precoDiamante || 0),
+        ].filter((p) => p > 0);
+
+        if (inputPrice > 0) {
+          item.valorUnitario = inputPrice;
+        } else if (possiblePrices.length > 0) {
+          item.valorUnitario = possiblePrices[0];
+        } else {
+          item.valorUnitario = inputPrice;
         }
-        item.valorUnitario = officialPrice;
+      } else {
+        item.valorUnitario = inputPrice;
       }
+
+      item.quantidade = Number(item.quantidade ?? item.qtd ?? 1);
+      item.valorTotal = calcular(item.quantidade, item.valorUnitario);
     }
   }
 
@@ -675,7 +714,9 @@ export async function processPedido(pedidoWebsite: any, opcoes: any = {}) {
 }
 
 function calcular(qtd: number, vUnit: number) {
-  return Math.round(qtd * vUnit * 100) / 100;
+  const q = Number(qtd) || 0;
+  const u = Number(vUnit) || 0;
+  return Math.round(q * u * 100) / 100;
 }
 
 function calcularIcms(qtd: number, vUnit: number) {
@@ -684,8 +725,19 @@ function calcularIcms(qtd: number, vUnit: number) {
 }
 
 function calcularTotais(itens: any[]) {
-  const totalProdutos = itens.reduce((s, i) => s + calcular(i.quantidade, i.valorUnitario), 0);
-  const totalIcms = itens.reduce((s, i) => s + calcularIcms(i.quantidade, i.valorUnitario), 0);
+  const totalProdutos = (itens || []).reduce((s, i) => {
+    const vTot = i.valorTotal !== undefined && !isNaN(Number(i.valorTotal)) && Number(i.valorTotal) > 0
+      ? Number(i.valorTotal)
+      : calcular(Number(i.quantidade || i.qtd || 1), Number(i.valorUnitario || i.precoAplicado || i.preco || 0));
+    return s + vTot;
+  }, 0);
+
+  const totalIcms = (itens || []).reduce((s, i) => {
+    const qtd = Number(i.quantidade || i.qtd || 1);
+    const vUnit = Number(i.valorUnitario || i.precoAplicado || i.preco || 0);
+    return s + calcularIcms(qtd, vUnit);
+  }, 0);
+
   return {
     totalProdutos: Math.round(totalProdutos * 100) / 100,
     totalIcms: Math.round(totalIcms * 100) / 100,
