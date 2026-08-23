@@ -16,12 +16,400 @@ import { CONFIG } from "../../lib/ecommerceFlow";
 import { getMercadoPagoConfig, MercadoPagoConfig } from "../../lib/mercadoPago";
 import { gerarPixCopiaECola } from "../../lib/documentValidators";
 
+// Helper para normalizar textos para comparações precisas de SKU, ID e Nomes de Produtos
+const normalizeCompare = (val: any): string => {
+  return String(val || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[-–—/._\s]+/g, " ")
+    .trim();
+};
+
+// Helper robusto para converter qualquer formato de número, objeto ou moeda para number
+const parseNumber = (val: any): number => {
+  if (val === null || val === undefined) return 0;
+  if (typeof val === "number") return isNaN(val) ? 0 : val;
+  if (typeof val === "object") {
+    if (val.valorUnitario !== undefined) return parseNumber(val.valorUnitario);
+    if (val.precoAplicado !== undefined) return parseNumber(val.precoAplicado);
+    if (val.precoOriginal !== undefined) return parseNumber(val.precoOriginal);
+    if (val.preco !== undefined) return parseNumber(val.preco);
+    if (val.precoVenda !== undefined) return parseNumber(val.precoVenda);
+    if (val.valorTotal !== undefined) return parseNumber(val.valorTotal);
+    if (val.valor !== undefined) return parseNumber(val.valor);
+    if (val.total !== undefined) return parseNumber(val.total);
+    if (val.amount !== undefined) return parseNumber(val.amount);
+    if (val.value !== undefined) return parseNumber(val.value);
+    return 0;
+  }
+  if (typeof val === "string") {
+    const cleaned = val.replace(/[^\d.,-]/g, "").trim();
+    if (!cleaned) return 0;
+    if (cleaned.includes(",") && cleaned.includes(".")) {
+      return parseFloat(cleaned.replace(/\./g, "").replace(",", ".")) || 0;
+    }
+    if (cleaned.includes(",")) {
+      return parseFloat(cleaned.replace(",", ".")) || 0;
+    }
+    return parseFloat(cleaned) || 0;
+  }
+  return 0;
+};
+
+const formatBRL = (val: any): string => {
+  const num = parseNumber(val);
+  return num.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+};
+
+const getPedidoItensList = (pedido: any): any[] => {
+  if (!pedido) return [];
+  if (Array.isArray(pedido.itens) && pedido.itens.length > 0) return pedido.itens;
+  if (Array.isArray(pedido.items) && pedido.items.length > 0) return pedido.items;
+  if (Array.isArray(pedido.produtos) && pedido.produtos.length > 0) return pedido.produtos;
+  if (Array.isArray(pedido.carrinho) && pedido.carrinho.length > 0) return pedido.carrinho;
+  if (Array.isArray(pedido.linhas) && pedido.linhas.length > 0) return pedido.linhas;
+  
+  // Se estiver salvo como objeto/mapa no Firestore com chaves numéricas
+  if (pedido.itens && typeof pedido.itens === "object") {
+    const vals = Object.values(pedido.itens);
+    if (vals.length > 0) return vals;
+  }
+  if (pedido.items && typeof pedido.items === "object") {
+    const vals = Object.values(pedido.items);
+    if (vals.length > 0) return vals;
+  }
+  if (pedido.produtos && typeof pedido.produtos === "object") {
+    const vals = Object.values(pedido.produtos);
+    if (vals.length > 0) return vals;
+  }
+  if (pedido.carrinho && typeof pedido.carrinho === "object") {
+    const vals = Object.values(pedido.carrinho);
+    if (vals.length > 0) return vals;
+  }
+  return [];
+};
+
+const getItemQuantity = (item: any): number => {
+  if (!item) return 1;
+  const q = parseNumber(item.quantidade ?? item.qtd ?? item.quantity ?? item.quant ?? item.qnt ?? item.count ?? item.unidades);
+  return q > 0 ? q : 1;
+};
+
+const getProductPriceFromCatalog = (item: any, catalogProducts?: any[], clientTier?: string): number => {
+  if (!item || !catalogProducts || catalogProducts.length === 0) return 0;
+  
+  const rawCode = String(item.codigo || item.sku || item.id || "").trim();
+  const rawDesc = String(item.descricao || item.nome || "").trim();
+  const normCode = normalizeCompare(rawCode);
+  const normDesc = normalizeCompare(rawDesc);
+
+  // 1. Busca por ID ou SKU exato / normalizado
+  let match = catalogProducts.find((p: any) => {
+    const pId = String(p.id || "").trim();
+    const pSku = String(p.sku || "").trim();
+    const normPId = normalizeCompare(pId);
+    const normPSku = normalizeCompare(pSku);
+
+    return (
+      (rawCode && (pId === rawCode || pSku === rawCode)) ||
+      (normCode && (normPId === normCode || normPSku === normCode)) ||
+      (item.id && (pId === String(item.id).trim() || pSku === String(item.id).trim())) ||
+      (item.sku && (pSku === String(item.sku).trim() || pId === String(item.sku).trim()))
+    );
+  });
+
+  // 2. Se não achou por código/SKU, busca pelo nome/descrição
+  if (!match && normDesc) {
+    match = catalogProducts.find((p: any) => {
+      const pNome = String(p.nome || "").trim();
+      const normPNome = normalizeCompare(pNome);
+      return (
+        pNome.toLowerCase() === rawDesc.toLowerCase() ||
+        normPNome === normDesc ||
+        (normDesc.length > 4 && normPNome.includes(normDesc)) ||
+        (normPNome.length > 4 && normDesc.includes(normPNome))
+      );
+    });
+  }
+
+  if (match) {
+    // 1º Tenta preço pela categoria/nível do cliente
+    let tierPrice = 0;
+    if (clientTier === "Bronze") tierPrice = parseNumber(match.precoBronze);
+    else if (clientTier === "Prata") tierPrice = parseNumber(match.precoPrata);
+    else if (clientTier === "Ouro") tierPrice = parseNumber(match.precoOuro);
+    else if (clientTier === "Diamante") tierPrice = parseNumber(match.precoDiamante);
+
+    if (tierPrice > 0) return tierPrice;
+
+    // 2º Tenta preços cadastrados no produto
+    const candidatePrices = [
+      parseNumber(match.precoPromocional),
+      parseNumber(match.precoVenda),
+      parseNumber(match.preco),
+      parseNumber(match.precoBronze),
+      parseNumber(match.precoPrata),
+      parseNumber(match.precoOuro),
+      parseNumber(match.precoDiamante),
+      parseNumber(match.precoMinimo),
+      parseNumber(match.custoUltimo),
+    ].filter((p) => p > 0);
+
+    if (candidatePrices.length > 0) {
+      return candidatePrices[0];
+    }
+  }
+
+  return 0;
+};
+
+const getItemUnitPrice = (item: any, pedido?: any, catalogProducts?: any[], clientTier?: string): number => {
+  if (!item) return 0;
+  const candidates = [
+    item.valorUnitario,
+    item.precoAplicado,
+    item.precoUnitario,
+    item.precoOriginal,
+    item.precoVenda,
+    item.preco,
+    item.valor_unitario,
+    item.preco_unitario,
+    item.vlUnitario,
+    item.vUnit,
+    item.unitario,
+    item.unitPrice,
+    item.price,
+    item.precoPromocional,
+    item.precoBronze,
+    item.precoPrata,
+    item.precoOuro,
+    item.precoDiamante,
+    item.precoTabela,
+    item.precoFinal,
+    item.produto?.preco,
+    item.produto?.precoVenda,
+    item.produto?.precoAplicado,
+    item.produto?.precoOriginal,
+    item.produto?.valor,
+    item.produto?.valorUnitario,
+    item.product?.price,
+    item.product?.preco,
+    item.product?.precoAplicado,
+    item.servico?.preco,
+    item.servico?.valor,
+  ];
+
+  for (const cand of candidates) {
+    const val = parseNumber(cand);
+    if (val > 0) return val;
+  }
+
+  // Se não achou nos campos unitários, mas tem total e quantidade
+  const tot = parseNumber(
+    item.valorTotal ?? 
+    item.total ?? 
+    item.totalItem ?? 
+    item.subtotal ?? 
+    item.vlTotal ?? 
+    item.vProd ?? 
+    item.valor_total ?? 
+    item.valor ?? 
+    item.valorFaturar
+  );
+  const q = getItemQuantity(item);
+  if (tot > 0 && q > 0) {
+    return tot / q;
+  }
+
+  // 3º Consulta no catálogo de produtos do Firestore
+  const catalogPrice = getProductPriceFromCatalog(item, catalogProducts, clientTier);
+  if (catalogPrice > 0) {
+    return catalogPrice;
+  }
+
+  // 4º Fallback com base nos totais do pedido
+  if (pedido) {
+    const itens = getPedidoItensList(pedido);
+    const orderTotal = parseNumber(
+      pedido.totais?.totalProdutos ?? 
+      pedido.totalProdutos ?? 
+      pedido.subtotal ?? 
+      pedido.valorProdutos ?? 
+      pedido.produtosTotal ?? 
+      pedido.valorOriginal ?? 
+      pedido.totais?.totalPedido ?? 
+      pedido.totalPedido ?? 
+      pedido.valorTotal ?? 
+      pedido.totalGeral ?? 
+      pedido.total ?? 
+      pedido.pagamento?.valor ?? 
+      pedido.valorFaturar ?? 
+      pedido.valor
+    );
+
+    if (orderTotal > 0 && itens.length > 0) {
+      const frete = getFreteValor(pedido);
+      const sub = Math.max(0, orderTotal - (pedido.totais?.totalProdutos ? 0 : frete));
+      const totalQtd = itens.reduce((sum, it) => sum + getItemQuantity(it), 0);
+      if (totalQtd > 0 && sub > 0) {
+        return sub / totalQtd;
+      }
+    }
+  }
+
+  return parseNumber(item.valor);
+};
+
+const getItemTotal = (item: any, pedido?: any, catalogProducts?: any[], clientTier?: string): number => {
+  if (!item) return 0;
+  const candidates = [
+    item.valorTotal,
+    item.total,
+    item.totalItem,
+    item.subtotal,
+    item.vlTotal,
+    item.vProd,
+    item.valor_total,
+    item.valorFaturar,
+  ];
+
+  for (const cand of candidates) {
+    const val = parseNumber(cand);
+    if (val > 0) return val;
+  }
+
+  const q = getItemQuantity(item);
+  const u = getItemUnitPrice(item, pedido, catalogProducts, clientTier);
+  if (q > 0 && u > 0) {
+    return q * u;
+  }
+
+  if (pedido) {
+    const itens = getPedidoItensList(pedido);
+    if (itens.length === 1) {
+      const sub = getSubtotalProdutos(pedido, catalogProducts, clientTier);
+      if (sub > 0) return sub;
+    }
+  }
+
+  return parseNumber(item.valor);
+};
+
+const getFreteValor = (pedido: any): number => {
+  if (!pedido) return 0;
+  const candidates = [
+    pedido.frete?.valor,
+    pedido.totais?.totalFrete,
+    pedido.valorFrete,
+    pedido.valor_frete,
+    pedido.freteValor,
+    pedido.totalFrete,
+    pedido.custoFrete,
+    pedido.taxaEntrega,
+    typeof pedido.frete === "number" ? pedido.frete : null,
+  ];
+
+  for (const cand of candidates) {
+    const val = parseNumber(cand);
+    if (val > 0) return val;
+  }
+
+  return 0;
+};
+
+const getSubtotalProdutos = (pedido: any, catalogProducts?: any[], clientTier?: string): number => {
+  if (!pedido) return 0;
+  const candidates = [
+    pedido.totais?.totalProdutos,
+    pedido.totalProdutos,
+    pedido.subtotal,
+    pedido.valorProdutos,
+    pedido.subtotalProdutos,
+    pedido.produtosTotal,
+    pedido.valorOriginal,
+  ];
+
+  for (const cand of candidates) {
+    const val = parseNumber(cand);
+    if (val > 0) return val;
+  }
+
+  const itens = getPedidoItensList(pedido);
+  if (itens.length > 0) {
+    let sum = 0;
+    for (const it of itens) {
+      const itemTot = parseNumber(it.valorTotal ?? it.total ?? it.totalItem ?? it.subtotal ?? it.vlTotal ?? it.vProd ?? it.valor_total);
+      if (itemTot > 0) {
+        sum += itemTot;
+      } else {
+        const q = getItemQuantity(it);
+        const u = getItemUnitPrice(it, pedido, catalogProducts, clientTier);
+        if (u > 0) {
+          sum += q * u;
+        }
+      }
+    }
+    if (sum > 0) return sum;
+  }
+
+  const total = parseNumber(
+    pedido.totais?.totalPedido ?? 
+    pedido.totalPedido ?? 
+    pedido.valorTotal ?? 
+    pedido.valor_total ?? 
+    pedido.totalGeral ?? 
+    pedido.total ?? 
+    pedido.pagamento?.valor ?? 
+    pedido.valorFaturar ?? 
+    pedido.valor
+  );
+  const frete = getFreteValor(pedido);
+  if (total > 0) {
+    return Math.max(0, total - frete);
+  }
+
+  return 0;
+};
+
+const getTotalGeral = (pedido: any, catalogProducts?: any[], clientTier?: string): number => {
+  if (!pedido) return 0;
+  const candidates = [
+    pedido.totais?.totalPedido,
+    pedido.totalPedido,
+    pedido.valorTotal,
+    pedido.valor_total,
+    pedido.totalGeral,
+    pedido.total,
+    pedido.pagamento?.valor,
+    pedido.valorFaturar,
+    pedido.valor,
+  ];
+
+  for (const cand of candidates) {
+    const val = parseNumber(cand);
+    if (val > 0) return val;
+  }
+
+  const subtotal = getSubtotalProdutos(pedido, catalogProducts, clientTier);
+  const frete = getFreteValor(pedido);
+  if (subtotal > 0 || frete > 0) {
+    return subtotal + frete;
+  }
+
+  return 0;
+};
+
 export default function MeusPedidos() {
   const { profile, user } = useAuth();
   const navigate = useNavigate();
   const { addMultipleToCart } = useCart();
   const { addToast, addOrderToast } = useToast();
   const [pedidos, setPedidos] = useState<any[]>([]);
+  const [catalogProducts, setCatalogProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedPedidoId, setExpandedPedidoId] = useState<string | null>(null);
   const [selectedPedidoModal, setSelectedPedidoModal] = useState<any | null>(null);
@@ -41,6 +429,25 @@ export default function MeusPedidos() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
+    // Escuta catálogo de produtos do Firestore para resolução precisa de preços e itens
+    const unsubscribeProds = onSnapshot(
+      collection(db, "produtos"),
+      (snapshot) => {
+        const prods = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        setCatalogProducts(prods);
+      },
+      (error) => {
+        console.error("Erro ao carregar catálogo para cálculo de pedidos:", error);
+      }
+    );
+
+    return () => unsubscribeProds();
+  }, []);
+
+  useEffect(() => {
     async function loadConfig() {
       const config = await getMercadoPagoConfig();
       setMpConfig(config);
@@ -49,42 +456,55 @@ export default function MeusPedidos() {
   }, []);
 
   useEffect(() => {
-    if (!profile?.email) {
+    const userEmail = profile?.email || user?.email;
+    const userId = user?.uid;
+
+    if (!userEmail && !userId) {
       setLoading(false);
       return;
     }
 
-    // Use snapshot listener so new orders appear immediately
-    const q = query(collection(db, "pedidos_venda"), where("cliente.email", "==", profile.email));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const customerOrders = snapshot.docs.map((doc) => ({
-        firebaseId: doc.id,
-        ...doc.data()
-      }));
+    // Escuta pedidos_venda pelo email do cliente ou ID
+    const q = userEmail
+      ? query(collection(db, "pedidos_venda"), where("cliente.email", "==", userEmail))
+      : query(collection(db, "pedidos_venda"), where("clienteId", "==", userId));
 
-      // Sort by date (newest first)
-      customerOrders.sort(
-        (a: any, b: any) => new Date(b.dataHora || 0).getTime() - new Date(a.dataHora || 0).getTime()
-      );
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const customerOrders = snapshot.docs.map((doc) => ({
+          firebaseId: doc.id,
+          ...doc.data(),
+        }));
 
-      setPedidos(customerOrders);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error loading customer orders:", error);
-      setLoading(false);
-    });
+        // Sort by date (newest first)
+        customerOrders.sort(
+          (a: any, b: any) =>
+            new Date(b.dataHora || b.createdAt || 0).getTime() -
+            new Date(a.dataHora || a.createdAt || 0).getTime()
+        );
+
+        setPedidos(customerOrders);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error loading customer orders:", error);
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
-  }, [profile]);
+  }, [profile?.email, user?.email, user?.uid]);
 
   // Filtered orders
   const filteredPedidos = useMemo(() => {
     return pedidos.filter((pedido) => {
-      const orderId = (pedido.id_externo || `PED-${pedido.numero}` || "").toLowerCase();
+      const orderId = (pedido.id_externo || `PED-${pedido.numero}` || pedido.firebaseId || "").toLowerCase();
       const clientName = (pedido.cliente?.nome || "").toLowerCase();
-      const itemsMatch = pedido.itens?.some((it: any) => 
-        (it.descricao || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (it.codigo || "").toLowerCase().includes(searchTerm.toLowerCase())
+      const itemsList = getPedidoItensList(pedido);
+      const itemsMatch = itemsList.some((it: any) => 
+        (it.descricao || it.nome || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (it.codigo || it.sku || it.id || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
       const matchesSearch = orderId.includes(searchTerm.toLowerCase()) || 
                             clientName.includes(searchTerm.toLowerCase()) ||
@@ -281,49 +701,6 @@ export default function MeusPedidos() {
     }
   };
 
-  const getFreteValor = (pedido: any) => {
-    if (pedido?.frete?.valor !== undefined && !isNaN(Number(pedido.frete.valor))) return Number(pedido.frete.valor);
-    if (pedido?.totais?.totalFrete !== undefined && !isNaN(Number(pedido.totais.totalFrete))) return Number(pedido.totais.totalFrete);
-    return 0;
-  };
-
-  const getItemUnitPrice = (item: any) => {
-    return Number(item?.valorUnitario ?? item?.precoAplicado ?? item?.preco ?? item?.precoUnitario ?? 0);
-  };
-
-  const getItemQuantity = (item: any) => {
-    return Number(item?.quantidade ?? item?.qtd ?? 1);
-  };
-
-  const getItemTotal = (item: any) => {
-    if (item?.valorTotal !== undefined && !isNaN(Number(item.valorTotal)) && Number(item.valorTotal) > 0) {
-      return Number(item.valorTotal);
-    }
-    return getItemQuantity(item) * getItemUnitPrice(item);
-  };
-
-  const getSubtotalProdutos = (pedido: any) => {
-    if (pedido?.totais?.totalProdutos !== undefined && !isNaN(Number(pedido.totais.totalProdutos)) && Number(pedido.totais.totalProdutos) > 0) {
-      return Number(pedido.totais.totalProdutos);
-    }
-    if (pedido?.itens && Array.isArray(pedido.itens)) {
-      return pedido.itens.reduce((sum: number, it: any) => sum + getItemTotal(it), 0);
-    }
-    return 0;
-  };
-
-  const getTotalGeral = (pedido: any) => {
-    if (pedido?.totais?.totalPedido !== undefined && !isNaN(Number(pedido.totais.totalPedido)) && Number(pedido.totais.totalPedido) > 0) {
-      return Number(pedido.totais.totalPedido);
-    }
-    if (pedido?.pagamento?.valor !== undefined && !isNaN(Number(pedido.pagamento.valor)) && Number(pedido.pagamento.valor) > 0) {
-      return Number(pedido.pagamento.valor);
-    }
-    const subtotal = getSubtotalProdutos(pedido);
-    const frete = getFreteValor(pedido);
-    return subtotal + frete;
-  };
-
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto py-16 text-center text-slate-500 space-y-3">
@@ -501,9 +878,10 @@ export default function MeusPedidos() {
               const formattedDate = dateObj.toLocaleDateString("pt-BR");
               const formattedTime = dateObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
               const freteVal = getFreteValor(pedido);
-              const subtotalProd = getSubtotalProdutos(pedido);
-              const totalGeral = getTotalGeral(pedido);
-              const totalQtdItens = pedido.itens?.reduce((acc: number, item: any) => acc + (Number(item.quantidade) || 0), 0) || 0;
+              const subtotalProd = getSubtotalProdutos(pedido, catalogProducts, profile?.level);
+              const totalGeral = getTotalGeral(pedido, catalogProducts, profile?.level);
+              const itensList = getPedidoItensList(pedido);
+              const totalQtdItens = itensList.reduce((acc: number, item: any) => acc + getItemQuantity(item), 0);
 
               return (
                 <div key={pedido.firebaseId} className={`p-4 sm:p-6 transition-colors ${isExpanded ? "bg-slate-50/70" : "hover:bg-slate-50/40"}`}>
@@ -575,11 +953,11 @@ export default function MeusPedidos() {
                         {/* Open Complete Details Modal */}
                         <button
                           onClick={() => setSelectedPedidoModal(pedido)}
-                          title="Ver Detalhes Completos em Janela"
-                          className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-all flex items-center gap-1.5 shadow-3xs cursor-pointer active:scale-95"
+                          title="Ver Detalhes Completos do Pedido"
+                          className="px-3.5 py-2 bg-blue-50 hover:bg-[#0071e3] text-[#0071e3] hover:text-white font-bold text-xs rounded-xl border border-blue-200 hover:border-[#0071e3] transition-all flex items-center gap-1.5 shadow-3xs cursor-pointer active:scale-95"
                         >
-                          <Eye size={14} className="text-[#0071e3]" />
-                          <span className="hidden sm:inline">Detalhes</span>
+                          <Eye size={15} />
+                          <span>Ver Pedido</span>
                         </button>
 
                         {/* Inline Expand Accordion */}
@@ -609,18 +987,18 @@ export default function MeusPedidos() {
                           <div className="flex items-center justify-between">
                             <h4 className="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
                               <Package size={15} className="text-[#0071e3]" />
-                              Itens Comprados ({pedido.itens?.length || 0})
+                              Itens Comprados ({getPedidoItensList(pedido).length})
                             </h4>
-                            <span className="text-[11px] font-semibold text-slate-500">
-                              Subtotal: R$ {subtotalProd.toFixed(2)}
+                            <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
+                              Subtotal: {formatBRL(subtotalProd)}
                             </span>
                           </div>
 
                           <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                            {pedido.itens?.map((item: any, idx: number) => {
-                              const uPrice = getItemUnitPrice(item);
+                            {getPedidoItensList(pedido).map((item: any, idx: number) => {
+                              const uPrice = getItemUnitPrice(item, pedido, catalogProducts, profile?.level);
                               const q = getItemQuantity(item);
-                              const iTot = getItemTotal(item);
+                              const iTot = getItemTotal(item, pedido, catalogProducts, profile?.level);
 
                               return (
                                 <div 
@@ -628,25 +1006,26 @@ export default function MeusPedidos() {
                                   className="flex items-center justify-between gap-3 bg-white border border-slate-200/80 p-3 sm:p-3.5 rounded-2xl shadow-3xs hover:border-slate-300 transition-colors"
                                 >
                                   <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 font-black text-xs flex items-center justify-center shrink-0">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-[#0071e3] font-black text-xs flex items-center justify-center shrink-0">
                                       #{idx + 1}
                                     </div>
                                     <div className="min-w-0">
-                                      <p className="font-bold text-slate-900 text-xs sm:text-sm truncate" title={item.descricao}>
-                                        {item.descricao}
+                                      <p className="font-bold text-slate-900 text-xs sm:text-sm truncate" title={item.descricao || item.nome}>
+                                        {item.descricao || item.nome || "Produto"}
                                       </p>
                                       <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500 mt-0.5">
-                                        <span>Código: <strong className="text-slate-700 font-mono">{item.codigo || "N/A"}</strong></span>
+                                        <span>Código: <strong className="text-slate-700 font-mono">{item.codigo || item.sku || item.id || "N/A"}</strong></span>
                                         <span>•</span>
-                                        <span>Qtd: <strong className="text-slate-700">{q} {item.unidade || "UN"}</strong></span>
+                                        <span>Qtd: <strong className="text-slate-900 font-bold bg-slate-100 px-1.5 py-0.5 rounded">{q} {item.unidade || "UN"}</strong></span>
                                         <span>•</span>
-                                        <span>Unitário: <strong className="text-slate-700">R$ {uPrice.toFixed(2)}</strong></span>
+                                        <span>Unitário: <strong className="text-slate-900 font-bold">{formatBRL(uPrice)}</strong></span>
                                       </div>
                                     </div>
                                   </div>
                                   <div className="text-right shrink-0">
-                                    <span className="font-black text-slate-900 text-xs sm:text-sm block">
-                                      R$ {iTot.toFixed(2)}
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Total do Item</span>
+                                    <span className="font-black text-slate-900 text-xs sm:text-sm block text-[#0071e3]">
+                                      {formatBRL(iTot)}
                                     </span>
                                   </div>
                                 </div>
@@ -667,7 +1046,7 @@ export default function MeusPedidos() {
                             <div className="flex items-center justify-between bg-sky-50/60 border border-blue-100 p-2.5 rounded-xl">
                               <span className="text-xs font-bold text-slate-700">Valor do Frete:</span>
                               <span className={`text-xs font-extrabold ${freteVal === 0 ? "text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md" : "text-[#0071e3]"}`}>
-                                {freteVal === 0 ? "FRETE GRÁTIS" : `R$ ${freteVal.toFixed(2)}`}
+                                {freteVal === 0 ? "FRETE GRÁTIS" : formatBRL(freteVal)}
                               </span>
                             </div>
 
@@ -711,18 +1090,20 @@ export default function MeusPedidos() {
                               </div>
 
                               {/* Summary calculation */}
-                              <div className="border-t border-slate-100 pt-2 space-y-1 text-xs">
-                                <div className="flex justify-between text-slate-500">
+                              <div className="border-t border-slate-100 pt-2 space-y-1.5 text-xs">
+                                <div className="flex justify-between text-slate-600">
                                   <span>Subtotal dos Produtos:</span>
-                                  <span>R$ {subtotalProd.toFixed(2)}</span>
+                                  <span className="font-semibold text-slate-800">{formatBRL(subtotalProd)}</span>
                                 </div>
-                                <div className="flex justify-between text-slate-500">
-                                  <span>Frete:</span>
-                                  <span>{freteVal === 0 ? "Grátis" : `R$ ${freteVal.toFixed(2)}`}</span>
+                                <div className="flex justify-between text-slate-600">
+                                  <span>Valor do Frete:</span>
+                                  <span className="font-semibold text-slate-800">
+                                    {freteVal === 0 ? "Grátis" : formatBRL(freteVal)}
+                                  </span>
                                 </div>
-                                <div className="flex justify-between font-black text-slate-900 text-sm pt-1 border-t border-slate-100">
+                                <div className="flex justify-between font-black text-slate-900 text-sm pt-2 border-t border-slate-100">
                                   <span>Total a Pagar:</span>
-                                  <span className="text-[#0071e3]">R$ {totalGeral.toFixed(2)}</span>
+                                  <span className="text-[#0071e3] text-base">{formatBRL(totalGeral)}</span>
                                 </div>
                               </div>
 
@@ -749,7 +1130,7 @@ export default function MeusPedidos() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setSelectedPedidoModal(pedido)}
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0071e3] hover:text-[#005bb5] hover:underline cursor-pointer"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0071e3] hover:text-[#005bb5] hover:underline cursor-pointer bg-blue-50/80 px-3 py-1.5 rounded-lg border border-blue-200"
                           >
                             <Eye size={14} />
                             Ver em Modal com Histórico e Nota Fiscal
@@ -831,37 +1212,92 @@ export default function MeusPedidos() {
               {/* Section 1: Itens Comprados */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                    <Package size={14} className="text-[#0071e3]" />
-                    Itens Comprados ({selectedPedidoModal.itens?.length || 0})
+                  <h4 className="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
+                    <Package size={15} className="text-[#0071e3]" />
+                    Itens Comprados ({getPedidoItensList(selectedPedidoModal).length})
                   </h4>
-                  <span className="text-xs font-semibold text-slate-500">
-                    Subtotal: R$ {getSubtotalProdutos(selectedPedidoModal).toFixed(2)}
+                  <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
+                    Subtotal: {formatBRL(getSubtotalProdutos(selectedPedidoModal, catalogProducts, profile?.level))}
                   </span>
                 </div>
 
-                <div className="divide-y divide-slate-100 border border-slate-200/80 rounded-2xl overflow-hidden bg-slate-50/30">
-                  {selectedPedidoModal.itens?.map((item: any, idx: number) => {
-                    const uPrice = getItemUnitPrice(item);
+                <div className="border border-slate-200/80 rounded-2xl overflow-hidden bg-white shadow-3xs divide-y divide-slate-100">
+                  {/* Table Header on Desktop */}
+                  <div className="hidden sm:grid grid-cols-12 gap-3 px-4 py-2.5 bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="col-span-6">Produto / Descrição</div>
+                    <div className="col-span-2 text-center">Quantidade</div>
+                    <div className="col-span-2 text-right">Valor Unitário</div>
+                    <div className="col-span-2 text-right">Valor Total</div>
+                  </div>
+
+                  {getPedidoItensList(selectedPedidoModal).map((item: any, idx: number) => {
+                    const uPrice = getItemUnitPrice(item, selectedPedidoModal, catalogProducts, profile?.level);
                     const q = getItemQuantity(item);
-                    const iTot = getItemTotal(item);
+                    const iTot = getItemTotal(item, selectedPedidoModal, catalogProducts, profile?.level);
 
                     return (
-                      <div key={idx} className="p-3 sm:p-3.5 flex items-center justify-between gap-3 hover:bg-white transition-colors">
-                        <div className="min-w-0 pr-2">
-                          <p className="font-bold text-slate-900 text-xs sm:text-sm truncate">{item.descricao}</p>
-                          <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-slate-500 mt-0.5">
-                            <span>SKU/Código: <strong className="font-mono text-slate-700">{item.codigo || "N/A"}</strong></span>
-                            <span>•</span>
-                            <span>Qtd: <strong>{q} {item.unidade || "UN"}</strong></span>
-                            <span>•</span>
-                            <span>Unitário: <strong>R$ {uPrice.toFixed(2)}</strong></span>
+                      <div key={idx} className="p-3.5 sm:px-4 sm:py-3 hover:bg-slate-50/60 transition-colors">
+                        {/* Desktop Row */}
+                        <div className="hidden sm:grid grid-cols-12 gap-3 items-center">
+                          <div className="col-span-6 flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 text-[#0071e3] font-black text-xs flex items-center justify-center shrink-0">
+                              #{idx + 1}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-slate-900 text-xs sm:text-sm truncate" title={item.descricao || item.nome}>
+                                {item.descricao || item.nome || "Produto"}
+                              </p>
+                              <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                                SKU/Código: <strong className="text-slate-600">{item.codigo || item.sku || item.id || "N/A"}</strong>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="col-span-2 text-center">
+                            <span className="inline-block bg-slate-100 text-slate-800 text-xs font-bold px-2.5 py-1 rounded-lg">
+                              {q} {item.unidade || "UN"}
+                            </span>
+                          </div>
+
+                          <div className="col-span-2 text-right font-bold text-slate-700 text-xs sm:text-sm">
+                            {formatBRL(uPrice)}
+                          </div>
+
+                          <div className="col-span-2 text-right font-black text-slate-900 text-xs sm:text-sm text-[#0071e3]">
+                            {formatBRL(iTot)}
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <span className="font-black text-slate-900 text-xs sm:text-sm">
-                            R$ {iTot.toFixed(2)}
-                          </span>
+
+                        {/* Mobile Card Layout */}
+                        <div className="sm:hidden space-y-2">
+                          <div className="flex items-start gap-2.5">
+                            <span className="w-6 h-6 rounded-lg bg-blue-50 text-[#0071e3] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                              #{idx + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-slate-900 text-xs leading-snug">
+                                {item.descricao || item.nome || "Produto"}
+                              </p>
+                              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                Código: {item.codigo || item.sku || item.id || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl text-center border border-slate-100">
+                            <div>
+                              <span className="block text-[9px] uppercase font-bold text-slate-400">Qtd</span>
+                              <span className="text-xs font-bold text-slate-800">{q} {item.unidade || "UN"}</span>
+                            </div>
+                            <div>
+                              <span className="block text-[9px] uppercase font-bold text-slate-400">Unitário</span>
+                              <span className="text-xs font-bold text-slate-800">{formatBRL(uPrice)}</span>
+                            </div>
+                            <div>
+                              <span className="block text-[9px] uppercase font-bold text-slate-400">Total Item</span>
+                              <span className="text-xs font-black text-[#0071e3]">{formatBRL(iTot)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -871,8 +1307,8 @@ export default function MeusPedidos() {
 
               {/* Section 2: Frete & Entrega */}
               <div className="space-y-3">
-                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                  <Truck size={14} className="text-[#0071e3]" />
+                <h4 className="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                  <Truck size={15} className="text-[#0071e3]" />
                   Valor Total do Frete & Detalhes da Entrega
                 </h4>
 
@@ -883,7 +1319,7 @@ export default function MeusPedidos() {
                       {getFreteValor(selectedPedidoModal) === 0 ? (
                         <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">FRETE GRÁTIS</span>
                       ) : (
-                        `R$ ${getFreteValor(selectedPedidoModal).toFixed(2)}`
+                        formatBRL(getFreteValor(selectedPedidoModal))
                       )}
                     </p>
                     <p className="text-[11px] text-slate-500 font-medium">
@@ -906,8 +1342,8 @@ export default function MeusPedidos() {
 
               {/* Section 3: Método de Pagamento & Totais */}
               <div className="space-y-3">
-                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                  <CreditCard size={14} className="text-[#0071e3]" />
+                <h4 className="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                  <CreditCard size={15} className="text-[#0071e3]" />
                   Método de Pagamento & Resumo Financeiro
                 </h4>
 
@@ -932,17 +1368,17 @@ export default function MeusPedidos() {
                   <div className="space-y-1.5 text-xs text-slate-600">
                     <div className="flex justify-between">
                       <span>Subtotal dos Produtos:</span>
-                      <span className="font-semibold text-slate-800">R$ {getSubtotalProdutos(selectedPedidoModal).toFixed(2)}</span>
+                      <span className="font-semibold text-slate-800">{formatBRL(getSubtotalProdutos(selectedPedidoModal, catalogProducts, profile?.level))}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Valor do Frete:</span>
                       <span className="font-semibold text-slate-800">
-                        {getFreteValor(selectedPedidoModal) === 0 ? "Grátis" : `R$ ${getFreteValor(selectedPedidoModal).toFixed(2)}`}
+                        {getFreteValor(selectedPedidoModal) === 0 ? "Grátis" : formatBRL(getFreteValor(selectedPedidoModal))}
                       </span>
                     </div>
                     <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-blue-100">
-                      <span>Valor Total:</span>
-                      <span className="text-[#0071e3]">R$ {getTotalGeral(selectedPedidoModal).toFixed(2)}</span>
+                      <span>Valor Total a Pagar:</span>
+                      <span className="text-[#0071e3] text-lg">{formatBRL(getTotalGeral(selectedPedidoModal, catalogProducts, profile?.level))}</span>
                     </div>
                   </div>
                 </div>

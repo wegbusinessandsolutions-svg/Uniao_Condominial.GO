@@ -176,7 +176,19 @@ service cloud.firestore {
     }
 
     match /suporte_mensagens/{id} {
-      allow read, write: if isStaff();
+      allow create: if true;
+      allow read: if isStaff() || (isSignedIn() && (resource == null || resource.data.get('clienteUid', '') == request.auth.uid || resource.data.get('clienteEmail', '') == request.auth.token.email));
+      allow update, delete: if isStaff();
+    }
+
+    match /sugestoes/{id} {
+      allow create: if true;
+      allow read, update, delete: if isStaff();
+    }
+
+    match /mail/{id} {
+      allow create: if true;
+      allow read, update, delete: if isStaff();
     }
 
     match /produtos/{id} {

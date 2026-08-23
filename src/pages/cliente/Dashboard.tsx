@@ -24,6 +24,7 @@ export default function CustomerDashboard() {
   const [isSuggestionSuccess, setIsSuggestionSuccess] = useState(false);
   const [suggestionText, setSuggestionText] = useState("");
   const [isSubmittingSuggestion, setIsSubmittingSuggestion] = useState(false);
+  const [isClassificationModalOpen, setIsClassificationModalOpen] = useState(false);
 
   useEffect(() => {
     if (localStorage.getItem("openSuggestion") === "true") {
@@ -39,7 +40,7 @@ export default function CustomerDashboard() {
     setIsSubmittingSuggestion(true);
     try {
       await addDoc(collection(db, "sugestoes"), {
-        userId: user?.uid,
+        userId: user?.uid || null,
         condominio: (profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || "",
         sindico: (profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || "",
         telefone: (profile as any)?.telefone || "",
@@ -49,22 +50,28 @@ export default function CustomerDashboard() {
         status: "Nova",
         createdAt: new Date(),
       });
-      await addDoc(collection(db, "mail"), {
-        to: "ceo@uniaocondominial.com.br",
-        message: {
-          subject: "Nova Sugestão Recebida - Aplicativo",
-          html: `
-            <h3>Nova Sugestão Recebida</h3>
-            <p><strong>Condomínio/Empresa:</strong> ${(profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
-            <p><strong>Responsável:</strong> ${(profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
-            <p><strong>Telefone:</strong> ${(profile as any)?.telefone || ""}</p>
-            <p><strong>E-mail:</strong> ${profile?.email || user?.email || ""}</p>
-            <br />
-            <p><strong>Sugestão:</strong></p>
-            <p>${suggestionText.replace(/\n/g, '<br/>')}</p>
-          `
-        }
-      });
+
+      try {
+        await addDoc(collection(db, "mail"), {
+          to: "ceo@uniaocondominial.com.br",
+          message: {
+            subject: "Nova Sugestão Recebida - Aplicativo",
+            html: `
+              <h3>Nova Sugestão Recebida</h3>
+              <p><strong>Condomínio/Empresa:</strong> ${(profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
+              <p><strong>Responsável:</strong> ${(profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
+              <p><strong>Telefone:</strong> ${(profile as any)?.telefone || ""}</p>
+              <p><strong>E-mail:</strong> ${profile?.email || user?.email || ""}</p>
+              <br />
+              <p><strong>Sugestão:</strong></p>
+              <p>${suggestionText.replace(/\n/g, '<br/>')}</p>
+            `
+          }
+        });
+      } catch (mailErr) {
+        console.warn("Disparo de e-mail assíncrono em fila não processado:", mailErr);
+      }
+
       setIsSuggestionSuccess(true);
       setSuggestionText("");
     } catch (error) {
@@ -205,24 +212,27 @@ export default function CustomerDashboard() {
               }
 
               return (
-                <div
-                  className="flex flex-col items-center justify-center p-2 sm:p-2.5 min-w-[110px] sm:min-w-[124px] bg-transparent transition-all duration-300"
+                <button
+                  type="button"
+                  onClick={() => setIsClassificationModalOpen(true)}
+                  title="Clique para ampliar a classificação do condomínio"
+                  className="group flex flex-col items-center justify-center p-2 sm:p-2.5 min-w-[110px] sm:min-w-[124px] bg-transparent hover:bg-white/70 active:scale-95 rounded-2xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
                 >
                   {/* Category Medal Image */}
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex items-center justify-center mb-1 drop-shadow-2xs transition-transform hover:scale-105 duration-300">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex items-center justify-center mb-1 drop-shadow-2xs transition-transform group-hover:scale-110 duration-300">
                     <img
                       src={badgeImage}
                       alt={badgeAlt}
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <p className="text-[8px] sm:text-[9px] text-black font-extrabold uppercase tracking-widest leading-none">
+                  <p className="text-[8px] sm:text-[9px] text-black font-extrabold uppercase tracking-widest leading-none group-hover:text-[#0071e3] transition-colors">
                     Classificação
                   </p>
                   <p className={`text-xs sm:text-sm font-black tracking-wide mt-1 leading-none capitalize ${textClass}`}>
                     {rawLevel}
                   </p>
-                </div>
+                </button>
               );
             })()}
           </div>
@@ -493,6 +503,91 @@ export default function CustomerDashboard() {
           </div>
         </div>
       )}
+      {/* Modal de Ampliação da Classificação (6x o tamanho apresentado inicial) */}
+      {isClassificationModalOpen && (() => {
+        const rawLevel = (profile?.level || "Bronze").trim();
+        const levelKey = rawLevel.toLowerCase();
+
+        let badgeImage = badgeBronze;
+        let badgeAlt = "Categoria Bronze";
+        let textClass = "text-[#78350f]";
+
+        if (levelKey === "prata") {
+          badgeImage = badgePrata;
+          badgeAlt = "Categoria Prata";
+          textClass = "text-[#334155]";
+        } else if (levelKey === "ouro") {
+          badgeImage = badgeOuro;
+          badgeAlt = "Categoria Ouro";
+          textClass = "text-[#854d0e]";
+        } else if (levelKey === "diamante") {
+          badgeImage = badgeDiamante;
+          badgeAlt = "Categoria Diamante";
+          textClass = "text-[#0369a1]";
+        }
+
+        return (
+          <div 
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setIsClassificationModalOpen(false)}
+          >
+            <div 
+              className="relative bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Botão Fechar no canto superior direito */}
+              <button 
+                type="button"
+                onClick={() => setIsClassificationModalOpen(false)}
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
+                title="Fechar janela"
+              >
+                <X size={20} />
+              </button>
+
+              {/* Título do Condomínio e Classificação */}
+              <div className="mb-4">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-[#0071e3] border border-sky-100 uppercase tracking-wider">
+                  <Sparkles size={13} className="text-amber-500" />
+                  Classificação do Condomínio
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                  {profile?.displayName || "Condomínio"}
+                </h3>
+              </div>
+
+              {/* Apresentação da Classificação: 6 vezes o tamanho inicial (336px ~ 384px) */}
+              <div className="flex flex-col items-center justify-center py-2">
+                <div className="w-[300px] h-[300px] sm:w-[336px] sm:h-[336px] md:w-[384px] md:h-[384px] max-w-full rounded-full overflow-hidden flex items-center justify-center p-2 bg-gradient-to-b from-slate-50 to-white shadow-xl border border-slate-100 transition-transform duration-300 hover:scale-105">
+                  <img
+                    src={badgeImage}
+                    alt={badgeAlt}
+                    className="w-full h-full object-contain drop-shadow-2xl"
+                  />
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-500 font-extrabold uppercase tracking-widest leading-none mt-5">
+                  Classificação
+                </p>
+                <p className={`text-2xl sm:text-3xl font-black tracking-wide mt-1.5 leading-none capitalize ${textClass}`}>
+                  {rawLevel}
+                </p>
+              </div>
+
+              {/* Botão Fechar abaixo da apresentação da classificação */}
+              <div className="pt-4 border-t border-slate-100 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsClassificationModalOpen(false)}
+                  className="w-full py-3.5 px-6 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold rounded-2xl text-base shadow-md hover:shadow-lg transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -19,10 +19,29 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
   const { profile, user } = useAuth();
   const [pedidos, setPedidos] = useState<any[]>([]);
   const [ordens, setOrdens] = useState<any[]>([]);
+  const [catalogProducts, setCatalogProducts] = useState<any[]>([]);
   const [loadingPedidos, setLoadingPedidos] = useState(true);
   const [loadingOrdens, setLoadingOrdens] = useState(true);
   const [activeTab, setActiveTab] = useState<"todos" | "pedidos" | "ordens">("todos");
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+
+  // 0. Real-time listener for Product Catalog (for accurate item prices)
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, "produtos"),
+      (snapshot) => {
+        const prods = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        }));
+        setCatalogProducts(prods);
+      },
+      (err) => {
+        console.warn("Erro ao escutar catálogo no dashboard tracker:", err);
+      }
+    );
+    return () => unsub();
+  }, []);
 
   // 1. Real-time listener for Product Orders (pedidos_venda)
   useEffect(() => {
@@ -293,20 +312,134 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
     }
   };
 
+  // Helper robusto para converter qualquer formato de número ou moeda para number
+  const parseNum = (val: any): number => {
+    if (val === null || val === undefined) return 0;
+    if (typeof val === "number") return isNaN(val) ? 0 : val;
+    if (typeof val === "string") {
+      const cleaned = val.replace(/[^\d.,-]/g, "").trim();
+      if (!cleaned) return 0;
+      if (cleaned.includes(",") && cleaned.includes(".")) {
+        return parseFloat(cleaned.replace(/\./g, "").replace(",", ".")) || 0;
+      }
+      if (cleaned.includes(",")) {
+        return parseFloat(cleaned.replace(",", ".")) || 0;
+      }
+      return parseFloat(cleaned) || 0;
+    }
+    return 0;
+  };
+
+  const getPedidoItens = (pedido: any): any[] => {
+    if (!pedido) return [];
+    if (Array.isArray(pedido.itens) && pedido.itens.length > 0) return pedido.itens;
+    if (Array.isArray(pedido.items) && pedido.items.length > 0) return pedido.items;
+    if (Array.isArray(pedido.produtos) && pedido.produtos.length > 0) return pedido.produtos;
+    if (Array.isArray(pedido.carrinho) && pedido.carrinho.length > 0) return pedido.carrinho;
+    return [];
+  };
+
+  const getItemUnitPriceTracker = (item: any): number => {
+    if (!item) return 0;
+    const candidates = [
+      item.valorUnitario,
+      item.precoAplicado,
+      item.precoUnitario,
+      item.precoOriginal,
+      item.precoVenda,
+      item.preco,
+      item.valor_unitario,
+      item.preco_unitario,
+      item.vlUnitario,
+      item.vUnit,
+      item.unitario,
+      item.unitPrice,
+      item.price,
+      item.precoPromocional,
+      item.precoBronze,
+      item.precoPrata,
+      item.precoOuro,
+      item.precoDiamante,
+      item.produto?.preco,
+      item.produto?.precoVenda,
+      item.produto?.valorUnitario,
+    ];
+
+    for (const cand of candidates) {
+      const val = parseNum(cand);
+      if (val > 0) return val;
+    }
+
+    const tot = parseNum(item.valorTotal ?? item.total ?? item.totalItem ?? item.subtotal ?? item.vlTotal ?? item.vProd ?? item.valor);
+    const q = parseNum(item.quantidade ?? item.qtd ?? item.quantity ?? 1) || 1;
+    if (tot > 0 && q > 0) {
+      return tot / q;
+    }
+
+    // Catalog lookup fallback
+    if (catalogProducts && catalogProducts.length > 0) {
+      const itemCode = String(item.codigo || item.sku || item.id || "").trim().toLowerCase();
+      const itemDesc = String(item.descricao || item.nome || "").trim().toLowerCase();
+
+      const match = catalogProducts.find((p: any) => {
+        const pId = String(p.id || "").trim().toLowerCase();
+        const pSku = String(p.sku || "").trim().toLowerCase();
+        const pNome = String(p.nome || "").trim().toLowerCase();
+        return (
+          (itemCode && (pId === itemCode || pSku === itemCode)) ||
+          (itemDesc && (pNome === itemDesc || pNome.includes(itemDesc) || itemDesc.includes(pNome)))
+        );
+      });
+
+      if (match) {
+        let tierPrice = 0;
+        if (profile?.level === "Bronze") tierPrice = parseNum(match.precoBronze);
+        else if (profile?.level === "Prata") tierPrice = parseNum(match.precoPrata);
+        else if (profile?.level === "Ouro") tierPrice = parseNum(match.precoOuro);
+        else if (profile?.level === "Diamante") tierPrice = parseNum(match.precoDiamante);
+
+        if (tierPrice > 0) return tierPrice;
+
+        const possible = [
+          parseNum(match.precoPromocional),
+          parseNum(match.precoVenda),
+          parseNum(match.preco),
+          parseNum(match.precoBronze),
+          parseNum(match.precoPrata),
+          parseNum(match.precoOuro),
+          parseNum(match.precoDiamante),
+          parseNum(match.precoMinimo),
+        ].filter((p) => p > 0);
+
+        if (possible.length > 0) return possible[0];
+      }
+    }
+
+    return parseNum(item.valor);
+  };
+
   const getPedidoTotal = (pedido: any) => {
-    if (pedido?.totais?.totalPedido !== undefined && !isNaN(Number(pedido.totais.totalPedido)) && Number(pedido.totais.totalPedido) > 0) {
-      return Number(pedido.totais.totalPedido);
+    if (pedido?.totais?.totalPedido !== undefined && parseNum(pedido.totais.totalPedido) > 0) {
+      return parseNum(pedido.totais.totalPedido);
     }
-    if (pedido?.pagamento?.valor !== undefined && !isNaN(Number(pedido.pagamento.valor)) && Number(pedido.pagamento.valor) > 0) {
-      return Number(pedido.pagamento.valor);
+    if (pedido?.totalPedido !== undefined && parseNum(pedido.totalPedido) > 0) {
+      return parseNum(pedido.totalPedido);
     }
-    if (pedido?.itens && Array.isArray(pedido.itens)) {
-      const sub = pedido.itens.reduce((s: number, i: any) => {
-        const q = Number(i.quantidade || i.qtd || 1);
-        const u = Number(i.valorUnitario || i.precoAplicado || i.preco || 0);
-        return s + (i.valorTotal ? Number(i.valorTotal) : q * u);
+    if (pedido?.pagamento?.valor !== undefined && parseNum(pedido.pagamento.valor) > 0) {
+      return parseNum(pedido.pagamento.valor);
+    }
+    if (pedido?.valorTotal !== undefined && parseNum(pedido.valorTotal) > 0) {
+      return parseNum(pedido.valorTotal);
+    }
+    const itens = getPedidoItens(pedido);
+    if (itens.length > 0) {
+      const sub = itens.reduce((s: number, i: any) => {
+        const q = parseNum(i.quantidade ?? i.qtd ?? 1) || 1;
+        const u = getItemUnitPriceTracker(i);
+        const tot = parseNum(i.valorTotal ?? i.total ?? i.totalItem ?? i.subtotal);
+        return s + (tot > 0 ? tot : q * u);
       }, 0);
-      return sub + Number(pedido.frete?.valor || 0);
+      return sub + parseNum(pedido.frete?.valor || pedido.totais?.totalFrete || pedido.valorFrete || 0);
     }
     return 0;
   };
@@ -619,12 +752,12 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                           <div className="text-slate-600">
                             <span>Itens: </span>
                             <strong className="text-slate-900">
-                              {pedido.itens?.length || 0} produto(s)
+                              {getPedidoItens(pedido).length} produto(s)
                             </strong>
                           </div>
                           <div>
                             <span className="text-slate-500">Total: </span>
-                            <strong className="text-slate-900 font-extrabold text-sm">
+                            <strong className="text-slate-900 font-extrabold text-sm text-[#0071e3]">
                               {formatCurrency(total)}
                             </strong>
                           </div>
@@ -637,19 +770,32 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                               Produtos no Pedido:
                             </p>
                             <div className="space-y-1.5 max-h-36 overflow-y-auto">
-                              {pedido.itens?.map((it: any, iIdx: number) => (
-                                <div
-                                  key={iIdx}
-                                  className="flex items-center justify-between text-xs bg-slate-50 p-2 rounded-xl border border-slate-100"
-                                >
-                                  <span className="text-slate-800 font-medium truncate max-w-[200px]" title={it.descricao}>
-                                    {it.descricao}
-                                  </span>
-                                  <span className="text-slate-600 font-bold shrink-0">
-                                    {it.quantidade || 1}x {formatCurrency(Number(it.valorUnitario || it.precoAplicado || 0))}
-                                  </span>
-                                </div>
-                              ))}
+                              {getPedidoItens(pedido).map((it: any, iIdx: number) => {
+                                const q = parseNum(it.quantidade ?? it.qtd ?? 1) || 1;
+                                const u = getItemUnitPriceTracker(it);
+                                const itemTot = parseNum(it.valorTotal ?? it.total ?? it.totalItem ?? it.subtotal) || (q * u);
+
+                                return (
+                                  <div
+                                    key={iIdx}
+                                    className="flex items-center justify-between gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100"
+                                  >
+                                    <div className="min-w-0 pr-2">
+                                      <p className="text-slate-800 font-bold truncate max-w-[180px]" title={it.descricao || it.nome}>
+                                        {it.descricao || it.nome || "Produto"}
+                                      </p>
+                                      <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                                        {q}x {formatCurrency(u)}
+                                      </p>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                      <span className="text-slate-900 font-black text-xs">
+                                        {formatCurrency(itemTot)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         )}

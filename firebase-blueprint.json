@@ -206,9 +206,63 @@
         "updatedBy": { "type": "string" }
       },
       "required": ["ano"]
+    },
+    "sugestoes": {
+      "title": "Sugestões de Usuários e Condomínios",
+      "description": "Sugestões enviadas por síndicos, condomínios e clientes",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "condominio": { "type": "string" },
+        "sindico": { "type": "string" },
+        "telefone": { "type": "string" },
+        "email": { "type": "string" },
+        "titulo": { "type": "string" },
+        "mensagem": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["titulo", "mensagem"]
+    },
+    "mail": {
+      "title": "Fila de E-mails",
+      "description": "Disparo assíncrono de notificações por e-mail",
+      "type": "object",
+      "properties": {
+        "to": { "type": "string" },
+        "message": { "type": "object" }
+      },
+      "required": ["to", "message"]
+    },
+    "suporte_mensagens": {
+      "title": "Mensagens de Suporte",
+      "description": "Atendimento e mensagens enviadas pelo portal do cliente",
+      "type": "object",
+      "properties": {
+        "clienteUid": { "type": "string" },
+        "clienteEmail": { "type": "string" },
+        "clienteNome": { "type": "string" },
+        "text": { "type": "string" },
+        "sender": { "type": "string" },
+        "statusAtendimento": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clienteUid", "text"]
     }
   },
   "firestore": {
+    "sugestoes/{sugestaoId}": {
+      "schema": "sugestoes",
+      "description": "Coleção de sugestões enviadas por clientes e visitantes"
+    },
+    "mail/{mailId}": {
+      "schema": "mail",
+      "description": "Fila de mensagens para envio de e-mails"
+    },
+    "suporte_mensagens/{msgId}": {
+      "schema": "suporte_mensagens",
+      "description": "Mensagens de suporte ao cliente"
+    },
     "metas_vendas/{metaId}": {
       "schema": "meta_vendas",
       "description": "Coleção de metas de vendas mensais e anuais por ano"

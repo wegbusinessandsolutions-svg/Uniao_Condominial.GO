@@ -57,7 +57,7 @@ export default function Home() {
     setIsSubmittingSuggestion(true);
     try {
       await addDoc(collection(db, "sugestoes"), {
-        userId: user?.uid,
+        userId: user?.uid || null,
         condominio: (profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || "",
         sindico: (profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || "",
         telefone: (profile as any)?.telefone || "",
@@ -67,22 +67,28 @@ export default function Home() {
         status: "Nova",
         createdAt: new Date(),
       });
-      await addDoc(collection(db, "mail"), {
-        to: "ceo@uniaocondominial.com.br",
-        message: {
-          subject: "Nova Sugestão Recebida - Aplicativo",
-          html: `
-            <h3>Nova Sugestão Recebida</h3>
-            <p><strong>Condomínio/Empresa:</strong> ${(profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
-            <p><strong>Responsável:</strong> ${(profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
-            <p><strong>Telefone:</strong> ${(profile as any)?.telefone || ""}</p>
-            <p><strong>E-mail:</strong> ${profile?.email || user?.email || ""}</p>
-            <br />
-            <p><strong>Sugestão:</strong></p>
-            <p>${suggestionText.replace(/\n/g, '<br/>')}</p>
-          `
-        }
-      });
+
+      try {
+        await addDoc(collection(db, "mail"), {
+          to: "ceo@uniaocondominial.com.br",
+          message: {
+            subject: "Nova Sugestão Recebida - Aplicativo",
+            html: `
+              <h3>Nova Sugestão Recebida</h3>
+              <p><strong>Condomínio/Empresa:</strong> ${(profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
+              <p><strong>Responsável:</strong> ${(profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
+              <p><strong>Telefone:</strong> ${(profile as any)?.telefone || ""}</p>
+              <p><strong>E-mail:</strong> ${profile?.email || user?.email || ""}</p>
+              <br />
+              <p><strong>Sugestão:</strong></p>
+              <p>${suggestionText.replace(/\n/g, '<br/>')}</p>
+            `
+          }
+        });
+      } catch (mailErr) {
+        console.warn("Disparo de e-mail assíncrono em fila não processado:", mailErr);
+      }
+
       setIsSuggestionSuccess(true);
       setSuggestionText("");
     } catch (error) {
@@ -157,7 +163,7 @@ export default function Home() {
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md w-full bg-slate-100">
             <picture className="w-full block">
               <img
-                src="/Cond_Vert_Horiz_UC-1.png"
+                src="/Cond_Vert_Horiz_UC.png"
                 alt="Goiânia é feita de grandes condomínios. Verticais e horizontais. Todos precisam de soluções. Todos podem ganhar juntos."
                 className="w-full h-auto object-cover block"
                 loading="eager"
@@ -277,7 +283,7 @@ export default function Home() {
               <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white">
                 <picture className="w-full block">
                   <img
-                    src="/servicos-rotineiros-oficial-1.png"
+                    src="/servicos-rotineiros-oficial.png"
                     alt="São mais de 10 Serviços a disposição - União Condominial"
                     className="w-full h-auto object-cover block"
                     loading="lazy"
