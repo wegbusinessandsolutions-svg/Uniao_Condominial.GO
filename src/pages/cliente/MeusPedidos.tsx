@@ -12,7 +12,6 @@ import { isStaffRole } from "../../lib/permissions";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useToast } from "../../context/ToastContext";
-import { useNotifications } from "../../context/NotificationContext";
 import { CONFIG } from "../../lib/ecommerceFlow";
 import { getMercadoPagoConfig, MercadoPagoConfig } from "../../lib/mercadoPago";
 import { gerarPixCopiaECola } from "../../lib/documentValidators";
@@ -22,7 +21,6 @@ export default function MeusPedidos() {
   const navigate = useNavigate();
   const { addMultipleToCart } = useCart();
   const { addToast, addOrderToast } = useToast();
-  const { permission, requestPermission } = useNotifications();
   const [pedidos, setPedidos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedPedidoId, setExpandedPedidoId] = useState<string | null>(null);
@@ -383,20 +381,7 @@ export default function MeusPedidos() {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap shrink-0">
-            {permission !== "granted" && (
-              <button
-                onClick={async () => {
-                  const res = await requestPermission();
-                  if (res === "granted") {
-                    addToast("Notificações Push no navegador ativadas com sucesso!", "success");
-                  }
-                }}
-                className="bg-[#0071e3] hover:bg-[#005bb5] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-3xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
-              >
-                <Volume2 size={13} />
-                Ativar Push no Navegador
-              </button>
-            )}
+
 
             <div className="flex items-center gap-1 bg-white/80 p-1 rounded-xl border border-blue-200/70 shadow-3xs">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1.5">

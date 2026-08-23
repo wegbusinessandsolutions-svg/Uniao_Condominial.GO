@@ -4,7 +4,6 @@ import { ShoppingCart, Menu, Search, User } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { LegalModal } from "../common/LegalModal";
-import { CustomerNotificationBell } from "../cliente/CustomerNotificationBell";
 
 export default function ShopLayout() {
   const { profile } = useAuth();
@@ -74,7 +73,6 @@ export default function ShopLayout() {
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {profile ? (
               <>
-                <CustomerNotificationBell isCompact={true} />
                 <Link
                   to="/minha-conta"
                   className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 hover:text-brand-dark transition-colors py-1.5 px-2 sm:px-2.5 rounded-xl hover:bg-slate-50 shrink-0"

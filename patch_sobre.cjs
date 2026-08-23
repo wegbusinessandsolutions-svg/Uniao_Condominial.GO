@@ -1,4 +1,5 @@
-import React from "react";
+const fs = require('fs');
+const content = `import React from "react";
 import { 
   Building, Target, Users, Wrench, ShieldCheck, MapPin, Briefcase, 
   Clock, CheckCircle2, Droplets, TrendingDown, Store, Star
@@ -9,7 +10,7 @@ export default function Sobre() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-12">
       
       {/* Hero Header */}
-      <div className="bg-[#003b5c] rounded-[2rem] p-8 sm:p-12 text-center shadow-lg relative overflow-hidden">
+      <div className="bg-slate-900 rounded-[2rem] p-8 sm:p-12 text-center shadow-lg relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay"></div>
         <div className="relative z-10">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
@@ -89,12 +90,12 @@ export default function Sobre() {
       </section>
 
       {/* Nossa Missão */}
-      <section className="bg-[#003b5c] rounded-[2rem] p-8 sm:p-12 border border-[#002f4b] shadow-xl text-center relative overflow-hidden">
+      <section className="bg-slate-900 rounded-[2rem] p-8 sm:p-12 border border-slate-800 shadow-xl text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-5">
           <Target size={200} className="text-white" />
         </div>
         <div className="relative z-10 max-w-4xl mx-auto space-y-6">
-          <div className="inline-flex items-center gap-2 bg-[#002f4b] text-sky-400 px-4 py-2 rounded-full text-sm font-bold tracking-wider uppercase border border-slate-700">
+          <div className="inline-flex items-center gap-2 bg-slate-800 text-sky-400 px-4 py-2 rounded-full text-sm font-bold tracking-wider uppercase border border-slate-700">
             <Target size={16} />
             <span>Nossa Missão</span>
           </div>
@@ -201,13 +202,13 @@ export default function Sobre() {
           </div>
           
           <div className="w-full lg:w-[450px]">
-            <div className="bg-[#003b5c] rounded-3xl p-8 shadow-2xl border border-[#002f4b] text-white space-y-6">
-              <div className="flex items-center gap-4 border-b border-[#002f4b] pb-6">
+            <div className="bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-800 text-white space-y-6">
+              <div className="flex items-center gap-4 border-b border-slate-800 pb-6">
                 <div className="w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center shrink-0">
                   <Building size={28} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-white">Faça Parte!</h3>
+                  <h3 className="font-bold text-lg">Faça Parte!</h3>
                   <p className="text-slate-400 text-sm leading-tight mt-1">
                     Fale com um de nossos representantes e conheça sem compromisso todas as vantagens de afiliar o seu condomínio à União Condominial.
                   </p>
@@ -228,3 +229,5 @@ export default function Sobre() {
     </div>
   );
 }
+`;
+fs.writeFileSync('src/pages/shop/Sobre.tsx', content);

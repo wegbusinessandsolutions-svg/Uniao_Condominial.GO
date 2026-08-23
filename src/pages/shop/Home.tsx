@@ -154,12 +154,12 @@ export default function Home() {
             Por que nos escolher?
           </h2>
           
-          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md w-full bg-slate-100 aspect-[1691/930]">
-            <picture className="w-full h-full block">
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md w-full bg-slate-100">
+            <picture className="w-full block">
               <img
-                src="/Cond_Vert_Horiz_UC.png"
+                src="/Cond_Vert_Horiz_UC-1.png"
                 alt="Goiânia é feita de grandes condomínios. Verticais e horizontais. Todos precisam de soluções. Todos podem ganhar juntos."
-                className="w-full h-full object-contain sm:object-cover block"
+                className="w-full h-auto object-cover block"
                 loading="eager"
                 decoding="async"
               />
@@ -274,12 +274,12 @@ export default function Home() {
 
             {/* Right Banner Image */}
             <div className="w-full lg:w-[480px] xl:w-[520px] shrink-0 self-center lg:self-start">
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white aspect-[1200/896]">
-                <picture className="w-full h-full block">
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white">
+                <picture className="w-full block">
                   <img
-                    src="/servicos-rotineiros-oficial.png"
+                    src="/servicos-rotineiros-oficial-1.png"
                     alt="São mais de 10 Serviços a disposição - União Condominial"
-                    className="w-full h-full object-contain sm:object-cover block"
+                    className="w-full h-auto object-cover block"
                     loading="lazy"
                     decoding="async"
                   />

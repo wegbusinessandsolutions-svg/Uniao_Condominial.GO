@@ -8,9 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";
-import { NotificationProvider } from "./context/NotificationContext";
 import { ToastProvider } from "./context/ToastContext";
-import { CustomerNotifications } from "./components/common/CustomerNotifications";
 import { GeolocationLoginPrompt } from "./components/common/GeolocationLoginPrompt";
 import ShopLayout from "./components/layouts/ShopLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
@@ -103,8 +101,6 @@ export default function App() {
         <AuthProvider>
           <CartProvider>
             <ThemeProvider>
-              <NotificationProvider>
-                <CustomerNotifications />
                 <GeolocationLoginPrompt />
                 <Routes>
           <Route path="/aceite-afiliacao/:id" element={<AceiteAfiliacao />} />
@@ -548,7 +544,6 @@ export default function App() {
           </Route>
             </Routes>
             <ScrollToTopButton />
-              </NotificationProvider>
           </ThemeProvider>
         </CartProvider>
       </AuthProvider>

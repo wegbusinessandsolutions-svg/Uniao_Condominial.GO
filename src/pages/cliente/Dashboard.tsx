@@ -206,7 +206,7 @@ export default function CustomerDashboard() {
 
               return (
                 <div
-                  className={`flex flex-col items-center justify-center p-2 sm:p-2.5 min-w-[110px] sm:min-w-[124px] bg-white border rounded-2xl shadow-3xs hover:shadow-xs transition-all duration-300 ${badgeBorderClass}`}
+                  className="flex flex-col items-center justify-center p-2 sm:p-2.5 min-w-[110px] sm:min-w-[124px] bg-transparent transition-all duration-300"
                 >
                   {/* Category Medal Image */}
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex items-center justify-center mb-1 drop-shadow-2xs transition-transform hover:scale-105 duration-300">
@@ -216,7 +216,7 @@ export default function CustomerDashboard() {
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <p className="text-[8px] sm:text-[9px] text-slate-400 font-extrabold uppercase tracking-widest leading-none">
+                  <p className="text-[8px] sm:text-[9px] text-black font-extrabold uppercase tracking-widest leading-none">
                     Classificação
                   </p>
                   <p className={`text-xs sm:text-sm font-black tracking-wide mt-1 leading-none capitalize ${textClass}`}>
