@@ -1,86 +1,133 @@
 const fs = require('fs');
-const file = 'src/components/layouts/AdminLayout.tsx';
-let content = fs.readFileSync(file, 'utf8');
 
-const targetStart = content.indexOf('// Automatic redirect if non-admin user lands on root "/admin" or "/admin/"');
-const targetEnd = content.indexOf('const handleLogout = async () => {');
+function patchFile(filePath) {
+  let content = fs.readFileSync(filePath, 'utf8');
 
-if (targetStart === -1 || targetEnd === -1) {
-  console.log("Could not find targets");
-  process.exit(1);
+  // Replace submission logic
+  const submitLogicTarget = `      });
+      alert("Sugestão enviada com sucesso! Muito obrigado.");
+      setIsSuggestionModalOpen(false);
+      setSuggestionText("");
+    } catch (error) {`;
+  
+  const submitLogicReplacement = `      });
+      await addDoc(collection(db, "mail"), {
+        to: "ceo@uniaocondominial.com.br",
+        message: {
+          subject: "Nova Sugestão Recebida - Aplicativo",
+          html: \`
+            <h3>Nova Sugestão Recebida</h3>
+            <p><strong>Condomínio/Empresa:</strong> \${(profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
+            <p><strong>Responsável:</strong> \${(profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
+            <p><strong>Telefone:</strong> \${(profile as any)?.telefone || ""}</p>
+            <p><strong>E-mail:</strong> \${profile?.email || user?.email || ""}</p>
+            <br />
+            <p><strong>Sugestão:</strong></p>
+            <p>\${suggestionText.replace(/\\n/g, '<br/>')}</p>
+          \`
+        }
+      });
+      setIsSuggestionSuccess(true);
+      setSuggestionText("");
+    } catch (error) {`;
+
+  if (content.includes(submitLogicTarget)) {
+    content = content.replace(submitLogicTarget, submitLogicReplacement);
+  }
+
+  // Replace modal render
+  const modalTarget = `            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-sky-100 text-[#0071e3] rounded-xl flex items-center justify-center shrink-0">
+                <Lightbulb size={20} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">
+                Envie sua Sugestão
+              </h3>
+            </div>
+
+            <form onSubmit={handleSubmitSuggestion} className="space-y-4">`;
+
+  const modalReplacement = `            {!isSuggestionSuccess ? (
+              <>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-sky-100 text-[#0071e3] rounded-xl flex items-center justify-center shrink-0">
+                    <Lightbulb size={20} />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Envie sua Sugestão
+                  </h3>
+                </div>
+
+                <form onSubmit={handleSubmitSuggestion} className="space-y-4">`;
+  
+  if (content.includes(modalTarget)) {
+    content = content.replace(modalTarget, modalReplacement);
+  }
+
+  const modalEndTarget = `              <div className="flex items-center justify-end gap-3 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => setIsSuggestionModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmittingSuggestion || !suggestionText.trim()}
+                  className="px-6 py-2.5 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingSuggestion ? "Enviando..." : "Enviar"}
+                </button>
+              </div>
+            </form>`;
+
+  const modalEndReplacement = `              <div className="flex items-center justify-end gap-3 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => setIsSuggestionModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmittingSuggestion || !suggestionText.trim()}
+                  className="px-6 py-2.5 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingSuggestion ? "Enviando..." : "Enviar"}
+                </button>
+              </div>
+            </form>
+            </>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lightbulb size={32} />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Sugestão Enviada!</h3>
+                <p className="text-slate-600 mb-8 max-w-sm mx-auto">
+                  A sugestão foi enviada, e será criteriosamente analisada, agradecemos sua contribuição.
+                </p>
+                <button 
+                  onClick={() => {
+                    setIsSuggestionModalOpen(false);
+                    setTimeout(() => setIsSuggestionSuccess(false), 300);
+                  }}
+                  className="px-8 py-3 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold transition-colors"
+                >
+                  Fechar
+                </button>
+              </div>
+            )}`;
+
+  if (content.includes(modalEndTarget)) {
+    content = content.replace(modalEndTarget, modalEndReplacement);
+  }
+
+  fs.writeFileSync(filePath, content);
+  console.log('Patched', filePath);
 }
 
-const replacement = `  // Automatic redirect if non-admin user lands on root "/admin" or "/admin/"
-  const currentPath = location.pathname;
-  const cleanPath = currentPath.replace(/\\/$/, "");
-
-  // Path-level module permission checks
-  const filteredNav = getFilteredNavGroups(navGroups, userRole, profile?.permissions);
-  
-  // Find the first available route to use as fallback/dashboard
-  let firstAvailableRoute = "/admin"; // fallback
-  if (!isAdmin) {
-    firstAvailableRoute = "/"; // ultimate fallback if nothing available
-    for (const group of filteredNav) {
-      if (group.items.length > 0) {
-        if (group.items[0].path) {
-          firstAvailableRoute = group.items[0].path;
-          break;
-        } else if (group.items[0].children && group.items[0].children.length > 0) {
-          firstAvailableRoute = group.items[0].children[0].path;
-          break;
-        }
-      }
-    }
-  }
-
-  if (cleanPath === "/admin" && !isAdmin) {
-    return <Navigate to={firstAvailableRoute} replace />;
-  }
-
-  let hasModuleAccess = false;
-  if (isAdmin) {
-    hasModuleAccess = true;
-  } else {
-    // recursively check if cleanPath matches any item's path
-    const checkPath = (items) => {
-      for (const item of items) {
-        if (item.path && (cleanPath === item.path || cleanPath.startsWith(item.path + "/"))) return true;
-        if (item.children && checkPath(item.children)) return true;
-      }
-      return false;
-    };
-    for (const group of filteredNav) {
-      if (checkPath(group.items)) {
-        hasModuleAccess = true;
-        break;
-      }
-    }
-  }
-
-  if (!hasModuleAccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full text-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">
-            Acesso Restrito ao Módulo
-          </h2>
-          <p className="text-slate-600 mb-6 text-sm">
-            Seu perfil (<span className="font-semibold text-slate-800">{userRole || "Colaborador"}</span>) não possui permissão para acessar este módulo.
-          </p>
-          <Link
-            to={firstAvailableRoute}
-            className="inline-block px-5 py-2.5 bg-[#0071e3] text-white rounded-xl hover:bg-blue-600 transition-colors font-bold text-sm shadow-sm"
-          >
-            Ir para a página inicial
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  `;
-
-content = content.substring(0, targetStart) + replacement + content.substring(targetEnd);
-fs.writeFileSync(file, content);
-console.log("Patched successfully");
+patchFile('src/pages/shop/Home.tsx');
+patchFile('src/pages/cliente/Dashboard.tsx');
