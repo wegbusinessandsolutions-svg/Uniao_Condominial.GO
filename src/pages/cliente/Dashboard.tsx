@@ -503,7 +503,7 @@ export default function CustomerDashboard() {
           </div>
         </div>
       )}
-      {/* Modal de Ampliação da Classificação (6x o tamanho apresentado inicial) */}
+      {/* Modal de Classificação do Condomínio (50% do tamanho da tela onde está sendo apresentado) */}
       {isClassificationModalOpen && (() => {
         const rawLevel = (profile?.level || "Bronze").trim();
         const levelKey = rawLevel.toLowerCase();
@@ -511,75 +511,82 @@ export default function CustomerDashboard() {
         let badgeImage = badgeBronze;
         let badgeAlt = "Categoria Bronze";
         let textClass = "text-[#78350f]";
+        let bgGradient = "from-amber-500/10 via-amber-500/5 to-transparent";
 
         if (levelKey === "prata") {
           badgeImage = badgePrata;
           badgeAlt = "Categoria Prata";
           textClass = "text-[#334155]";
+          bgGradient = "from-slate-400/10 via-slate-400/5 to-transparent";
         } else if (levelKey === "ouro") {
           badgeImage = badgeOuro;
           badgeAlt = "Categoria Ouro";
           textClass = "text-[#854d0e]";
+          bgGradient = "from-amber-400/15 via-amber-400/5 to-transparent";
         } else if (levelKey === "diamante") {
           badgeImage = badgeDiamante;
           badgeAlt = "Categoria Diamante";
           textClass = "text-[#0369a1]";
+          bgGradient = "from-sky-500/15 via-sky-500/5 to-transparent";
         }
 
         return (
           <div 
-            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
             onClick={() => setIsClassificationModalOpen(false)}
           >
             <div 
-              className="relative bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200"
+              className="relative bg-white rounded-3xl p-4 sm:p-6 md:p-8 w-[92vw] sm:w-[80vw] md:w-[50vw] h-[85vh] sm:h-[70vh] md:h-[50vh] min-h-[380px] text-center shadow-2xl border border-slate-200/80 animate-in fade-in zoom-in-95 duration-200 flex flex-col justify-between items-center overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Efeito sutil de iluminação decorativa no topo */}
+              <div className={`absolute top-0 inset-x-0 h-32 bg-gradient-to-b ${bgGradient} pointer-events-none`} />
+
               {/* Botão Fechar no canto superior direito */}
               <button 
                 type="button"
                 onClick={() => setIsClassificationModalOpen(false)}
-                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer z-10"
                 title="Fechar janela"
               >
                 <X size={20} />
               </button>
 
               {/* Título do Condomínio e Classificação */}
-              <div className="mb-4">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-[#0071e3] border border-sky-100 uppercase tracking-wider">
+              <div className="relative z-10 w-full shrink-0">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-sky-50 text-[#0071e3] border border-sky-100 uppercase tracking-wider">
                   <Sparkles size={13} className="text-amber-500" />
                   Classificação do Condomínio
                 </span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 mt-1 truncate px-6">
                   {profile?.displayName || "Condomínio"}
                 </h3>
               </div>
 
-              {/* Apresentação da Classificação: 6 vezes o tamanho inicial (336px ~ 384px) */}
-              <div className="flex flex-col items-center justify-center py-2">
-                <div className="w-[300px] h-[300px] sm:w-[336px] sm:h-[336px] md:w-[384px] md:h-[384px] max-w-full rounded-full overflow-hidden flex items-center justify-center p-2 bg-gradient-to-b from-slate-50 to-white shadow-xl border border-slate-100 transition-transform duration-300 hover:scale-105">
+              {/* Apresentação da Classificação: Ícone Medalha Ampliado e Categoria */}
+              <div className="relative z-10 flex flex-col items-center justify-center flex-1 my-auto py-2">
+                <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 max-h-[22vh] aspect-square rounded-full overflow-hidden flex items-center justify-center p-2 bg-gradient-to-b from-slate-50 to-white shadow-lg border border-slate-100 transition-transform duration-300 hover:scale-105">
                   <img
                     src={badgeImage}
                     alt={badgeAlt}
-                    className="w-full h-full object-contain drop-shadow-2xl"
+                    className="w-full h-full object-contain drop-shadow-xl"
                   />
                 </div>
 
-                <p className="text-xs sm:text-sm text-slate-500 font-extrabold uppercase tracking-widest leading-none mt-5">
+                <p className="text-[10px] sm:text-xs text-slate-500 font-extrabold uppercase tracking-widest leading-none mt-3">
                   Classificação
                 </p>
-                <p className={`text-2xl sm:text-3xl font-black tracking-wide mt-1.5 leading-none capitalize ${textClass}`}>
+                <p className={`text-xl sm:text-2xl md:text-3xl font-black tracking-wide mt-1 leading-none capitalize ${textClass}`}>
                   {rawLevel}
                 </p>
               </div>
 
               {/* Botão Fechar abaixo da apresentação da classificação */}
-              <div className="pt-4 border-t border-slate-100 mt-4">
+              <div className="relative z-10 w-full shrink-0 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsClassificationModalOpen(false)}
-                  className="w-full py-3.5 px-6 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold rounded-2xl text-base shadow-md hover:shadow-lg transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-3 sm:py-3.5 px-6 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold rounded-2xl text-sm sm:text-base shadow-md hover:shadow-lg transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
                 >
                   Fechar
                 </button>
