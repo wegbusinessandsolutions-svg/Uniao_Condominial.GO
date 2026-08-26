@@ -54,6 +54,9 @@ const GuidedTour = React.lazy(() => import("../common/GuidedTour"));
 const AdminNotifications = React.lazy(() =>
   import("../common/AdminNotifications").then((m) => ({ default: m.AdminNotifications }))
 );
+const AfiliacaoOverdueAlert = React.lazy(() =>
+  import("../financeiro/AfiliacaoOverdueAlert").then((m) => ({ default: m.AfiliacaoOverdueAlert }))
+);
 const BackupCsvModal = React.lazy(() =>
   import("../admin/BackupCsvModal").then((m) => ({ default: m.BackupCsvModal }))
 );
@@ -662,6 +665,9 @@ export default function AdminLayout() {
         </header>
         <div className="flex-1 overflow-auto print:overflow-visible print:block py-4 px-2 sm:px-4 md:px-6 print:p-0 bg-slate-50 dark:bg-slate-900 print:bg-white text-black">
           <div className="w-[98%] max-w-[98%] mx-auto flex flex-col gap-6">
+            <Suspense fallback={null}>
+              <AfiliacaoOverdueAlert />
+            </Suspense>
             <Suspense fallback={<AdminContentSkeleton />}>
               <Outlet />
             </Suspense>

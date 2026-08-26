@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation, Navigate } from "react-router-dom";
+import { ClientAfiliacaoAlert } from "../cliente/ClientAfiliacaoAlert";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import { Home, FileText, User, ShoppingBag, MapPin, Package, Tag, Heart, CreditCard, LogOut, Book, Menu, Sun, Moon, Coins, MessageSquare, Headphones, Megaphone } from "lucide-react";
+import { Home, FileText, User, ShoppingBag, MapPin, Package, Tag, Heart, CreditCard, LogOut, Book, Menu, Sun, Moon, Coins, MessageSquare, Headphones, Megaphone, Building2 } from "lucide-react";
 import { getAuth } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -96,6 +97,7 @@ export default function CustomerLayout() {
   const navItems = [
     { name: "Inicial", path: "/cliente", icon: Home, end: true, key: "menuInicial" },
     { name: "Meus Dados", path: "/cliente/meus-dados", icon: User, key: "menuMeusDados" },
+    { name: "Afiliado - União Condominial", path: "/cliente/afiliado", icon: Building2, key: "menuAfiliado" },
     { name: "Meus Pedidos", path: "/cliente/pedidos", icon: ShoppingBag, key: "menuMeusPedidos" },
     { name: "Minhas Ordens de Serviço", path: "/cliente/ordens-servico", icon: FileText, key: "menuOrdensServico" },
     { name: "Localização do Condomínio", path: "/cliente/endereco", icon: MapPin, key: "menuLocalEntrega" },
@@ -285,6 +287,7 @@ export default function CustomerLayout() {
 
       <main ref={mainRef} className="flex-1 py-4 px-2 sm:px-4 md:px-6 flex flex-col justify-between min-w-0">
         <div className="w-[98%] max-w-[98%] mx-auto flex-1">
+          <ClientAfiliacaoAlert />
           <Outlet />
         </div>
 

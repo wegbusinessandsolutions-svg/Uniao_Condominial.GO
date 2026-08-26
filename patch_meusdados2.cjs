@@ -1,8 +1,14 @@
 const fs = require('fs');
-let content = fs.readFileSync('src/pages/cliente/MeusDados.tsx', 'utf8');
 
-content = content.replace('import { sendEmail } from "../../lib/emailService";', 'import { sendEmailWithLog } from "../../lib/emailService";');
-content = content.replace('await sendEmail({', 'await sendEmailWithLog({');
-content = content.replace('});\n\n      setAfiliadoStatus', '}, "AFILIACAO_UC");\n\n      setAfiliadoStatus');
+let file = fs.readFileSync('src/pages/cliente/MeusDados.tsx', 'utf8');
 
-fs.writeFileSync('src/pages/cliente/MeusDados.tsx', content);
+const start = file.indexOf('{/* Form Section to become affiliated */}');
+const end = file.indexOf('<div className="mt-6 bg-slate-50');
+
+if (start !== -1 && end !== -1) {
+  file = file.substring(0, start) + "\n          </dl>\n        </div>\n      </div>\n      " + file.substring(end);
+  fs.writeFileSync('src/pages/cliente/MeusDados.tsx', file);
+  console.log("Successfully removed affiliation UI from MeusDados");
+} else {
+  console.log("Could not find blocks in MeusDados");
+}

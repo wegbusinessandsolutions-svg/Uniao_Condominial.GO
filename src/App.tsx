@@ -53,6 +53,7 @@ const BackupExport = lazy(() => import("./pages/admin/BackupExport"));
 import CustomerLayout from "./components/layouts/CustomerLayout";
 import CustomerDashboard from "./pages/cliente/Dashboard";
 import MeusDados from "./pages/cliente/MeusDados";
+import Afiliacao from "./pages/cliente/Afiliacao";
 import MeusPedidos from "./pages/cliente/MeusPedidos";
 import LocalEntrega from "./pages/cliente/LocalEntrega";
 import ServicosEssenciais from "./pages/cliente/ServicosEssenciais";
@@ -119,6 +120,7 @@ export default function App() {
           <Route path="/cliente" element={<CustomerLayout />}>
             <Route index element={<CustomerDashboard />} />
             <Route path="meus-dados" element={<MeusDados />} />
+            <Route path="afiliado" element={<Afiliacao />} />
             <Route path="pedidos" element={<MeusPedidos />} />
             <Route path="endereco" element={<LocalEntrega />} />
             <Route path="produtos" element={<Catalog />} />

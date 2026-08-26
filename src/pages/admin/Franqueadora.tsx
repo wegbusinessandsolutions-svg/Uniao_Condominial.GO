@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { initFirebase } from "../../lib/firebase";
 import {
   collection,
@@ -29,6 +30,7 @@ import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 import { validarCPF, validarCNPJ, formatarCPF, formatarCNPJ } from "../../lib/documentValidators";
 
 interface FranqueadoraData {
+  numeroFranqueada: string;
   id?: string;
   // Básico
   razaoSocial: string;
@@ -89,6 +91,7 @@ interface FranqueadoraData {
 }
 
 const emptyFranqueadora: FranqueadoraData = {
+  numeroFranqueada: "",
   razaoSocial: "",
   nomeFantasia: "",
   cnpj: "",
@@ -149,6 +152,7 @@ export default function Franqueadora() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FranqueadoraData>(emptyFranqueadora);
+  const [chartData, setChartData] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<
     "Básico" | "Endereço" | "Fiscal" | "Extra" | "Franquia"
   >("Básico");
@@ -217,22 +221,64 @@ export default function Franqueadora() {
     window.print();
   };
 
+  
   const fetchData = async () => {
     setLoading(true);
     try {
       const { db } = await initFirebase();
       const querySnapshot = await getDocs(collection(db, "config_franqueadora"));
       const items: FranqueadoraData[] = [];
+      let totalRoyaltiesPercent = 0;
+      let countFranqueadas = 0;
+
       querySnapshot.forEach((doc) => {
-        items.push({ id: doc.id, ...(doc.data() as Omit<FranqueadoraData, "id">) });
+        const d = doc.data() as Omit<FranqueadoraData, "id">;
+        items.push({ id: doc.id, ...d });
+        if (d.royalties) {
+          const r = parseFloat(d.royalties.replace(',', '.'));
+          if (!isNaN(r)) {
+            totalRoyaltiesPercent += r;
+            countFranqueadas++;
+          }
+        }
       });
       setData(items);
+
+      const avgRoyalty = countFranqueadas > 0 ? (totalRoyaltiesPercent / countFranqueadas) / 100 : 0.05;
+
+      const ordersSnap = await getDocs(collection(db, "pedidos_venda"));
+      const monthlyTotals = Array(12).fill(0);
+      const currentYear = new Date().getFullYear();
+
+      ordersSnap.forEach((d) => {
+        const order = d.data();
+        if (order.createdAt && order.status !== "cancelado") {
+          const date = new Date(order.createdAt);
+          if (date.getFullYear() === currentYear) {
+            const m = date.getMonth();
+            const cand = order.totais?.totalPedido || order.totalPedido || order.valorTotal || order.valor_total || order.totalGeral || order.total;
+            let val = 0;
+            if (typeof cand === "number") val = cand;
+            else if (typeof cand === "string") val = parseFloat(cand.replace(/[^0-9,-]+/g,"").replace(",","."));
+            if (!isNaN(val)) monthlyTotals[m] += val;
+          }
+        }
+      });
+
+      const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      const newChartData = months.map((m, idx) => ({
+        name: m,
+        royalties: monthlyTotals[idx] * avgRoyalty
+      }));
+      setChartData(newChartData);
+
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchData();
@@ -364,10 +410,10 @@ export default function Franqueadora() {
         <div className="bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 gap-4 border-b border-slate-200 -mx-6 -mt-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Dados da Franqueadora
+              Empresas Franqueadas
             </h1>
             <p className="text-slate-500 text-sm mt-1">
-              Configurações e informações legais da sua franqueadora.
+              Gestão e cadastro de empresas franqueadas para controle de royalties.
             </p>
           </div>
           <button
@@ -375,11 +421,40 @@ export default function Franqueadora() {
             className="bg-brand-dark hover:bg-brand-dark/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm"
           >
             <Plus size={16} />
-            Nova Franqueadora
+            Nova Empresa Franqueada
           </button>
         </div>
 
+        
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <Building size={20} className="text-brand-dark" />
+            Somatório Mensal de Royalties ({new Date().getFullYear()})
+          </h2>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 12, fill: '#64748b' }} 
+                  tickFormatter={(value) => `R$ ${value >= 1000 ? (value/1000).toFixed(1) + 'k' : value}`}
+                />
+                <Tooltip 
+                  cursor={{ fill: '#f1f5f9' }}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, 'Royalties Recebidos']}
+                />
+                <Bar dataKey="royalties" fill="#0f172a" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+
           <div className="p-4 border-b border-slate-200 bg-slate-50/50">
             <div className="relative max-w-md">
               <Search
@@ -400,6 +475,7 @@ export default function Franqueadora() {
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                 <tr>
+                  <th className="px-6 py-3 font-semibold w-24">Nº</th>
                   <th className="px-6 py-3 font-semibold">Razão Social</th>
                   <th className="px-6 py-3 font-semibold">Nome Fantasia</th>
                   <th className="px-6 py-3 font-semibold">CNPJ</th>
@@ -410,6 +486,9 @@ export default function Franqueadora() {
                 {loading ? (
                   Array.from({ length: 3 }).map((_, rIdx) => (
                     <tr key={rIdx} className="animate-pulse">
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-slate-100 rounded w-8" />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="h-4 bg-slate-100 rounded w-48" />
                       </td>
@@ -427,10 +506,10 @@ export default function Franqueadora() {
                 ) : filteredData.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="px-6 py-8 text-center text-slate-500"
                     >
-                      Nenhuma franqueadora encontrada.
+                      Nenhuma empresa franqueada encontrada.
                     </td>
                   </tr>
                 ) : (
@@ -439,6 +518,9 @@ export default function Franqueadora() {
                       key={item.id}
                       className="hover:bg-slate-50 transition-colors"
                     >
+                      <td className="px-6 py-4 font-bold text-slate-700">
+                        {item.numeroFranqueada || "—"}
+                      </td>
                       <td className="px-6 py-4 font-medium text-slate-900">
                         {item.razaoSocial || "—"}
                       </td>
@@ -499,7 +581,7 @@ export default function Franqueadora() {
             <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between p-6 border-b border-slate-100">
                 <h2 className="text-xl font-bold text-slate-800">
-                  {editingId ? "Editar Franqueadora" : "Nova Franqueadora"}
+                  {editingId ? "Editar Empresa Franqueada" : "Nova Empresa Franqueada"}
                 </h2>
                 <button
                   onClick={handleCloseModal}
@@ -578,19 +660,48 @@ export default function Franqueadora() {
               >
                 {activeTab === "Básico" && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                    <div className="col-span-1 md:col-span-2">
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                        Razão Social *
-                      </label>
-                      <input
-                        type="text"
-                        name="razaoSocial"
-                        required
-                        value={formData.razaoSocial}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm"
-                      />
+                    
+                    <div className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      <div className="sm:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                          Nº da Franqueada (3 dígitos) *
+                        </label>
+                        <input
+                          type="text"
+                          name="numeroFranqueada"
+                          required
+                          maxLength={3}
+                          value={formData.numeroFranqueada}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').substring(0, 3);
+                            handleChange({
+                              ...e,
+                              target: {
+                                ...e.target,
+                                name: "numeroFranqueada",
+                                value: val
+                              }
+                            } as any);
+                          }}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm text-center font-bold"
+                          placeholder="Ex: 001"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                          Razão Social *
+                        </label>
+                        <input
+                          type="text"
+                          name="razaoSocial"
+                          required
+                          value={formData.razaoSocial}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm"
+                        />
+                      </div>
                     </div>
+
                     <div className="col-span-1 md:col-span-2">
                       <label className="block text-sm font-medium text-slate-700 mb-1.5">
                         Nome Fantasia
@@ -661,7 +772,7 @@ export default function Franqueadora() {
                     </div>
                     <div className="col-span-1 md:col-span-2">
                       <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                        Logo da Franqueadora
+                        Logo da Empresa Franqueada
                       </label>
                       <div className="flex items-center gap-4">
                         {formData.logoUrl && (
@@ -1056,8 +1167,8 @@ export default function Franqueadora() {
           <div className="flex justify-between items-baseline border-b-2 border-slate-900 pb-2 mb-6">
             <div>
               <h1 className="text-xl font-bold">
-                Ficha da Franqueadora —{" "}
-                {printingItem.razaoSocial || "Configuração da Franqueadora"}
+                Ficha da Empresa Franqueada —{" "}
+                {printingItem.razaoSocial || "Configuração da Empresa Franqueada"}
               </h1>
               <p className="text-sm text-slate-600 mt-1">
                 {printingItem.cnpj || "—"}
@@ -1078,6 +1189,12 @@ export default function Franqueadora() {
                 >
                   Básico
                 </th>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="bg-slate-100 font-semibold px-3 py-2 w-1/4">
+                  Número da Franqueada
+                </td>
+                <td className="px-3 py-2 font-bold">{printingItem.numeroFranqueada || "—"}</td>
               </tr>
               <tr className="border-b border-slate-200">
                 <td className="bg-slate-100 font-semibold px-3 py-2 w-1/4">
@@ -1271,7 +1388,7 @@ export default function Franqueadora() {
           </table>
 
           <div className="text-center text-slate-500 text-[10px]">
-            Página 1 de 1 — Relatório da Franqueadora
+            Página 1 de 1 — Relatório da Empresa Franqueada
           </div>
         </div>
       )}
