@@ -51,6 +51,7 @@ import { validarCPF, validarCNPJ, formatarCpfCnpj } from "../../lib/documentVali
 import { exportBeneficiosPdf, exportServicosPdf, exportGenericPdf } from "../../lib/pdfExport";
 import { compareSkuAscending } from "../../lib/serviceUtils";
 import { useAuth } from "../../context/AuthContext";
+import { useFranqueada } from "../../context/FranqueadaContext";
 import FormularioBeneficioModal from "../../components/admin/FormularioBeneficioModal";
 import GenericTableFilters, {
   FilterState,
@@ -103,6 +104,13 @@ export default function GenericModulePage({
   data: staticData = [],
 }: GenericModulePageProps) {
   const { profile } = useAuth();
+  const {
+    filterByFranqueada,
+    injectFranqueada,
+    canModify,
+    isFranqueada,
+    userUnidade,
+  } = useFranqueada();
   const [data, setData] = useState<any[]>(staticData);
   const [loading, setLoading] = useState(false);
 
@@ -219,12 +227,16 @@ export default function GenericModulePage({
 
   const handleOpenModal = (item?: any) => {
     if (item) {
+      if (!canModify(item)) {
+        alert("Acesso Restrito: Você só pode editar registros pertencentes à sua própria unidade franqueada.");
+        return;
+      }
       setEditingId(item.id);
       setFormData(item);
       setOriginalData(JSON.parse(JSON.stringify(item)));
     } else {
       setEditingId(null);
-      setFormData({});
+      setFormData(injectFranqueada({}));
       setOriginalData(null);
     }
     setIsModalOpen(true);
@@ -273,17 +285,24 @@ export default function GenericModulePage({
     setIsSaving(true);
     try {
       const { db } = await initFirebase();
-      const dataToSave = { ...formData };
+      const rawData = { ...formData };
 
-      Object.keys(dataToSave).forEach((key) => {
-        if (dataToSave[key] === undefined) {
-          delete dataToSave[key];
+      Object.keys(rawData).forEach((key) => {
+        if (rawData[key] === undefined) {
+          delete rawData[key];
         }
       });
 
+      // Injeta franqueadaId e codigoUnidade de acordo com a política de isolamento
+      const dataToSave = injectFranqueada(rawData);
       const itemName = dataToSave.nome || dataToSave.descricao || dataToSave.nivel || dataToSave.titulo || "Sem Nome";
 
       if (editingId) {
+        if (originalData && !canModify(originalData)) {
+          alert("Acesso Restrito: Permissão negada para atualizar dados de outra franquia.");
+          setIsSaving(false);
+          return;
+        }
         await updateDoc(doc(db, collectionName, editingId), dataToSave);
         await logAction(
           `Edição no módulo "${title || collectionName}": ${itemName}`,
@@ -321,6 +340,10 @@ export default function GenericModulePage({
     try {
       const { db } = await initFirebase();
       const itemToDelete = data.find(item => item.id === id);
+      if (itemToDelete && !canModify(itemToDelete)) {
+        alert("Acesso Restrito: Você só pode excluir registros pertencentes à sua própria unidade franqueada.");
+        return;
+      }
       const itemName = itemToDelete ? (itemToDelete.nome || itemToDelete.descricao || itemToDelete.nivel || itemToDelete.titulo || id) : id;
 
       await deleteDoc(doc(db, collectionName, id));
@@ -500,7 +523,8 @@ export default function GenericModulePage({
   }, [fields, columns, data]);
 
   const filteredData = useMemo(() => {
-    return data
+    const scopedList = filterByFranqueada(data);
+    return scopedList
       .filter((item) => {
         // 1. Search Term Filter (Global or Column-specific)
         if (filters.search.trim()) {

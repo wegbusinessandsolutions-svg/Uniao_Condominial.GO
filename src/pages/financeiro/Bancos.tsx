@@ -4,8 +4,10 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase
 import { initFirebase } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
+import { useFranqueada } from "../../context/FranqueadaContext";
 
 export default function Bancos() {
+  const { filterByFranqueada, injectFranqueada, canModify, isFranqueada } = useFranqueada();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -79,17 +81,21 @@ export default function Bancos() {
   }, []);
 
   const openAddModal = () => {
-    setFormData({ 
+    setFormData(injectFranqueada({ 
       tipo: "Corrente",
       ativa: true,
       saldoInicial: 0,
       saldoAtual: 0
-    });
+    }));
     setEditingId(null);
     setIsModalOpen(true);
   };
 
   const openEditModal = (item: any) => {
+    if (!canModify(item)) {
+      alert("Acesso Restrito: Você só pode editar contas bancárias da sua própria franquia.");
+      return;
+    }
     setFormData(item);
     setEditingId(item.id);
     setIsModalOpen(true);
@@ -128,12 +134,19 @@ export default function Bancos() {
         await Promise.all(batchUpdates);
       }
 
-      const savePayload = {
+      const rawPayload = {
         ...formData,
         updatedAt: new Date().toISOString()
       };
+      const savePayload = injectFranqueada(rawPayload);
 
       if (editingId) {
+        const oldDoc = data.find(d => d.id === editingId);
+        if (oldDoc && !canModify(oldDoc)) {
+          alert("Acesso Restrito: Permissão negada para alterar conta de outra franquia.");
+          setIsSaving(false);
+          return;
+        }
         await updateDoc(doc(db, "bancos", editingId), savePayload);
       } else {
         savePayload.createdAt = new Date().toISOString();
@@ -153,6 +166,10 @@ export default function Bancos() {
     try {
       const { db } = await initFirebase();
       const bankToDelete = data.find(item => item.id === id);
+      if (bankToDelete && !canModify(bankToDelete)) {
+        alert("Acesso Restrito: Você só pode excluir contas da sua própria franquia.");
+        return;
+      }
       const bankName = bankToDelete ? `${bankToDelete.banco || "Banco"} (${bankToDelete.agencia || ""}/${bankToDelete.conta || ""})` : id;
 
       await deleteDoc(doc(db, "bancos", id));
@@ -218,7 +235,7 @@ export default function Bancos() {
       <div className="bg-white rounded-xl shadow-sm border border-slate-200">
         <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50/50 rounded-t-xl">
           <div className="text-sm font-medium text-slate-600">
-            {data.length} conta(s)
+            {filterByFranqueada(data).length} conta(s)
           </div>
         </div>
 
@@ -266,14 +283,14 @@ export default function Bancos() {
                     </td>
                   </tr>
                 ))
-              ) : data.length === 0 ? (
+              ) : filterByFranqueada(data).length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
                     Nenhuma conta encontrada.
                   </td>
                 </tr>
               ) : (
-                data.map((item) => (
+                filterByFranqueada(data).map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 font-medium text-slate-900">{item.banco || '-'}</td>
                     <td className="px-6 py-4">

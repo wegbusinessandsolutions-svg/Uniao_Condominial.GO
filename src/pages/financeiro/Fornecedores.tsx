@@ -6,11 +6,13 @@ import { logAction } from "../../lib/audit";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 import { validarCPF, validarCNPJ, formatarCpfCnpj } from "../../lib/documentValidators";
 import { exportTableToPdf } from "../../lib/pdfExport";
+import { useFranqueada } from "../../context/FranqueadaContext";
 
 // Basic Tab structure
 const tabs = ["Básico", "Endereço", "Bancário", "Extra"];
 
 export default function Fornecedores() {
+  const { filterByFranqueada, injectFranqueada, canModify, isFranqueada } = useFranqueada();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,7 +46,7 @@ export default function Fornecedores() {
   };
 
   const openAddModal = () => {
-    setFormData({ ativo: true });
+    setFormData(injectFranqueada({ ativo: true }));
     setEditingId(null);
     setActiveTab("Básico");
     setEmailError("");
@@ -53,6 +55,10 @@ export default function Fornecedores() {
   };
 
   const openEditModal = (item: any) => {
+    if (!canModify(item)) {
+      alert("Acesso Restrito: Você só pode editar fornecedores cadastrados pela sua própria franquia.");
+      return;
+    }
     setFormData(item);
     setEditingId(item.id);
     setActiveTab("Básico");
@@ -136,12 +142,19 @@ export default function Fornecedores() {
     setIsSaving(true);
     try {
       const { db } = await initFirebase();
-      const savePayload = {
+      const rawPayload = {
         ...formData,
         updatedAt: new Date().toISOString()
       };
+      const savePayload = injectFranqueada(rawPayload);
 
       if (editingId) {
+        const oldDoc = data.find(item => item.id === editingId);
+        if (oldDoc && !canModify(oldDoc)) {
+          alert("Acesso Restrito: Permissão negada para alterar fornecedor de outra franquia.");
+          setIsSaving(false);
+          return;
+        }
         await updateDoc(doc(db, "fornecedores", editingId), savePayload);
       } else {
         savePayload.createdAt = new Date().toISOString();
@@ -161,6 +174,10 @@ export default function Fornecedores() {
     try {
       const { db } = await initFirebase();
       const supplierToDelete = data.find(item => item.id === id);
+      if (supplierToDelete && !canModify(supplierToDelete)) {
+        alert("Acesso Restrito: Você só pode excluir fornecedores cadastrados pela sua própria franquia.");
+        return;
+      }
       const supplierName = supplierToDelete ? (supplierToDelete.razaoSocial || supplierToDelete.nome || id) : id;
 
       await deleteDoc(doc(db, "fornecedores", id));
@@ -194,7 +211,7 @@ export default function Fornecedores() {
     );
   };
 
-  const filteredData = data.filter(item => {
+  const filteredData = filterByFranqueada(data).filter(item => {
     const searchLower = searchTerm.toLowerCase();
     const razao = (item.razaoSocial || item.nome || "").toLowerCase();
     const fantasia = (item.nomeFantasia || "").toLowerCase();

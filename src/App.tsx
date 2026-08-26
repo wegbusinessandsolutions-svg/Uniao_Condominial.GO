@@ -9,6 +9,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "./context/ToastContext";
+import { FranqueadaProvider } from "./context/FranqueadaContext";
 import { GeolocationLoginPrompt } from "./components/common/GeolocationLoginPrompt";
 import ShopLayout from "./components/layouts/ShopLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
@@ -100,8 +101,9 @@ export default function App() {
     <ToastProvider>
       <BrowserRouter>
         <AuthProvider>
-          <CartProvider>
-            <ThemeProvider>
+          <FranqueadaProvider>
+            <CartProvider>
+              <ThemeProvider>
                 <GeolocationLoginPrompt />
                 <Routes>
           <Route path="/aceite-afiliacao/:id" element={<AceiteAfiliacao />} />
@@ -548,7 +550,8 @@ export default function App() {
             <ScrollToTopButton />
           </ThemeProvider>
         </CartProvider>
-      </AuthProvider>
+      </FranqueadaProvider>
+    </AuthProvider>
     </BrowserRouter>
     </ToastProvider>
   );

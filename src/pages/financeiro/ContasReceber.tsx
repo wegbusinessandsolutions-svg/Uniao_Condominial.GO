@@ -27,8 +27,11 @@ import { logAction } from "../../lib/audit";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 import AfiliadosInadimplenciaDashboard, { CENTRO_CUSTO_AFILIACAO } from "../../components/financeiro/AfiliadosInadimplenciaDashboard";
 import { exportTableToPdf } from "../../lib/pdfExport";
+import { recalcularNivelClientePorRecebimento } from "../../services/nivelClienteService";
+import { useFranqueada } from "../../context/FranqueadaContext";
 
 export default function ContasReceber() {
+  const { filterByFranqueada, injectFranqueada, canModify, isFranqueada, userUnidade } = useFranqueada();
   const [data, setData] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
   const [afiliados, setAfiliados] = useState<any[]>([]);
@@ -182,15 +185,19 @@ export default function ContasReceber() {
   }, []);
 
   const openAddModal = () => {
-    setFormData({ 
+    setFormData(injectFranqueada({ 
       status: "Aberto",
       parcelas: 1,
-    });
+    }));
     setEditingId(null);
     setIsModalOpen(true);
   };
 
   const openEditModal = (item: any) => {
+    if (!canModify(item)) {
+      alert("Acesso Restrito: Você só pode editar contas a receber da sua própria franquia.");
+      return;
+    }
     const docId = item._docId || item.id;
     const clientName = (item.titular || item.clienteNome || item.cliente || "").trim();
     
@@ -283,13 +290,15 @@ export default function ContasReceber() {
       // Remove campos de controle de ID para não poluir o documento Firestore
       const { id, _docId, ...dataToSave } = formData;
 
-      const savePayload: any = {
+      const rawPayload: any = {
         ...dataToSave,
         titular: clientName || "",
         clienteNome: clientName || "",
         cliente: clientName || "",
         updatedAt: new Date().toISOString()
       };
+      
+      const savePayload: any = injectFranqueada(rawPayload);
       
       const { runTransaction } = await import("firebase/firestore");
 
@@ -299,6 +308,11 @@ export default function ContasReceber() {
       if (editingId) {
         const oldDoc = data.find(d => (d._docId || d.id) === editingId);
         if (oldDoc) {
+          if (!canModify(oldDoc)) {
+            alert("Acesso Restrito: Permissão negada para alterar contas a receber de outra franquia.");
+            setIsSaving(false);
+            return;
+          }
           oldStatus = oldDoc.status || "Aberto";
         }
         await updateDoc(doc(db, "contas_receber", editingId), savePayload);
@@ -346,6 +360,17 @@ export default function ContasReceber() {
         );
       }
 
+      // Recálculo automático do nível do cliente caso a conta esteja baixada como "Recebido"
+      if (savePayload.status === "Recebido" && savePayload.clienteId) {
+        const valorRecebidoFinal = Number(savePayload.valorRecebido || savePayload.valor || 0);
+        recalcularNivelClientePorRecebimento(db, savePayload.clienteId, valorRecebidoFinal, {
+          descricao: savePayload.descricao,
+          pedidoId: savePayload.pedidoId
+        }).catch((err) => {
+          console.warn("[ContasReceber] Aviso ao recalcular nível do cliente:", err);
+        });
+      }
+
       closeModal();
       fetchData();
     } catch (err) {
@@ -360,6 +385,10 @@ export default function ContasReceber() {
     try {
       const { db } = await initFirebase();
       const itemToDeleteDoc = data.find(item => (item._docId || item.id) === id);
+      if (itemToDeleteDoc && !canModify(itemToDeleteDoc)) {
+        alert("Acesso Restrito: Você só pode excluir contas a receber da sua própria franquia.");
+        return;
+      }
       const description = itemToDeleteDoc ? `${itemToDeleteDoc.descricao || "Conta"} (R$ ${itemToDeleteDoc.valor || 0})` : id;
 
       await deleteDoc(doc(db, "contas_receber", id));
@@ -420,7 +449,7 @@ export default function ContasReceber() {
     setActiveDatePreset("todos");
   };
 
-  const filteredData = data.filter(item => {
+  const filteredData = filterByFranqueada(data).filter(item => {
     // Filtro de Data (Início e Fim)
     if (dataInicio || dataFim) {
       const targetDate = tipoDataFiltro === "recebimento" 
@@ -564,6 +593,20 @@ export default function ContasReceber() {
         });
         
         await batch.commit();
+      }
+
+      // Se alterou para "Recebido", recalcular nível de cada cliente selecionado
+      if (newStatus === "Recebido") {
+        for (const id of selectedIds) {
+          const itm = data.find(d => (d._docId || d.id) === id);
+          if (itm && itm.clienteId) {
+            const val = Number(itm.valorRecebido || itm.valor || 0);
+            recalcularNivelClientePorRecebimento(db, itm.clienteId, val, {
+              descricao: itm.descricao,
+              pedidoId: itm.pedidoId
+            }).catch(e => console.warn("[ContasReceber] Erro em lote no recálculo de nível:", e));
+          }
+        }
       }
 
       await logAction(

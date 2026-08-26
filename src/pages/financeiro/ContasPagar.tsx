@@ -25,9 +25,11 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy,
 import { initFirebase } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
-
+import { useFranqueada } from "../../context/FranqueadaContext";
 import { exportTableToPdf } from "../../lib/pdfExport";
+
 export default function ContasPagar() {
+  const { filterByFranqueada, injectFranqueada, canModify, isFranqueada, userUnidade } = useFranqueada();
   const [data, setData] = useState<any[]>([]);
   const [fornecedores, setFornecedores] = useState<any[]>([]);
   const [centrosCusto, setCentrosCusto] = useState<any[]>([]);
@@ -107,16 +109,20 @@ export default function ContasPagar() {
   }, []);
 
   const openAddModal = () => {
-    setFormData({ 
+    setFormData(injectFranqueada({ 
       status: "Aberto",
       parcelas: 1,
       recorrente: false
-    });
+    }));
     setEditingId(null);
     setIsModalOpen(true);
   };
 
   const openEditModal = (item: any) => {
+    if (!canModify(item)) {
+      alert("Acesso Restrito: Você só pode editar contas a pagar da sua própria franquia.");
+      return;
+    }
     setFormData({ ...item, fornecedorId: item.fornecedorId || item.fornecedor || "" });
     setEditingId(item.id);
     setIsModalOpen(true);
@@ -142,10 +148,11 @@ export default function ContasPagar() {
     try {
       const { db } = await initFirebase();
       const { id: _, ...cleanFormData } = formData;
-      const savePayload: any = {
+      const rawPayload: any = {
         ...cleanFormData,
         updatedAt: new Date().toISOString()
       };
+      const savePayload: any = injectFranqueada(rawPayload);
       
       const { getDoc, runTransaction } = await import("firebase/firestore");
 
@@ -153,6 +160,11 @@ export default function ContasPagar() {
       if (editingId) {
         const oldDoc = data.find(d => d.id === editingId);
         if (oldDoc) {
+          if (!canModify(oldDoc)) {
+            alert("Acesso Restrito: Permissão negada para alterar contas a pagar de outra franquia.");
+            setIsSaving(false);
+            return;
+          }
           oldStatus = oldDoc.status || "Aberto";
         }
         await updateDoc(doc(db, "contas_pagar", editingId), savePayload);
@@ -214,6 +226,10 @@ export default function ContasPagar() {
     try {
       const { db } = await initFirebase();
       const itemToDelete = data.find(item => item.id === id);
+      if (itemToDelete && !canModify(itemToDelete)) {
+        alert("Acesso Restrito: Você só pode excluir contas a pagar da sua própria franquia.");
+        return;
+      }
       const description = itemToDelete ? `${itemToDelete.descricao || "Conta"} (R$ ${itemToDelete.valor || 0})` : id;
 
       await deleteDoc(doc(db, "contas_pagar", id));
@@ -273,7 +289,7 @@ export default function ContasPagar() {
     setActiveDatePreset("todos");
   };
 
-  const filteredData = data.filter(item => {
+  const filteredData = filterByFranqueada(data).filter(item => {
     // Filtro de Data (Início e Fim)
     if (dataInicio || dataFim) {
       const targetDate = tipoDataFiltro === "pagamento" 

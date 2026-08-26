@@ -9,10 +9,12 @@ import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 import toast from "react-hot-toast";
 import { convertToCSV, triggerDownloadCSV } from "../../components/admin/BackupCsvModal";
 import { useAuth } from "../../context/AuthContext";
+import { useFranqueada } from "../../context/FranqueadaContext";
 import { processarCancelamentoAfiliacaoFinanceiro } from "../../services/afiliacaoFinanceiroService";
 
 export default function Usuarios() {
   const { profile } = useAuth();
+  const { franqueadas, filterByFranqueada, injectFranqueada, canModify, isFranqueada, userUnidade } = useFranqueada();
   const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Todos");
@@ -32,6 +34,7 @@ export default function Usuarios() {
     role: "Cliente" as any,
     level: "Bronze",
     status: "Ativo",
+    codigoUnidade: "",
     cashbackBalance: 0,
     telefone: "",
     endereco: "",
@@ -107,7 +110,7 @@ export default function Usuarios() {
     }
   }, [mainTab]);
 
-  const filteredUsers = users.filter((u) => {
+  const filteredUsers = filterByFranqueada(users).filter((u) => {
     const matchesSearch = (u.displayName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (u.email || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "Todos" || u.status === statusFilter;
@@ -130,6 +133,10 @@ export default function Usuarios() {
     setActiveTab("login");
     setEmailError("");
     if (user) {
+      if (!canModify(user)) {
+        toast.error("Acesso Restrito: Você só pode gerenciar usuários vinculados à sua franquia.");
+        return;
+      }
       const initialPermissions = (user.permissions && Object.keys(user.permissions).length > 0)
         ? user.permissions
         : getDefaultPermissionsMapForRole(user.role);
@@ -140,6 +147,7 @@ export default function Usuarios() {
         role: user.role || "customer",
         level: user.level || "Bronze",
         status: user.status || "Ativo",
+        codigoUnidade: user.codigoUnidade || "",
         cashbackBalance: user.cashbackBalance || 0,
         telefone: user.telefone || "",
         endereco: user.endereco || "",
@@ -162,12 +170,13 @@ export default function Usuarios() {
       });
     } else {
       setEditingUser(null);
-      setFormData({
+      setFormData(injectFranqueada({
         email: "",
         displayName: "",
         role: "Cliente",
         level: "Bronze",
         status: "Ativo",
+        codigoUnidade: userUnidade || "",
         cashbackBalance: 0,
         telefone: "",
         endereco: "",
@@ -185,7 +194,7 @@ export default function Usuarios() {
         cpfResponsavel: "",
         codigoIndicacao: "",
         permissions: {}
-      });
+      }));
     }
     setIsModalOpen(true);
   };
@@ -265,7 +274,7 @@ export default function Usuarios() {
       const isCancelled = formData.status === "Cancelado";
       const nowIso = new Date().toISOString();
 
-      const savePayload: any = {
+      const rawPayload: any = {
         uid: dbId, // Use mock UID if creating
         email: formData.email,
         displayName: formData.displayName,
@@ -282,6 +291,7 @@ export default function Usuarios() {
         estado: formData.estado,
         cep: formData.cep,
         tipoCadastro: formData.tipoCadastro,
+        codigoUnidade: formData.codigoUnidade || "",
         cpf: formData.cpf,
         cnpj: formData.cnpj,
         nomeResponsavel: formData.nomeResponsavel,
@@ -292,6 +302,15 @@ export default function Usuarios() {
         emailConfirmadoAdmin: formData.emailConfirmadoAdmin,
         updatedAt: nowIso
       };
+
+      const savePayload = injectFranqueada(rawPayload);
+
+      if (editingUser) {
+        if (!canModify(editingUser)) {
+          alert("Acesso Restrito: Permissão negada para alterar usuário de outra franquia.");
+          return;
+        }
+      }
 
       if (isCancelled) {
         savePayload.dataCancelamento = editingUser?.dataCancelamento || nowIso;
@@ -434,6 +453,10 @@ export default function Usuarios() {
     try {
       const { db } = await initFirebase();
       const userToDelete = users.find(u => u.id === id);
+      if (userToDelete && !canModify(userToDelete)) {
+        alert("Acesso Restrito: Você só pode excluir usuários vinculados à sua franquia.");
+        return;
+      }
       const userEmail = userToDelete?.email || id;
 
       // 1. Delete associated `pedidos_venda`
@@ -1152,6 +1175,26 @@ export default function Usuarios() {
                       <option value="Cancelado">Cancelado</option>
                       <option value="Inativo">Inativo</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-900 mb-1">
+                      Unidade Franqueada Vinculada
+                    </label>
+                    <select
+                      value={formData.codigoUnidade || ""}
+                      onChange={(e) => setFormData({ ...formData, codigoUnidade: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-[#0B1A3A] text-sm bg-white"
+                    >
+                      <option value="">Rede Franqueadora Geral / Matriz (Acesso Global)</option>
+                      {franqueadas.map((frq) => (
+                        <option key={frq.id} value={frq.codigoUnidade || frq.id}>
+                          {frq.codigoUnidade ? `${frq.codigoUnidade} • ${frq.nomeFantasia || frq.razaoSocial}` : frq.razaoSocial}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Vincula a visualização e operações deste usuário à unidade específica.
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-900 mb-1">Usuário</label>

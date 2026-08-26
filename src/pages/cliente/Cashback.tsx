@@ -120,9 +120,9 @@ function validatePixKey(type: string, key: string): { isValid: boolean; errorMsg
 
 const DEFAULT_CASHBACK_RULES = [
   { nivel: "Bronze", percentual: 5, minimo: 0 },
-  { nivel: "Prata", percentual: 7, minimo: 150 },
-  { nivel: "Ouro", percentual: 10, minimo: 300 },
-  { nivel: "Diamante", percentual: 12, minimo: 500 }
+  { nivel: "Prata", percentual: 7, minimo: 401 },
+  { nivel: "Ouro", percentual: 10, minimo: 801 },
+  { nivel: "Diamante", percentual: 12, minimo: 1200.01 }
 ];
 
 export default function Cashback() {
@@ -661,9 +661,15 @@ export default function Cashback() {
 
             {/* Rules explanation box */}
             <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/50 text-xs text-slate-600 space-y-2">
-              <span className="font-bold text-slate-700 block">Como funciona o acúmulo?</span>
+              <span className="font-bold text-slate-700 block">Como funciona o nível e o acúmulo?</span>
               <p className="leading-relaxed">
-                Cada compra em nossa plataforma gera um percentual de crédito de acordo com a sua categoria atual (<strong>Bronze</strong>, <strong>Prata</strong>, <strong>Ouro</strong> ou <strong>Diamante</strong>). Seus créditos ficam salvos na sua carteira e podem ser usados para gerar cupons de desconto de até 100% ou resgatados via Pix com 75% do valor líquido.
+                Todo cliente inicia como <strong>Bronze</strong> (compras de R$ 1,00 até R$ 400,00). Ao realizar compras de R$ 401,00 até R$ 800,00 avança para <strong>Prata</strong>; de R$ 801,00 até R$ 1.200,00 torna-se <strong>Ouro</strong>; e compras acima de R$ 1.200,00 alcançam o nível <strong>Diamante</strong>.
+              </p>
+              <p className="leading-relaxed">
+                A cada recebimento de compra baixado no sistema financeiro, o nível do cliente é atualizado para as próximas compras, ajustando automaticamente a taxa de cashback e os preços exclusivos de sua categoria.
+              </p>
+              <p className="leading-relaxed">
+                Seus créditos de cashback acumulados ficam salvos na sua carteira e podem ser usados para gerar cupons de desconto de até 100% ou resgatados via Pix com 75% do valor líquido.
               </p>
             </div>
           </div>

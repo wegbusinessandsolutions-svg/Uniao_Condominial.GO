@@ -7,7 +7,8 @@ import {
   Search, 
   Coins, 
   X,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from "lucide-react";
 import { initFirebase } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
@@ -208,6 +209,22 @@ export default function CashbackAdmin() {
         </div>
       )}
 
+      {/* Informative Banner */}
+      <div className="p-4 bg-sky-50 border border-sky-200 rounded-xl flex items-start gap-3 text-sm text-sky-900">
+        <Sparkles className="text-sky-600 shrink-0 mt-0.5" size={18} />
+        <div>
+          <p className="font-semibold">Recálculo Automático de Categorias e Cashback (Bronze, Prata, Ouro, Diamante)</p>
+          <p className="text-xs text-sky-700 mt-1">
+            <strong>Regras de Enquadramento:</strong><br />
+            • <strong>Bronze (5%):</strong> De R$ 1,00 até R$ 400,00.<br />
+            • <strong>Prata (7%):</strong> De R$ 401,00 até R$ 800,00.<br />
+            • <strong>Ouro (10%):</strong> De R$ 801,00 até R$ 1.200,00.<br />
+            • <strong>Diamante (12%):</strong> Compras acima de R$ 1.200,00.<br />
+            A cada recebimento baixado ("Recebido" no Financeiro), o nível do cliente e suas taxas de cashback/preços são atualizados para as próximas compras.
+          </p>
+        </div>
+      </div>
+
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div className="relative w-full max-w-sm">
@@ -349,17 +366,20 @@ export default function CashbackAdmin() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                  Valor Mínimo do Pedido (R$)
+                  Valor Mínimo do Pedido para Enquadramento (R$)
                 </label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="Ex: 100"
+                  placeholder="Ex: 801 (classifica cliente neste nível se compra baixada >= este valor)"
                   value={ruleForm.minimo}
                   onChange={(e) => setRuleForm(prev => ({ ...prev, minimo: Number(e.target.value) }))}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-dark/40 text-sm text-slate-800"
                 />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Ao baixar o recebimento de uma compra, o cliente é automaticamente reclassificado para este nível caso o valor da última compra atinja este valor mínimo.
+                </p>
               </div>
 
               <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">

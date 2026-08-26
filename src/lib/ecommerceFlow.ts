@@ -4,6 +4,7 @@ import { GoogleGenAI } from "@google/genai";
 import { logAction } from "./audit";
 import { sendEmailWithLog } from "./emailService";
 import { gravarLogCentralizadoPedido } from "./orderLogger";
+import { recalcularNivelClientePorRecebimento } from "../services/nivelClienteService";
 
 /**
  * ============================================================
@@ -327,6 +328,12 @@ export async function processarPedidoWebsite(pedidoWebsite: any) {
     if (isPaidImmediately) {
       contasReceberPayload.recebidoEm = todayStr;
       contasReceberPayload.valorRecebido = totalOrderValue;
+
+      // Recalcular nível do cliente imediatamente para pagamentos instantâneos (PIX / Cartão)
+      recalcularNivelClientePorRecebimento(db, resolvedClienteId, totalOrderValue, {
+        pedidoId: numeroPedido,
+        descricao: `Pedido e-commerce #${numeroPedido}`
+      }).catch((err) => console.warn("[ecommerceFlow] Aviso ao recalcular nível do cliente:", err));
     }
 
     await addDoc(collection(db, "contas_receber"), contasReceberPayload);

@@ -248,9 +248,51 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["clienteUid", "text"]
+    },
+    "configuracao_royalties": {
+      "title": "Configuração de Agendamento de Royalties",
+      "description": "Parâmetros e regras de agendamento automático de apuração e faturamento de royalties das franqueadas",
+      "type": "object",
+      "properties": {
+        "ativo": { "type": "boolean" },
+        "diaFechamento": { "type": "number" },
+        "diaVencimento": { "type": "number" },
+        "aliquotaPadraoRoyalty": { "type": "number" },
+        "aliquotaPadraoFundoPropaganda": { "type": "number" },
+        "gerarContaReceberAutomaticamente": { "type": "boolean" },
+        "notificarEmail": { "type": "boolean" },
+        "emailNotificacao": { "type": "string" }
+      },
+      "required": ["ativo", "diaFechamento", "diaVencimento"]
+    },
+    "cobrancas_royalties": {
+      "title": "Cobranças e Faturas de Royalties",
+      "description": "Histórico de faturamentos mensais, royalties apurados e cobranças emitidas para as franqueadas",
+      "type": "object",
+      "properties": {
+        "competencia": { "type": "string" },
+        "franqueadaId": { "type": "string" },
+        "codigoUnidade": { "type": "string" },
+        "faturamentoBruto": { "type": "number" },
+        "valorRoyalties": { "type": "number" },
+        "valorFundoPropaganda": { "type": "number" },
+        "valorTotal": { "type": "number" },
+        "dataVencimento": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pendente", "Faturado", "Pago", "Cancelado"] },
+        "contaReceberId": { "type": "string" }
+      },
+      "required": ["competencia", "codigoUnidade", "valorTotal", "status"]
     }
   },
   "firestore": {
+    "configuracao_royalties/{configId}": {
+      "schema": "configuracao_royalties",
+      "description": "Configurações do motor de agendamento de faturamento de royalties"
+    },
+    "cobrancas_royalties/{cobrancaId}": {
+      "schema": "cobrancas_royalties",
+      "description": "Registro analítico de cobranças mensais de royalties e marketing da rede de franqueadas"
+    },
     "sugestoes/{sugestaoId}": {
       "schema": "sugestoes",
       "description": "Coleção de sugestões enviadas por clientes e visitantes"

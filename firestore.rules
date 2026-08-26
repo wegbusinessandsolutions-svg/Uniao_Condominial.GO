@@ -259,6 +259,14 @@ service cloud.firestore {
       allow read, write: if isStaff();
     }
 
+    match /configuracao_royalties/{id} {
+      allow read, write: if isStaff();
+    }
+
+    match /cobrancas_royalties/{id} {
+      allow read, write: if isStaff();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

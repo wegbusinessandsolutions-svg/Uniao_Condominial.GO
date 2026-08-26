@@ -36,6 +36,7 @@ import {
   garantirCentroCustoAfiliacao,
   CENTRO_CUSTO_AFILIACAO,
 } from "../../services/afiliacaoFinanceiroService";
+import { useFranqueada } from "../../context/FranqueadaContext";
 
 export type TipoCentro = "custo" | "lucro";
 
@@ -52,6 +53,7 @@ export interface CentroCustoItem {
 }
 
 export default function CentrosCusto() {
+  const { filterByFranqueada, injectFranqueada, canModify, isFranqueada } = useFranqueada();
   const [data, setData] = useState<CentroCustoItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [migrationNotice, setMigrationNotice] = useState<string | null>(null);
@@ -147,19 +149,23 @@ export default function CentrosCusto() {
   }, []);
 
   const openAddModal = () => {
-    setFormData({
+    setFormData(injectFranqueada({
       tipo: "custo",
       status: "Ativo",
       categoria: "fixo",
       nome: "",
       centroPai: "",
       descricao: "",
-    });
+    }));
     setEditingId(null);
     setIsModalOpen(true);
   };
 
   const openEditModal = (item: CentroCustoItem) => {
+    if (!canModify(item)) {
+      alert("Acesso Restrito: Você só pode editar centros de custo/lucro da sua própria franquia.");
+      return;
+    }
     setFormData({
       tipo: item.tipo || "custo",
       status: item.status || "Ativo",
@@ -207,7 +213,7 @@ export default function CentrosCusto() {
     setIsSaving(true);
     try {
       const { db } = await initFirebase();
-      const savePayload: any = {
+      const rawPayload: any = {
         nome: formData.nome.trim(),
         tipo: formData.tipo || "custo",
         categoria: formData.categoria || "fixo",
@@ -216,8 +222,15 @@ export default function CentrosCusto() {
         status: formData.status || "Ativo",
         updatedAt: new Date().toISOString(),
       };
+      const savePayload: any = injectFranqueada(rawPayload);
 
       if (editingId) {
+        const oldDoc = data.find((d) => d.id === editingId);
+        if (oldDoc && !canModify(oldDoc)) {
+          alert("Acesso Restrito: Permissão negada para alterar centro de outra franquia.");
+          setIsSaving(false);
+          return;
+        }
         await updateDoc(doc(db, "centros_custo", editingId), savePayload);
         await logAction(
           `Edição de centro (${savePayload.tipo === "lucro" ? "Centro de Lucro" : "Centro de Custo"}): ${savePayload.nome}`,
@@ -250,6 +263,10 @@ export default function CentrosCusto() {
     try {
       const { db } = await initFirebase();
       const itemToDeleteObj = data.find((item) => item.id === id);
+      if (itemToDeleteObj && !canModify(itemToDeleteObj)) {
+        alert("Acesso Restrito: Você só pode excluir centros da sua própria franquia.");
+        return;
+      }
       const name = itemToDeleteObj?.nome || id;
       const tipo = itemToDeleteObj?.tipo || "custo";
 
@@ -298,14 +315,15 @@ export default function CentrosCusto() {
   };
 
   // Metrics
-  const totalGeral = data.length;
-  const totalCusto = data.filter((d) => d.tipo === "custo").length;
-  const totalLucro = data.filter((d) => d.tipo === "lucro").length;
-  const totalAtivos = data.filter((d) => d.status === "Ativo").length;
+  const scopedData = useMemo(() => filterByFranqueada(data), [data, filterByFranqueada]);
+  const totalGeral = scopedData.length;
+  const totalCusto = scopedData.filter((d) => d.tipo === "custo").length;
+  const totalLucro = scopedData.filter((d) => d.tipo === "lucro").length;
+  const totalAtivos = scopedData.filter((d) => d.status === "Ativo").length;
 
   // Filtered List
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
+    return scopedData.filter((item) => {
       // Search term
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase();

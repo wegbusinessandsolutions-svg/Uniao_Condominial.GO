@@ -49,6 +49,8 @@ import {
   NavGroup
 } from "../../lib/permissions";
 
+import FranqueadaSwitcher from "../admin/FranqueadaSwitcher";
+
 // Lazy-load secondary layout components to prevent blocking initial render
 const GuidedTour = React.lazy(() => import("../common/GuidedTour"));
 const AdminNotifications = React.lazy(() =>
@@ -628,7 +630,8 @@ export default function AdminLayout() {
               : location.pathname.split("/").pop()?.replace(/-/g, " ") ||
                 "Dashboard"}
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {isAdmin && <FranqueadaSwitcher />}
             {isAdmin && (
               <button
                 type="button"

@@ -23,6 +23,7 @@ import {
   doc,
 } from "firebase/firestore";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
+import { useFranqueada } from "../../context/FranqueadaContext";
 
 interface Produto {
   id?: string;
@@ -177,6 +178,7 @@ const ImageUploadLabel: React.FC<{
 
 
 export default function Produtos() {
+  const { filterByFranqueada, injectFranqueada, canModify, isFranqueada } = useFranqueada();
   const [data, setData] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -229,6 +231,10 @@ export default function Produtos() {
   const handleOpenModal = (item?: Produto) => {
     setActiveTab("Basico");
     if (item) {
+      if (!canModify(item)) {
+        alert("Acesso Restrito: Você só pode editar produtos da sua própria franquia.");
+        return;
+      }
       setEditingId(item.id || null);
       let categorias = item.categorias || [];
       if (categorias.length === 0 && item.categoria) {
@@ -239,7 +245,7 @@ export default function Produtos() {
       setOriginalData(JSON.parse(JSON.stringify(initialForm)));
     } else {
       setEditingId(null);
-      setFormData({ ativo: true, galeria: [], categorias: [] } as Produto);
+      setFormData(injectFranqueada({ ativo: true, galeria: [], categorias: [] } as Produto));
       setOriginalData(null);
     }
     setIsModalOpen(true);
@@ -272,12 +278,19 @@ export default function Produtos() {
     setIsSaving(true);
     try {
       const { db } = await initFirebase();
-      const dataToSave = { ...formData };
+      const rawData = { ...formData };
 
       // Clean undefined
-      Object.keys(dataToSave).forEach(key => dataToSave[key] === undefined && delete dataToSave[key]);
+      Object.keys(rawData).forEach(key => (rawData as any)[key] === undefined && delete (rawData as any)[key]);
+      const dataToSave = injectFranqueada(rawData);
 
       if (editingId) {
+        const oldDoc = data.find(p => p.id === editingId);
+        if (oldDoc && !canModify(oldDoc)) {
+          alert("Acesso Restrito: Permissão negada para alterar produto de outra franquia.");
+          setIsSaving(false);
+          return;
+        }
         await updateDoc(doc(db, "produtos", editingId), dataToSave);
         await logAction(
           `Edição de produto: ${dataToSave.nome}`,
@@ -310,6 +323,10 @@ export default function Produtos() {
     try {
       const { db } = await initFirebase();
       const productToDelete = data.find(p => p.id === id);
+      if (productToDelete && !canModify(productToDelete)) {
+        alert("Acesso Restrito: Você só pode excluir produtos da sua própria franquia.");
+        return;
+      }
       const productName = productToDelete?.nome || id;
 
       await deleteDoc(doc(db, "produtos", id));
@@ -329,7 +346,7 @@ export default function Produtos() {
     }
   };
 
-  const filteredData = data.filter((item) =>
+  const filteredData = filterByFranqueada(data).filter((item) =>
     JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase())
   );
 

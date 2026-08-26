@@ -16,7 +16,12 @@ import {
   CheckCircle2,
   AlertTriangle,
   Network,
+  Globe,
+  ExternalLink,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useFranqueada } from "../../context/FranqueadaContext";
+import toast from "react-hot-toast";
 import { initFirebase } from "../../lib/firebase";
 import {
   collection,
@@ -149,6 +154,7 @@ const emptyEmpresa: EmpresaData = {
 };
 
 export default function Empresa() {
+  const { refreshFranqueadas } = useFranqueada();
   const [data, setData] = useState<EmpresaData[]>([]);
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -339,11 +345,13 @@ export default function Empresa() {
         });
       }
 
+      await refreshFranqueadas();
       await fetchData();
       handleCloseModal();
+      toast.success("Empresa franqueada salva com sucesso!");
     } catch (error) {
       console.error("Error saving doc:", error);
-      alert("Erro ao salvar os dados.");
+      toast.error("Erro ao salvar os dados.");
     } finally {
       setIsSaving(false);
     }
@@ -353,10 +361,12 @@ export default function Empresa() {
     try {
       const { db } = await initFirebase();
       await deleteDoc(doc(db, "config_empresa", id));
+      await refreshFranqueadas();
       await fetchData();
+      toast.success("Franqueada excluída com sucesso.");
     } catch (error) {
       console.error("Error deleting doc:", error);
-      alert("Erro ao excluir registro.");
+      toast.error("Erro ao excluir registro.");
     }
   };
 
@@ -370,6 +380,30 @@ export default function Empresa() {
   return (
     <>
       <div className="space-y-6 print:hidden">
+        {/* Banner Informativo de Ligação com Franqueador */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="p-2.5 bg-[#0071e3] text-white rounded-xl shadow-xs shrink-0">
+              <Globe size={20} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">
+                Cadastro e Gestão de Unidades Franqueadas
+              </h3>
+              <p className="text-xs text-slate-600 mt-0.5 max-w-xl">
+                Aqui você cadastra filiais, define percentuais de royalties e responsáveis. Para ver a consolidação de faturamento e royalties de toda a rede, acesse a <strong>Central do Franqueador Master</strong>.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/admin/franqueadora"
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 shadow-sm"
+          >
+            <span>Central do Franqueador</span>
+            <ExternalLink size={13} />
+          </Link>
+        </div>
+
         <div className="bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 gap-4 border-b border-slate-200 -mx-6 -mt-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">

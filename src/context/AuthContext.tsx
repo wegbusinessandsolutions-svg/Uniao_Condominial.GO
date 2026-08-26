@@ -36,6 +36,10 @@ interface UserProfile {
   longitude?: number;
   geolocalizacaoAtiva?: boolean;
   geolocalizacaoAtualizadaEm?: any;
+  codigoUnidade?: string;
+  franqueadaId?: string;
+  tipoAcesso?: "Franqueadora" | "Franqueada" | string;
+  isFranqueadora?: boolean;
 }
 
 interface AuthContextType {
