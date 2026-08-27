@@ -1,5 +1,35 @@
 {
   "entities": {
+    "users": {
+      "title": "Usuários e Perfis",
+      "description": "Perfis de clientes, síndicos, condomínios e colaboradores do sistema",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "type": "string" },
+        "tipoCadastro": { "type": "string", "enum": ["Fisica", "Juridica"] },
+        "tipoCondominio": { "type": "string", "enum": ["Residencial", "Comercial"] },
+        "quantidadeUnidades": { "type": "number", "description": "Quantidade de unidades no condomínio" },
+        "telefone": { "type": "string" },
+        "cpf": { "type": "string" },
+        "cnpj": { "type": "string" },
+        "nomeResponsavel": { "type": "string" },
+        "cpfResponsavel": { "type": "string" },
+        "funcao": { "type": "string" },
+        "endereco": { "type": "string" },
+        "numero": { "type": "string" },
+        "complemento": { "type": "string" },
+        "bairro": { "type": "string" },
+        "cidade": { "type": "string" },
+        "estado": { "type": "string" },
+        "cep": { "type": "string" },
+        "codigoIndicacao": { "type": "string" }
+      },
+      "required": ["email", "displayName", "role", "telefone", "quantidadeUnidades"]
+    },
     "logs_sistema": {
       "title": "Logs de Auditoria do Sistema",
       "description": "Registros de auditoria de ações críticas no sistema",
@@ -282,9 +312,65 @@
         "contaReceberId": { "type": "string" }
       },
       "required": ["competencia", "codigoUnidade", "valorTotal", "status"]
+    },
+    "solicitacao_boleto": {
+      "title": "Solicitações de Emissão de Boletos em Atraso",
+      "description": "Pedidos de emissão de 2ª via ou novo boleto para pagamento de mensalidade em atraso",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "afiliacaoId": { "type": "string" },
+        "nomeCliente": { "type": "string" },
+        "cnpj": { "type": "string" },
+        "representadoPor": { "type": "string" },
+        "emailEnvio": { "type": "string" },
+        "parcelaId": { "type": "string" },
+        "numeroParcela": { "type": "string" },
+        "valor": { "type": "number" },
+        "vencimentoOriginal": { "type": "string" },
+        "status": { "type": "string" },
+        "tipo": { "type": "string" },
+        "solicitadoEm": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "emailEnvio", "valor", "status"]
+    },
+    "config_empresa": {
+      "title": "Cadastro de Empresas Franqueadas",
+      "description": "Dados cadastrais, contratuais, fiscais e de e-mails para contato departamental das empresas franqueadas",
+      "type": "object",
+      "properties": {
+        "razaoSocial": { "type": "string" },
+        "nomeFantasia": { "type": "string" },
+        "cnpj": { "type": "string" },
+        "codigoUnidade": { "type": "string" },
+        "statusFranquia": { "type": "string" },
+        "email": { "type": "string" },
+        "telefone": { "type": "string" },
+        "emailDiretoria": { "type": "string", "description": "E-mail para contato com a Diretoria Executiva" },
+        "emailComercial": { "type": "string", "description": "E-mail para contato com o Departamento Comercial" },
+        "emailFinanceiro": { "type": "string", "description": "E-mail para contato com o Departamento Financeiro" },
+        "emailSac": { "type": "string", "description": "E-mail para contato com o Serviço de Atendimento ao Cliente (SAC)" },
+        "royalties": { "type": "string" },
+        "fundoPropaganda": { "type": "string" },
+        "cidade": { "type": "string" },
+        "uf": { "type": "string" }
+      },
+      "required": ["razaoSocial"]
     }
   },
   "firestore": {
+    "config_empresa/{empresaId}": {
+      "schema": "config_empresa",
+      "description": "Coleção de configurações e cadastro das empresas franqueadas"
+    },
+    "solicitacoes_boletos/{solicitacaoId}": {
+      "schema": "solicitacao_boleto",
+      "description": "Coleção de solicitações de emissão de boletos para mensalidades em atraso"
+    },
+    "users/{userId}": {
+      "schema": "users",
+      "description": "Documentos de perfis de usuários e clientes cadastrados"
+    },
     "configuracao_royalties/{configId}": {
       "schema": "configuracao_royalties",
       "description": "Configurações do motor de agendamento de faturamento de royalties"

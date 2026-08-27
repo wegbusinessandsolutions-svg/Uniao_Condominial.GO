@@ -40,6 +40,9 @@ interface UserProfile {
   franqueadaId?: string;
   tipoAcesso?: "Franqueadora" | "Franqueada" | string;
   isFranqueadora?: boolean;
+  tipoCondominio?: "Residencial" | "Comercial" | string;
+  quantidadeUnidades?: number | string;
+  quantidadeUnidadesCondominio?: number | string;
 }
 
 interface AuthContextType {

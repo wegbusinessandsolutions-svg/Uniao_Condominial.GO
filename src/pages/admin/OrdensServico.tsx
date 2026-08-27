@@ -180,9 +180,9 @@ export default function OrdensServicoAdmin() {
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                       o.status === 'Serviço Concluído' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 
                       o.status === 'Confirmada a Visita' ? 'bg-sky-100 text-sky-800 border border-sky-200' : 
-                      (o.status === 'Cancelada pelo Cliente' || o.status === 'Cancelado') ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-blue-50 text-blue-800 border border-blue-200'
+                      (o.status === 'Cancelada pelo Cliente' || o.status === 'Cancelado') ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-amber-100 text-amber-900 border border-amber-300'
                     }`}>
-                      {o.status}
+                      {o.status || 'aguardando confirmação - Equipe União Condominial'}
                     </span>
                   </div>
                   <h3 className="font-extrabold text-lg text-slate-900 dark:text-white">{o.servicoNome}</h3>
@@ -190,7 +190,7 @@ export default function OrdensServicoAdmin() {
 
                 {/* Status action buttons */}
                 <div className="flex flex-wrap gap-2 shrink-0 items-center">
-                  {o.status === 'Solicitado o Serviço' && (
+                  {(o.status === 'Solicitado o Serviço' || o.status === 'aguardando confirmação - Equipe União Condominial' || o.status === 'Aguardando Confirmação - Equipe União Condominial' || o.status === 'Pendente' || !o.status) && (
                     <>
                       <button
                         onClick={() => handleStatusChange(o.id, 'Confirmada a Visita')}

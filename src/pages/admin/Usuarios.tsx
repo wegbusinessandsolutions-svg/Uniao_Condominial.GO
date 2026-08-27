@@ -11,6 +11,7 @@ import { convertToCSV, triggerDownloadCSV } from "../../components/admin/BackupC
 import { useAuth } from "../../context/AuthContext";
 import { useFranqueada } from "../../context/FranqueadaContext";
 import { processarCancelamentoAfiliacaoFinanceiro } from "../../services/afiliacaoFinanceiroService";
+import { formatarCPF, formatarCNPJ } from "../../lib/documentValidators";
 
 export default function Usuarios() {
   const { profile } = useAuth();
@@ -164,6 +165,8 @@ export default function Usuarios() {
         funcao: user.funcao || "",
         cpfResponsavel: user.cpfResponsavel || "",
         codigoIndicacao: user.codigoIndicacao || "",
+        tipoCondominio: user.tipoCondominio || "",
+        quantidadeUnidades: user.quantidadeUnidades || user.quantidadeUnidadesCondominio || "",
         permissions: initialPermissions,
         emailConfirmadoAdmin: user.emailConfirmadoAdmin || false,
         password: ""
@@ -193,6 +196,8 @@ export default function Usuarios() {
         funcao: "",
         cpfResponsavel: "",
         codigoIndicacao: "",
+        tipoCondominio: "",
+        quantidadeUnidades: "",
         permissions: {}
       }));
     }
@@ -298,6 +303,8 @@ export default function Usuarios() {
         funcao: formData.funcao,
         cpfResponsavel: formData.cpfResponsavel,
         codigoIndicacao: formData.codigoIndicacao,
+        tipoCondominio: formData.tipoCondominio || "",
+        quantidadeUnidades: formData.quantidadeUnidades ? Number(formData.quantidadeUnidades) || formData.quantidadeUnidades : "",
         permissions: ["admin", "Administrador", "Admin", "Comercial", "Financeiro", "Estoquista", "Entregador", "Expedição"].includes(formData.role) ? formData.permissions : {},
         emailConfirmadoAdmin: formData.emailConfirmadoAdmin,
         updatedAt: nowIso
@@ -319,29 +326,43 @@ export default function Usuarios() {
 
       await setDoc(doc(db, "users", dbId), savePayload, { merge: true });
 
-      // Sincronizar status com afiliação na coleção afiliados_uc
+      // Sincronizar dados e status com afiliação na coleção afiliados_uc
       try {
         const cancelDateToSave = editingUser?.dataCancelamento || nowIso;
+        const affiliateSyncData: any = {
+          nomeCondominio: formData.displayName,
+          nomeSindico: formData.nomeResponsavel || formData.displayName,
+          funcaoSindico: formData.funcao || "",
+          cnpj: formData.cnpj || formData.cpf || "",
+          telefone: formData.telefone || "",
+          email: formData.email,
+          tipoCondominio: formData.tipoCondominio || "",
+          unidadesHabitacionais: formData.quantidadeUnidades ? Number(formData.quantidadeUnidades) || formData.quantidadeUnidades : 0,
+          endereco: formData.endereco || "",
+          numero: formData.numero || "",
+          complemento: formData.complemento || "",
+          bairro: formData.bairro || "",
+          cidade: formData.cidade || "",
+          estado: formData.estado || "",
+          cep: formData.cep || "",
+          updatedAt: nowIso
+        };
         
         // 1. Registro direto por ID
         const afDirectRef = doc(db, "afiliados_uc", dbId);
         const afDirectSnap = await getDoc(afDirectRef);
         if (afDirectSnap.exists()) {
+          const payloadDirect = { ...affiliateSyncData };
           if (isCancelled) {
-            await updateDoc(afDirectRef, {
-              status: "Cancelado",
-              dataCancelamento: cancelDateToSave,
-              canceladoPor: profile?.displayName || profile?.email || "Painel de Usuários",
-              motivoCancelamento: "Status cancelado no Painel de Usuários",
-              updatedAt: nowIso
-            });
+            payloadDirect.status = "Cancelado";
+            payloadDirect.dataCancelamento = cancelDateToSave;
+            payloadDirect.canceladoPor = profile?.displayName || profile?.email || "Painel de Usuários";
+            payloadDirect.motivoCancelamento = "Status cancelado no Painel de Usuários";
           } else if (formData.status === "Ativo" && afDirectSnap.data().status === "Cancelado") {
-            await updateDoc(afDirectRef, {
-              status: "Ativo",
-              dataAtivacao: nowIso,
-              updatedAt: nowIso
-            });
+            payloadDirect.status = "Ativo";
+            payloadDirect.dataAtivacao = nowIso;
           }
+          await updateDoc(afDirectRef, payloadDirect);
         }
 
         // 2. Query por userId
@@ -349,21 +370,17 @@ export default function Usuarios() {
           const qUserAf = query(collection(db, "afiliados_uc"), where("userId", "==", dbId));
           const snapUserAf = await getDocs(qUserAf);
           for (const d of snapUserAf.docs) {
+            const payloadUser = { ...affiliateSyncData };
             if (isCancelled) {
-              await updateDoc(doc(db, "afiliados_uc", d.id), {
-                status: "Cancelado",
-                dataCancelamento: cancelDateToSave,
-                canceladoPor: profile?.displayName || profile?.email || "Painel de Usuários",
-                motivoCancelamento: "Status cancelado no Painel de Usuários",
-                updatedAt: nowIso
-              });
+              payloadUser.status = "Cancelado";
+              payloadUser.dataCancelamento = cancelDateToSave;
+              payloadUser.canceladoPor = profile?.displayName || profile?.email || "Painel de Usuários";
+              payloadUser.motivoCancelamento = "Status cancelado no Painel de Usuários";
             } else if (formData.status === "Ativo" && d.data().status === "Cancelado") {
-              await updateDoc(doc(db, "afiliados_uc", d.id), {
-                status: "Ativo",
-                dataAtivacao: nowIso,
-                updatedAt: nowIso
-              });
+              payloadUser.status = "Ativo";
+              payloadUser.dataAtivacao = nowIso;
             }
+            await updateDoc(doc(db, "afiliados_uc", d.id), payloadUser);
           }
         }
 
@@ -372,21 +389,17 @@ export default function Usuarios() {
           const qEmailAf = query(collection(db, "afiliados_uc"), where("email", "==", formData.email.trim()));
           const snapEmailAf = await getDocs(qEmailAf);
           for (const d of snapEmailAf.docs) {
+            const payloadEmail = { ...affiliateSyncData };
             if (isCancelled) {
-              await updateDoc(doc(db, "afiliados_uc", d.id), {
-                status: "Cancelado",
-                dataCancelamento: cancelDateToSave,
-                canceladoPor: profile?.displayName || profile?.email || "Painel de Usuários",
-                motivoCancelamento: "Status cancelado no Painel de Usuários",
-                updatedAt: nowIso
-              });
+              payloadEmail.status = "Cancelado";
+              payloadEmail.dataCancelamento = cancelDateToSave;
+              payloadEmail.canceladoPor = profile?.displayName || profile?.email || "Painel de Usuários";
+              payloadEmail.motivoCancelamento = "Status cancelado no Painel de Usuários";
             } else if (formData.status === "Ativo" && d.data().status === "Cancelado") {
-              await updateDoc(doc(db, "afiliados_uc", d.id), {
-                status: "Ativo",
-                dataAtivacao: nowIso,
-                updatedAt: nowIso
-              });
+              payloadEmail.status = "Ativo";
+              payloadEmail.dataAtivacao = nowIso;
             }
+            await updateDoc(doc(db, "afiliados_uc", d.id), payloadEmail);
           }
         }
       } catch (afiliadoSyncErr) {
@@ -569,6 +582,8 @@ export default function Usuarios() {
         nivel: u.level || "Bronze",
         saldo_cashback: Number(u.cashbackBalance || 0).toFixed(2),
         telefone: u.telefone || "",
+        tipo_condominio: u.tipoCondominio || "",
+        quantidade_unidades: u.quantidadeUnidades || u.quantidadeUnidadesCondominio || "",
         cpf_cnpj: u.cpf || u.cnpj || "",
         endereco: u.endereco || "",
         numero: u.numero || "",
@@ -1268,46 +1283,131 @@ export default function Usuarios() {
 
               {activeTab === "cadastral" && (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="col-span-2 md:col-span-2">
+                    <label className="block text-sm font-bold text-slate-900 mb-1">
+                      {formData.tipoCadastro === "Fisica" ? "Nome Completo" : "Nome / Razão Social / Condomínio"} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.displayName || ""}
+                      onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                      placeholder={formData.tipoCadastro === "Fisica" ? "Nome Completo" : "Ex: Condomínio Residencial Parque"}
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-900 mb-1">Tipo de Cadastro</label>
+                    <select
+                      value={formData.tipoCadastro || "Juridica"}
+                      onChange={(e) => setFormData({ ...formData, tipoCadastro: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                    >
+                      <option value="Juridica">Pessoa Jurídica (Condomínio / Empresa)</option>
+                      <option value="Fisica">Pessoa Física</option>
+                    </select>
+                  </div>
+
                   {formData.tipoCadastro === "Juridica" ? (
                     <>
                       <div>
-                        <label className="block text-sm font-bold text-slate-900 mb-1">Nome</label>
-                        <input type="text" value={formData.displayName} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-slate-900 mb-1">Tipo de Cadastro</label>
-                        <input type="text" value="Pessoa Jurídica" readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
-                      </div>
-                      <div>
                         <label className="block text-sm font-bold text-slate-900 mb-1">C.N.P.J.</label>
-                        <input type="text" value={formData.cnpj} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <input
+                          type="text"
+                          value={formData.cnpj || ""}
+                          onChange={(e) => setFormData({ ...formData, cnpj: formatarCNPJ(e.target.value) })}
+                          placeholder="00.000.000/0000-00"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-slate-900 mb-1">Nome do Responsável</label>
-                        <input type="text" value={formData.nomeResponsavel} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <label className="block text-sm font-bold text-slate-900 mb-1">Tipo de Condomínio</label>
+                        <select
+                          value={formData.tipoCondominio || ""}
+                          onChange={(e) => setFormData({ ...formData, tipoCondominio: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        >
+                          <option value="">Não informado</option>
+                          <option value="Residencial">Residencial</option>
+                          <option value="Comercial">Comercial</option>
+                        </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-slate-900 mb-1">N. C.P.F.</label>
-                        <input type="text" value={formData.cpfResponsavel} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <label className="block text-sm font-bold text-slate-900 mb-1">Quantidade de Unidades</label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={formData.quantidadeUnidades || ""}
+                          onChange={(e) => setFormData({ ...formData, quantidadeUnidades: e.target.value.replace(/\D/g, "") })}
+                          placeholder="Ex: 12"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-slate-900 mb-1">Função</label>
-                        <input type="text" value={formData.funcao} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <label className="block text-sm font-bold text-slate-900 mb-1">Nome do Responsável / Síndico</label>
+                        <input
+                          type="text"
+                          value={formData.nomeResponsavel || ""}
+                          onChange={(e) => setFormData({ ...formData, nomeResponsavel: e.target.value })}
+                          placeholder="Ex: João da Silva"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-900 mb-1">CPF do Responsável</label>
+                        <input
+                          type="text"
+                          value={formData.cpfResponsavel || ""}
+                          onChange={(e) => setFormData({ ...formData, cpfResponsavel: formatarCPF(e.target.value) })}
+                          placeholder="000.000.000-00"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-900 mb-1">Função / Cargo</label>
+                        <input
+                          type="text"
+                          value={formData.funcao || ""}
+                          onChange={(e) => setFormData({ ...formData, funcao: e.target.value })}
+                          placeholder="Ex: Síndico(a), Subsíndico(a), Administrador(a)"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
                       </div>
                     </>
                   ) : (
                     <>
                       <div>
-                        <label className="block text-sm font-bold text-slate-900 mb-1">Nome</label>
-                        <input type="text" value={formData.displayName} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <label className="block text-sm font-bold text-slate-900 mb-1">Nº C.P.F.</label>
+                        <input
+                          type="text"
+                          value={formData.cpf || ""}
+                          onChange={(e) => setFormData({ ...formData, cpf: formatarCPF(e.target.value) })}
+                          placeholder="000.000.000-00"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-slate-900 mb-1">Tipo de Cadastro</label>
-                        <input type="text" value="Pessoa Física" readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <label className="block text-sm font-bold text-slate-900 mb-1">Tipo de Condomínio</label>
+                        <select
+                          value={formData.tipoCondominio || ""}
+                          onChange={(e) => setFormData({ ...formData, tipoCondominio: e.target.value })}
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        >
+                          <option value="">Não informado</option>
+                          <option value="Residencial">Residencial</option>
+                          <option value="Comercial">Comercial</option>
+                        </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-slate-900 mb-1">N. C.P.F.</label>
-                        <input type="text" value={formData.cpf} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <label className="block text-sm font-bold text-slate-900 mb-1">Quantidade de Unidades</label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={formData.quantidadeUnidades || ""}
+                          onChange={(e) => setFormData({ ...formData, quantidadeUnidades: e.target.value.replace(/\D/g, "") })}
+                          placeholder="Ex: 12"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
                       </div>
                     </>
                   )}
@@ -1316,39 +1416,86 @@ export default function Usuarios() {
                     <h4 className="text-sm font-bold text-slate-900 mb-4">Endereço</h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       <div className="col-span-2 md:col-span-3">
-                        <label className="block text-sm font-bold text-slate-900 mb-1">Logradouro</label>
-                        <input type="text" value={formData.endereco} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-slate-900 mb-1">Complemento</label>
-                        <input type="text" value={formData.complemento} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <label className="block text-sm font-bold text-slate-900 mb-1">Logradouro / Rua</label>
+                        <input
+                          type="text"
+                          value={formData.endereco || ""}
+                          onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+                          placeholder="Ex: Av. Paulista"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-bold text-slate-900 mb-1">Número</label>
-                        <input type="text" value={formData.numero} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <input
+                          type="text"
+                          value={formData.numero || ""}
+                          onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                          placeholder="Ex: 100"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-slate-900 mb-1">Bairro/Setor</label>
-                        <input type="text" value={formData.bairro} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <label className="block text-sm font-bold text-slate-900 mb-1">Complemento / Bloco</label>
+                        <input
+                          type="text"
+                          value={formData.complemento || ""}
+                          onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
+                          placeholder="Ex: Bloco A, Apto 101"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-900 mb-1">Bairro / Setor</label>
+                        <input
+                          type="text"
+                          value={formData.bairro || ""}
+                          onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
+                          placeholder="Ex: Centro"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-bold text-slate-900 mb-1">Cidade</label>
-                        <input type="text" value={formData.cidade} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <input
+                          type="text"
+                          value={formData.cidade || ""}
+                          onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+                          placeholder="Ex: São Paulo"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-slate-900 mb-1">Estado</label>
-                        <input type="text" value={formData.estado} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <label className="block text-sm font-bold text-slate-900 mb-1">Estado (UF)</label>
+                        <input
+                          type="text"
+                          maxLength={2}
+                          value={formData.estado || ""}
+                          onChange={(e) => setFormData({ ...formData, estado: e.target.value.toUpperCase() })}
+                          placeholder="SP"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none uppercase"
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-bold text-slate-900 mb-1">CEP</label>
-                        <input type="text" value={formData.cep} readOnly className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-sm" />
+                        <input
+                          type="text"
+                          value={formData.cep || ""}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/\D/g, "").slice(0, 8);
+                            const formatted = v.length > 5 ? `${v.slice(0, 5)}-${v.slice(5)}` : v;
+                            setFormData({ ...formData, cep: formatted });
+                          }}
+                          placeholder="00000-000"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
+                        />
                       </div>
                       <div className="col-span-2 md:col-span-3 pt-4 border-t border-slate-100">
                         <label className="block text-sm font-bold text-slate-900 mb-1">Código de Indicação</label>
                         <input 
                           type="text" 
                           value={formData.codigoIndicacao || ""} 
-                          onChange={(e) => setFormData({ ...formData, codigoIndicacao: e.target.value })} 
+                          onChange={(e) => setFormData({ ...formData, codigoIndicacao: e.target.value.toUpperCase() })} 
                           placeholder="Ex: CONSULTOR123"
                           className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-brand-light outline-none transition-shadow" 
                         />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { Building2, Check, CheckCircle, HeartHandshake, AlertTriangle, AlertCircle, X, Receipt, ChevronDown, ChevronUp, FileText, Barcode, Printer } from "lucide-react";
-import { doc, setDoc, serverTimestamp, collection, onSnapshot, query, where } from "firebase/firestore";
+import { Building2, Check, CheckCircle, HeartHandshake, AlertTriangle, AlertCircle, X, Receipt, ChevronDown, ChevronUp, FileText, Barcode, Printer, Mail, Send, Calendar, DollarSign, UserCheck, ShieldCheck, Building } from "lucide-react";
+import { doc, setDoc, addDoc, serverTimestamp, collection, onSnapshot, query, where, getDocs, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { sendEmailWithLog } from "../../lib/emailService";
 import { syncAfiliacaoContasReceber, validarAfiliacaoAntesDePersistir } from "../../services/afiliacaoFinanceiroService";
@@ -21,6 +21,104 @@ export default function Afiliacao() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [canceling, setCanceling] = useState(false);
   const [cancelFeedback, setCancelFeedback] = useState<{type: 'success'|'error', message: string} | null>(null);
+
+  // Solicitação de envio de boleto para mensalidade em atraso
+  const [showSolicitacaoBoletoModal, setShowSolicitacaoBoletoModal] = useState(false);
+  const [selectedParcelaParaBoleto, setSelectedParcelaParaBoleto] = useState<any | null>(null);
+  const [emailDestinoBoleto, setEmailDestinoBoleto] = useState("");
+  const [solicitandoBoleto, setSolicitandoBoleto] = useState(false);
+  const [franqueadaModalInfo, setFranqueadaModalInfo] = useState<{
+    id: string;
+    codigoUnidade: string;
+    nomeFranqueada: string;
+    emailFinanceiro: string;
+    emailGeral: string;
+    cidade?: string;
+    uf?: string;
+  } | null>(null);
+
+  // Helper para identificar a empresa franqueada responsável e seu e-mail financeiro
+  const findFranqueadaParaCliente = async (
+    afiliado: any,
+    userProfile: any,
+    parcela: any
+  ) => {
+    try {
+      const rawTarget =
+        parcela?.codigoUnidade ||
+        parcela?.franqueadaId ||
+        afiliado?.codigoUnidade ||
+        afiliado?.franqueadaId ||
+        userProfile?.codigoUnidade ||
+        userProfile?.franqueadaId ||
+        "";
+
+      const targetClean = String(rawTarget || "").trim().toUpperCase();
+
+      // 1. Buscar na coleção principal config_empresa
+      const empSnap = await getDocs(collection(db, "config_empresa"));
+      let matchingDoc: any = null;
+      let fallbackDoc: any = null;
+
+      empSnap.forEach((d) => {
+        const data = d.data();
+        const currentObj = { id: d.id, ...data };
+        if (!fallbackDoc) fallbackDoc = currentObj;
+        if (data.statusFranquia === "Ativa" && (!fallbackDoc || fallbackDoc.statusFranquia !== "Ativa")) {
+          fallbackDoc = currentObj;
+        }
+
+        if (targetClean) {
+          if (
+            d.id === rawTarget ||
+            (data.codigoUnidade && data.codigoUnidade.toUpperCase() === targetClean) ||
+            (data.cnpj && data.cnpj === rawTarget)
+          ) {
+            matchingDoc = currentObj;
+          }
+        }
+      });
+
+      // 2. Se não encontrou em config_empresa, busca em config_franqueadora (legado)
+      if (!matchingDoc) {
+        try {
+          const frqSnap = await getDocs(collection(db, "config_franqueadora"));
+          frqSnap.forEach((d) => {
+            const data = d.data();
+            const currentObj = { id: d.id, ...data };
+            if (!fallbackDoc) fallbackDoc = currentObj;
+            if (targetClean) {
+              if (
+                d.id === rawTarget ||
+                (data.codigoUnidade && data.codigoUnidade.toUpperCase() === targetClean) ||
+                (data.numeroFranqueada && data.numeroFranqueada.toUpperCase() === targetClean)
+              ) {
+                matchingDoc = currentObj;
+              }
+            }
+          });
+        } catch (err) {
+          console.warn("Aviso ao buscar config_franqueadora:", err);
+        }
+      }
+
+      const finalDoc = matchingDoc || fallbackDoc;
+      if (!finalDoc) return null;
+
+      return {
+        id: finalDoc.id,
+        codigoUnidade: finalDoc.codigoUnidade || finalDoc.numeroFranqueada || "",
+        nomeFranqueada: finalDoc.nomeFantasia || finalDoc.razaoSocial || "Empresa Franqueada",
+        emailFinanceiro: (finalDoc.emailFinanceiro || "").trim(),
+        emailGeral: (finalDoc.email || "").trim(),
+        cidade: finalDoc.cidade || "",
+        uf: finalDoc.uf || ""
+      };
+    } catch (error) {
+      console.warn("Erro ao identificar franqueada para solicitação de boleto:", error);
+      return null;
+    }
+  };
 
   // Monitor Afiliacao
   useEffect(() => {
@@ -303,6 +401,187 @@ export default function Afiliacao() {
     }
   };
 
+  const handleAbrirSolicitacaoBoleto = async (parcela: any) => {
+    setSelectedParcelaParaBoleto(parcela);
+    const defaultEmail = profile?.email || user?.email || afiliadoData?.email || "";
+    setEmailDestinoBoleto(defaultEmail);
+    setShowSolicitacaoBoletoModal(true);
+
+    // Carrega informações da franqueada responsável
+    const frq = await findFranqueadaParaCliente(afiliadoData, profile, parcela);
+    setFranqueadaModalInfo(frq);
+  };
+
+  const handleConfirmarSolicitacaoBoleto = async () => {
+    if (!selectedParcelaParaBoleto) return;
+    const finalEmailDestino = (emailDestinoBoleto || profile?.email || user?.email || afiliadoData?.email || "").trim();
+    if (!finalEmailDestino || !finalEmailDestino.includes("@")) {
+      setCancelFeedback({
+        type: "error",
+        message: "Não foi possível identificar o e-mail do cliente cadastrado para recebimento."
+      });
+      return;
+    }
+
+    setSolicitandoBoleto(true);
+    try {
+      const nomeCliente = profile?.displayName || profile?.nome || (profile as any)?.nomeFantasia || (profile as any)?.razaoSocial || afiliadoData?.nomeCondominio || "Condomínio Afiliado";
+      const cnpjCliente = profile?.cnpj || profile?.cpfCnpj || (profile as any)?.cpf || (profile as any)?.documento || afiliadoData?.cnpj || "Não informado";
+      const representante = (profile as any)?.nomeResponsavel || (profile as any)?.responsavel || profile?.nome || afiliadoData?.nomeSindico || "Não informado";
+      const numParcela = selectedParcelaParaBoleto.numeroParcela || "1";
+      const valorFormatado = Number(selectedParcelaParaBoleto.valor || 0).toFixed(2).replace('.', ',');
+      const vencFormatado = selectedParcelaParaBoleto.vencimento ? new Date(selectedParcelaParaBoleto.vencimento + "T00:00:00").toLocaleDateString("pt-BR") : "Não informado";
+
+      // 1. Identificar a franqueada e o e-mail do departamento financeiro
+      const franqueadaInfo = franqueadaModalInfo || (await findFranqueadaParaCliente(afiliadoData, profile, selectedParcelaParaBoleto));
+      const emailFinanceiroFranqueada = (franqueadaInfo?.emailFinanceiro || franqueadaInfo?.emailGeral || "").trim();
+      const nomeFranqueada = franqueadaInfo?.nomeFranqueada || "União Condominial";
+      const codigoUnidadeFranqueada = franqueadaInfo?.codigoUnidade || "";
+
+      // 2. Salvar solicitação no Firestore (com dados de rastreio e vínculo da franqueada)
+      await addDoc(collection(db, "solicitacoes_boletos"), {
+        userId: user?.uid || "",
+        afiliacaoId: user?.uid || "",
+        nomeCliente,
+        cnpj: cnpjCliente,
+        representadoPor: representante,
+        emailEnvio: finalEmailDestino,
+        emailFinanceiroFranqueada: emailFinanceiroFranqueada || null,
+        franqueadaId: franqueadaInfo?.id || "",
+        codigoUnidade: codigoUnidadeFranqueada,
+        nomeFranqueada: nomeFranqueada,
+        parcelaId: selectedParcelaParaBoleto.id || "",
+        numeroParcela: numParcela,
+        valor: selectedParcelaParaBoleto.valor || 0,
+        vencimentoOriginal: selectedParcelaParaBoleto.vencimento || "",
+        status: "Solicitado",
+        tipo: "Emissão de Boleto em Atraso",
+        solicitadoEm: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+      });
+
+      // 3. Enviar mensagem ao e-mail cadastrado no item "Departamento Financeiro" da referida franqueada
+      if (emailFinanceiroFranqueada) {
+        const htmlFinanceiro = `
+        <div style="font-family: Arial, sans-serif; color: #1e293b; max-width: 650px; margin: 0 auto; line-height: 1.6; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #0071e3; margin: 0 0 4px 0;">UNIÃO CONDOMINIAL</h2>
+            <p style="color: #0f172a; font-size: 14px; font-weight: bold; margin: 0;">DEPARTAMENTO FINANCEIRO DA FRANQUEADA</p>
+            <p style="color: #64748b; font-size: 12px; margin: 4px 0 0 0;">Unidade: <strong>${nomeFranqueada}</strong> ${codigoUnidadeFranqueada ? `(${codigoUnidadeFranqueada})` : ""}</p>
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
+
+          <div style="background-color: #eff6ff; border-left: 4px solid #0071e3; padding: 14px 16px; border-radius: 6px; margin-bottom: 18px;">
+            <p style="margin: 0; font-size: 14px; color: #1e40af; font-weight: bold;">
+              Notificação: Solicitação de Boleto em Atraso
+            </p>
+            <p style="margin: 4px 0 0 0; font-size: 13px; color: #334155;">
+              O cliente abaixo registrou uma solicitação de 2ª via / novo boleto bancário atualizado para pagamento da mensalidade de afiliação em atraso.
+            </p>
+          </div>
+
+          <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <h3 style="margin-top: 0; font-size: 14px; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Dados do Cliente Solicitante</h3>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Nome do Condomínio / Cliente:</strong> ${nomeCliente}</p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>C.N.P.J. Nº:</strong> ${cnpjCliente}</p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Representado por:</strong> ${representante}</p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>E-mail do Cliente para Envio do Boleto:</strong> <a href="mailto:${finalEmailDestino}" style="color: #0071e3; font-weight: bold;">${finalEmailDestino}</a></p>
+          </div>
+
+          <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <h3 style="margin-top: 0; font-size: 14px; color: #92400e; border-bottom: 1px solid #fde68a; padding-bottom: 8px;">Detalhes da Parcela em Atraso</h3>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Parcela:</strong> ${numParcela}/12</p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Vencimento Original:</strong> ${vencFormatado}</p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Valor da Mensalidade:</strong> R$ ${valorFormatado}</p>
+            <p style="margin: 6px 0; font-size: 13px;"><strong>Data/Hora do Registro:</strong> ${new Date().toLocaleString("pt-BR")}</p>
+          </div>
+
+          <div style="background-color: #f1f5f9; border-radius: 8px; padding: 14px; margin: 16px 0; font-size: 13px; color: #334155;">
+            <strong style="color: #0f172a;">Ação Necessária do Departamento Financeiro:</strong>
+            <ol style="margin: 8px 0 0 0; padding-left: 20px; line-line-height: 1.6;">
+              <li>Emitir o novo boleto bancário referente à <strong>Parcela ${numParcela}/12</strong> com a nova data de vencimento;</li>
+              <li>Encaminhar o boleto bancário atualizado diretamente para o e-mail: <strong>${finalEmailDestino}</strong>.</li>
+            </ol>
+          </div>
+
+          <br />
+          <p style="color: #94a3b8; font-size: 12px; margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 12px; text-align: center;">
+            União Condominial — Gestão Financeira Franqueadora & Franqueadas
+          </p>
+        </div>
+        `;
+
+        await sendEmailWithLog({
+          to: emailFinanceiroFranqueada,
+          subject: `[Depto. Financeiro] Solicitação de Novo Boleto em Atraso - Parcela ${numParcela}/12 - ${nomeCliente}`,
+          html: htmlFinanceiro
+        }, "SOLICITACAO_BOLETO_FINANCEIRO_FRANQUEADA");
+      }
+
+      // 4. Montar e enviar e-mail de confirmação ao cliente
+      const htmlEmailCliente = `
+      <div style="font-family: Arial, sans-serif; color: #1e293b; max-width: 650px; margin: 0 auto; line-height: 1.6; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #0071e3; margin: 0 0 6px 0;">UNIÃO CONDOMINIAL</h2>
+          <p style="color: #64748b; font-size: 14px; margin: 0;">Solicitação de Emissão de Boleto para Pagamento de Mensalidade em Atraso</p>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 16px 0;" />
+
+        <p style="font-size: 15px; color: #334155;">
+          Confirmamos o registro da sua solicitação de emissão de um novo boleto bancário atualizado para pagamento de mensalidade da Afiliação à União Condominial.
+        </p>
+
+        <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin: 18px 0;">
+          <h3 style="margin-top: 0; font-size: 15px; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Dados do Cliente Solicitante</h3>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>Nome do Cliente / Condomínio:</strong> ${nomeCliente}</p>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>C.N.P.J. Nº:</strong> ${cnpjCliente}</p>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>Representado por:</strong> ${representante}</p>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>E-mail de envio:</strong> ${finalEmailDestino}</p>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>Unidade Franqueada Responsável:</strong> ${nomeFranqueada}</p>
+        </div>
+
+        <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin: 18px 0;">
+          <h3 style="margin-top: 0; font-size: 15px; color: #92400e; border-bottom: 1px solid #fde68a; padding-bottom: 8px;">Mensalidade em Atraso</h3>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>Parcela:</strong> ${numParcela}/12</p>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>Vencimento Original:</strong> ${vencFormatado}</p>
+          <p style="margin: 6px 0; font-size: 13px;"><strong>Valor:</strong> R$ ${valorFormatado}</p>
+        </div>
+
+        <p style="font-size: 13px; color: #475569;">
+          Sua solicitação foi encaminhada diretamente ao <strong>Departamento Financeiro</strong> da unidade franqueada responsável (<strong>${nomeFranqueada}</strong>), que emitirá a 2ª via atualizada com a nova data de vencimento e enviará o boleto diretamente para o seu e-mail cadastrado (<strong>${finalEmailDestino}</strong>).
+        </p>
+
+        <br />
+        <p style="color: #94a3b8; font-size: 12px; margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 12px; text-align: center;">
+          União Condominial — Produtos de Limpeza e Conservação
+        </p>
+      </div>
+      `;
+
+      await sendEmailWithLog({
+        to: finalEmailDestino,
+        subject: `Solicitação de Boleto em Atraso - Parcela ${numParcela}/12 - ${nomeCliente}`,
+        html: htmlEmailCliente
+      }, "SOLICITACAO_BOLETO_CLIENTE");
+
+      setShowSolicitacaoBoletoModal(false);
+      setCancelFeedback({
+        type: "success",
+        message: `Solicitação de emissão de novo boleto referente à Parcela ${numParcela}/12 enviada com sucesso! O Departamento Financeiro foi notificado.`
+      });
+    } catch (error: any) {
+      console.error("Erro ao solicitar novo boleto:", error);
+      setCancelFeedback({
+        type: "error",
+        message: "Ocorreu um erro ao enviar a solicitação do boleto. Tente novamente."
+      });
+    } finally {
+      setSolicitandoBoleto(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Feedback Toast */}
@@ -576,11 +855,11 @@ export default function Afiliacao() {
                                     <td className="px-3 py-2 text-center flex items-center justify-center gap-2">
                                       {!isPago && !isCancelado && (
                                         <button
-                                          onClick={() => alert("Boleto enviado para o e-mail cadastrado.")}
-                                          className="p-1.5 rounded-lg text-slate-500 hover:text-[#0071e3] hover:bg-blue-50 transition-colors"
-                                          title="Re-emitir Boleto"
+                                          onClick={() => handleAbrirSolicitacaoBoleto(parc)}
+                                          className="p-1.5 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors cursor-pointer flex items-center gap-1"
+                                          title="Solicitação de envio de boleto para pagamento de mensalidade em atraso"
                                         >
-                                          <Barcode className="w-4 h-4" />
+                                          <Mail className="w-4 h-4" />
                                         </button>
                                       )}
                                       
@@ -666,6 +945,130 @@ export default function Afiliacao() {
                 className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
               >
                 {canceling ? "Cancelando..." : "Confirmar Cancelamento"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Solicitação de Envio de Boleto para Mensalidade em Atraso */}
+      {showSolicitacaoBoletoModal && selectedParcelaParaBoleto && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center shrink-0">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-slate-900 leading-tight">
+                    Solicitação de Envio de Boleto
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Pagamento de mensalidade de afiliado em atraso
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSolicitacaoBoletoModal(false)}
+                disabled={solicitandoBoleto}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-sm">
+              {/* Card de Identificação do Cliente Conectado */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-slate-500 block">Nome do Cliente / Condomínio:</span>
+                    <span className="font-bold text-slate-900 text-sm">
+                      {profile?.displayName || profile?.nome || (profile as any)?.nomeFantasia || (profile as any)?.razaoSocial || afiliadoData?.nomeCondominio || "Condomínio"}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-500 block">C.N.P.J. Nº:</span>
+                    <span className="font-bold text-slate-900 font-mono text-sm">
+                      {profile?.cnpj || profile?.cpfCnpj || (profile as any)?.cpf || (profile as any)?.documento || afiliadoData?.cnpj || "Não informado"}
+                    </span>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <span className="text-slate-500 block">Representado por:</span>
+                    <span className="font-bold text-slate-800 text-sm">
+                      {(profile as any)?.nomeResponsavel || (profile as any)?.responsavel || profile?.nome || afiliadoData?.nomeSindico || "Não informado"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detalhes da Mensalidade / Parcela */}
+              <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-900 block mb-0.5">
+                      Mensalidade Solicitada
+                    </span>
+                    <p className="font-black text-slate-900 text-base">
+                      Parcela {selectedParcelaParaBoleto.numeroParcela || 1}/12
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-amber-800 block">Valor da Mensalidade</span>
+                    <span className="text-lg font-black text-amber-900">
+                      R$ {Number(selectedParcelaParaBoleto.valor || 0).toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-2 pt-2 border-t border-amber-200/80 flex items-center justify-between text-xs text-amber-900">
+                  <span>
+                    Vencimento original: <strong>{selectedParcelaParaBoleto.vencimento ? new Date(selectedParcelaParaBoleto.vencimento + "T00:00:00").toLocaleDateString("pt-BR") : "-"}</strong>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold border border-amber-300 text-[11px]">
+                    Em Aberto / Atraso
+                  </span>
+                </div>
+              </div>
+
+              {/* Declaração formal de solicitação */}
+              <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-3.5 text-xs text-slate-700 leading-relaxed">
+                <p>
+                  O cliente <strong>{profile?.displayName || profile?.nome || afiliadoData?.nomeCondominio || "Condomínio"}</strong>, C.N.P.J. Nº <strong>{profile?.cnpj || profile?.cpfCnpj || afiliadoData?.cnpj || "Não informado"}</strong>, representado por <strong>{(profile as any)?.nomeResponsavel || profile?.nome || afiliadoData?.nomeSindico || "Não informado"}</strong>, solicita a emissão de um novo boleto bancário atualizado para pagamento da mensalidade em atraso.
+                </p>
+                <p className="mt-1 text-[11px] text-slate-500">
+                  Ao clicar em <strong>Solicitar</strong>, a notificação será encaminhada diretamente ao departamento financeiro responsável pela unidade para emissão e envio do novo boleto com a data de vencimento atualizada.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-5 mt-5 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowSolicitacaoBoletoModal(false)}
+                disabled={solicitandoBoleto}
+                className="w-full sm:w-auto px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50 cursor-pointer text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmarSolicitacaoBoleto}
+                disabled={solicitandoBoleto}
+                className="w-full sm:w-auto px-6 py-2.5 bg-[#0071e3] hover:bg-blue-600 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm"
+              >
+                {solicitandoBoleto ? (
+                  <>Processando...</>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Solicitar
+                  </>
+                )}
               </button>
             </div>
           </div>

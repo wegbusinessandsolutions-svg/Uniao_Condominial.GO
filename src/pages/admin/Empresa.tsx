@@ -18,6 +18,12 @@ import {
   Network,
   Globe,
   ExternalLink,
+  Mail,
+  Briefcase,
+  DollarSign,
+  Headphones,
+  ShieldCheck,
+  Building2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useFranqueada } from "../../context/FranqueadaContext";
@@ -46,6 +52,12 @@ interface EmpresaData {
   telefone: string;
   email: string;
   site: string;
+
+  // E-mails para contato com os departamentos
+  emailDiretoria?: string;
+  emailComercial?: string;
+  emailFinanceiro?: string;
+  emailSac?: string;
 
   // Parâmetros da Franquia / Unidade
   codigoUnidade?: string;
@@ -109,6 +121,12 @@ const emptyEmpresa: EmpresaData = {
   email: "",
   site: "",
 
+  // E-mails Departamentos
+  emailDiretoria: "",
+  emailComercial: "",
+  emailFinanceiro: "",
+  emailSac: "",
+
   codigoUnidade: "",
   statusFranquia: "Ativa",
   dataInicio: "",
@@ -165,7 +183,7 @@ export default function Empresa() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<EmpresaData>(emptyEmpresa);
   const [activeTab, setActiveTab] = useState<
-    "Básico" | "Franquia" | "Endereço" | "Fiscal" | "Extra"
+    "Básico" | "Franquia" | "E-mails" | "Endereço" | "Fiscal" | "Extra"
   >("Básico");
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -608,6 +626,18 @@ export default function Empresa() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setActiveTab("E-mails")}
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+                    activeTab === "E-mails"
+                      ? "border-brand-dark text-brand-dark font-semibold"
+                      : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+                  }`}
+                >
+                  <Mail size={16} />
+                  E-mails de Contato
+                </button>
+                <button
+                  type="button"
                   onClick={() => setActiveTab("Endereço")}
                   className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
                     activeTab === "Endereço"
@@ -916,6 +946,171 @@ export default function Empresa() {
                         onChange={handleChange}
                         className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-brand-dark focus:border-brand-dark sm:text-sm"
                       />
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "E-mails" && (
+                  <div className="space-y-6">
+                    {/* Header Informativo */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-xl p-4 sm:p-5 flex items-start gap-3.5 shadow-xs">
+                      <div className="p-2.5 bg-[#0071e3] text-white rounded-lg shrink-0 shadow-xs">
+                        <Mail size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900">
+                          E-mails de Contato Departamental da Empresa Franqueada
+                        </h3>
+                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                          Cadastre os endereços de e-mail oficiais de cada departamento da unidade franqueada. Esses e-mails serão utilizados para encaminhamento de notificações, cobranças, chamados e comunicações com a rede franqueadora e clientes.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {/* Diretoria Executiva */}
+                      <div className="bg-slate-50/80 border border-slate-200/90 rounded-xl p-4 sm:p-5 transition-all hover:border-slate-300 hover:shadow-xs space-y-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-indigo-100 text-indigo-700 rounded-lg shrink-0">
+                            <ShieldCheck size={18} />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-800">
+                              Diretoria Executiva
+                            </h4>
+                            <p className="text-[11px] text-slate-500">
+                              Contatos estratégicos, contratos e decisões institucionais
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            E-mail da Diretoria Executiva
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                              <Mail size={15} />
+                            </div>
+                            <input
+                              type="email"
+                              name="emailDiretoria"
+                              placeholder="diretoria@franquia.com.br"
+                              value={formData.emailDiretoria || ""}
+                              onChange={handleChange}
+                              className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-dark focus:border-brand-dark bg-white transition-all outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Departamento Comercial */}
+                      <div className="bg-slate-50/80 border border-slate-200/90 rounded-xl p-4 sm:p-5 transition-all hover:border-slate-300 hover:shadow-xs space-y-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg shrink-0">
+                            <Briefcase size={18} />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-800">
+                              Departamento Comercial
+                            </h4>
+                            <p className="text-[11px] text-slate-500">
+                              Vendas, propostas, captação de clientes e orçamentos
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            E-mail do Departamento Comercial
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                              <Mail size={15} />
+                            </div>
+                            <input
+                              type="email"
+                              name="emailComercial"
+                              placeholder="comercial@franquia.com.br"
+                              value={formData.emailComercial || ""}
+                              onChange={handleChange}
+                              className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-dark focus:border-brand-dark bg-white transition-all outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Departamento Financeiro */}
+                      <div className="bg-slate-50/80 border border-slate-200/90 rounded-xl p-4 sm:p-5 transition-all hover:border-slate-300 hover:shadow-xs space-y-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-amber-100 text-amber-700 rounded-lg shrink-0">
+                            <DollarSign size={18} />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-800">
+                              Departamento Financeiro
+                            </h4>
+                            <p className="text-[11px] text-slate-500">
+                              Faturas de royalties, notas fiscais, contas a pagar e a receber
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            E-mail do Departamento Financeiro
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                              <Mail size={15} />
+                            </div>
+                            <input
+                              type="email"
+                              name="emailFinanceiro"
+                              placeholder="financeiro@franquia.com.br"
+                              value={formData.emailFinanceiro || ""}
+                              onChange={handleChange}
+                              className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-dark focus:border-brand-dark bg-white transition-all outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Serviço de Atendimento ao Cliente (SAC) */}
+                      <div className="bg-slate-50/80 border border-slate-200/90 rounded-xl p-4 sm:p-5 transition-all hover:border-slate-300 hover:shadow-xs space-y-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-sky-100 text-sky-700 rounded-lg shrink-0">
+                            <Headphones size={18} />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-800">
+                              Serviço de Atendimento ao Cliente (SAC)
+                            </h4>
+                            <p className="text-[11px] text-slate-500">
+                              Suporte a condôminos, dúvidas, sugestões e pós-venda
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            E-mail do SAC / Atendimento
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                              <Mail size={15} />
+                            </div>
+                            <input
+                              type="email"
+                              name="emailSac"
+                              placeholder="sac@franquia.com.br"
+                              value={formData.emailSac || ""}
+                              onChange={handleChange}
+                              className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-dark focus:border-brand-dark bg-white transition-all outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1323,6 +1518,46 @@ export default function Empresa() {
                   Fundo de Propaganda
                 </td>
                 <td className="px-3 py-2">{printingItem.fundoPropaganda || "2"}%</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table
+            className="w-full border border-slate-200 mb-6"
+            style={{ pageBreakInside: "avoid" }}
+          >
+            <tbody>
+              <tr>
+                <th
+                  colSpan={2}
+                  className="bg-slate-900 text-white text-left px-3 py-1.5 font-bold uppercase text-[11px]"
+                >
+                  E-mails para Contato Departamental
+                </th>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="bg-slate-100 font-semibold px-3 py-2 w-1/4">
+                  Diretoria Executiva
+                </td>
+                <td className="px-3 py-2">{printingItem.emailDiretoria || "—"}</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="bg-slate-100 font-semibold px-3 py-2">
+                  Departamento Comercial
+                </td>
+                <td className="px-3 py-2">{printingItem.emailComercial || "—"}</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="bg-slate-100 font-semibold px-3 py-2">
+                  Departamento Financeiro
+                </td>
+                <td className="px-3 py-2">{printingItem.emailFinanceiro || "—"}</td>
+              </tr>
+              <tr>
+                <td className="bg-slate-100 font-semibold px-3 py-2">
+                  Serviço de Atendimento ao Cliente (SAC)
+                </td>
+                <td className="px-3 py-2">{printingItem.emailSac || "—"}</td>
               </tr>
             </tbody>
           </table>

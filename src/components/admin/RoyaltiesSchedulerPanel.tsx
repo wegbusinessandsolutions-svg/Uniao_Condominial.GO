@@ -129,7 +129,9 @@ export default function RoyaltiesSchedulerPanel({ onRefreshParent }: RoyaltiesSc
         await loadData(selectedCompetencia);
         if (onRefreshParent) onRefreshParent();
       } else {
-        toast.info(check.motivo || "Nenhuma rotina pendente para execução hoje.");
+        toast(check.motivo || "Nenhuma rotina pendente para execução hoje.", {
+          icon: "ℹ️",
+        });
       }
     } catch (error) {
       console.error("Erro ao verificar agendador:", error);

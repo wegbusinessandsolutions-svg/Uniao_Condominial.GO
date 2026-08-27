@@ -267,6 +267,12 @@ service cloud.firestore {
       allow read, write: if isStaff();
     }
 
+    match /solicitacoes_boletos/{id} {
+      allow create: if isSignedIn();
+      allow read: if isStaff() || (isSignedIn() && (resource == null || resource.data.get('userId', '') == request.auth.uid || resource.data.get('emailEnvio', '') == request.auth.token.email));
+      allow update, delete: if isStaff();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

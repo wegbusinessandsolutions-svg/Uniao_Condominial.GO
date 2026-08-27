@@ -254,16 +254,18 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
 
   // Status mapping for service orders
   const getOSStatusInfo = (rawStatus: string) => {
+    const sLower = (rawStatus || "").toLowerCase();
+    if (sLower.includes("aguardando") || sLower.includes("solicitado") || sLower.includes("pendente") || sLower === "novo") {
+      return {
+        label: "aguardando confirmação - Equipe União Condominial",
+        step: 1,
+        badgeBg: "bg-amber-50 text-amber-900 border-amber-300",
+        icon: <Clock size={14} className="text-amber-600 animate-pulse" />,
+        desc: "Solicitação recebida com data de preferência. Aguardando confirmação da Equipe União Condominial.",
+      };
+    }
+
     switch (rawStatus) {
-      case "Solicitado o Serviço":
-      case "Pendente":
-        return {
-          label: "Solicitado",
-          step: 1,
-          badgeBg: "bg-blue-50 text-blue-700 border-blue-200",
-          icon: <Clock size={14} className="text-blue-600 animate-pulse" />,
-          desc: "Solicitação recebida. Nossa equipe técnica está analisando a demanda.",
-        };
       case "Confirmada a Visita":
       case "Agendado":
       case "Em Análise":

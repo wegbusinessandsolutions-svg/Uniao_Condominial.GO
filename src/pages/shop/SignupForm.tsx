@@ -45,6 +45,8 @@ export default function SignupForm({ onGoToLogin }: SignupFormProps) {
       formattedVal = formatCEP(value);
     } else if (name === "telefone") {
       formattedVal = formatPhone(value);
+    } else if (name === "quantidadeUnidades") {
+      formattedVal = value.replace(/\D/g, "");
     }
     if (name === "email" && emailError) setEmailError("");
     setFormData((prev: any) => ({ ...prev, [name]: formattedVal }));
@@ -75,10 +77,19 @@ export default function SignupForm({ onGoToLogin }: SignupFormProps) {
         setMessage({ type: "error", text: "O CNPJ digitado é inválido. Por favor, verifique." });
         return;
       }
+      if (!formData.tipoCondominio) {
+        setMessage({ type: "error", text: "Por favor, selecione o Tipo de Condomínio (Residencial ou Comercial)." });
+        return;
+      }
       if (!formData.cpfResponsavel || !validarCPF(formData.cpfResponsavel)) {
         setMessage({ type: "error", text: "O CPF do Responsável digitado é inválido. Por favor, verifique." });
         return;
       }
+    }
+
+    if (!formData.quantidadeUnidades || Number(formData.quantidadeUnidades) < 1) {
+      setMessage({ type: "error", text: "Por favor, informe a Quantidade de Unidades no Condomínio (número maior que zero)." });
+      return;
     }
 
     if (!acceptedTerms) {
@@ -109,6 +120,8 @@ export default function SignupForm({ onGoToLogin }: SignupFormProps) {
         estado: formData.estado,
         cep: formData.cep,
         telefone: formData.telefone,
+        quantidadeUnidades: Number(formData.quantidadeUnidades) || formData.quantidadeUnidades,
+        tipoCondominio: formData.tipoCondominio || "",
         codigoIndicacao: formData.codigoIndicacao || "",
         dataCadastro: new Date().toLocaleDateString("pt-BR"),
       };
@@ -120,6 +133,7 @@ export default function SignupForm({ onGoToLogin }: SignupFormProps) {
         nomeResponsavel: formData.nomeResponsavel,
         funcao: formData.funcao,
         cpfResponsavel: formData.cpfResponsavel,
+        tipoCondominio: formData.tipoCondominio || "",
       };
 
       await setDoc(doc(db, "users", userCred.user.uid), { ...baseUserData, ...specificData });
@@ -163,6 +177,8 @@ export default function SignupForm({ onGoToLogin }: SignupFormProps) {
             estado: formData.estado,
             cep: formData.cep,
             telefone: formData.telefone,
+            quantidadeUnidades: Number(formData.quantidadeUnidades) || formData.quantidadeUnidades,
+            tipoCondominio: formData.tipoCondominio || "",
             codigoIndicacao: formData.codigoIndicacao || "",
             dataCadastro: new Date().toLocaleDateString("pt-BR"),
           };
@@ -174,6 +190,7 @@ export default function SignupForm({ onGoToLogin }: SignupFormProps) {
             nomeResponsavel: formData.nomeResponsavel,
             funcao: formData.funcao,
             cpfResponsavel: formData.cpfResponsavel,
+            tipoCondominio: formData.tipoCondominio || "",
           };
 
           await setDoc(doc(db, "users", tempUid), { ...baseUserData, ...specificData });
@@ -309,6 +326,20 @@ export default function SignupForm({ onGoToLogin }: SignupFormProps) {
                 <input required type="text" name="nomeEmpresa" value={formData.nomeEmpresa || ""} onChange={handleInputChange} className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-brand-light" />
               </div>
               <div>
+                <label className="block text-sm font-bold text-slate-900 mb-1">Tipo de Condomínio <span className="text-red-500">*</span></label>
+                <select
+                  required
+                  name="tipoCondominio"
+                  value={formData.tipoCondominio || ""}
+                  onChange={handleInputChange}
+                  className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-brand-light bg-white"
+                >
+                  <option value="">Selecione o tipo de condomínio...</option>
+                  <option value="Residencial">Residencial</option>
+                  <option value="Comercial">Comercial</option>
+                </select>
+              </div>
+              <div>
                 <label className="block text-sm font-bold text-slate-900 mb-1">Nº C.N.P.J. <span className="text-red-500">*</span></label>
                 <input
                   required
@@ -435,6 +466,21 @@ export default function SignupForm({ onGoToLogin }: SignupFormProps) {
           <div>
              <label className="block text-sm font-bold text-slate-900 mb-1">Telefone / WhatsApp <span className="text-red-500">*</span></label>
              <input required type="text" name="telefone" value={formData.telefone || ""} onChange={handleInputChange} className="w-full sm:w-1/2 border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-brand-light" />
+          </div>
+
+          <div>
+             <label className="block text-sm font-bold text-slate-900 mb-1">Quantidade de Unidades no Condomínio: <span className="text-red-500">*</span></label>
+             <input
+               required
+               type="text"
+               inputMode="numeric"
+               pattern="[0-9]*"
+               name="quantidadeUnidades"
+               placeholder="Ex: 12"
+               value={formData.quantidadeUnidades || ""}
+               onChange={handleInputChange}
+               className="w-full sm:w-1/2 border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-brand-light"
+             />
           </div>
 
           <div className="pt-4 pb-2 border-b border-slate-100">

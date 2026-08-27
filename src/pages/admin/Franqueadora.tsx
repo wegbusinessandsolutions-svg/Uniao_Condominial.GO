@@ -61,6 +61,8 @@ import { useFranqueada } from "../../context/FranqueadaContext";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
+import RoyaltiesSchedulerPanel from "../../components/admin/RoyaltiesSchedulerPanel";
+
 export interface FranqueadaUnitData {
   id?: string;
   codigoUnidade: string;
@@ -73,6 +75,12 @@ export interface FranqueadaUnitData {
   telefone: string;
   email: string;
   site?: string;
+
+  // E-mails Departamentos
+  emailDiretoria?: string;
+  emailComercial?: string;
+  emailFinanceiro?: string;
+  emailSac?: string;
 
   // Franquia e Parâmetros Contratuais
   statusFranquia?: "Ativa" | "Em Implantação" | "Suspensa" | "Inativa" | string;
@@ -142,6 +150,12 @@ const emptyFormData: FranqueadaUnitData = {
   email: "",
   site: "",
 
+  // E-mails Departamentos
+  emailDiretoria: "",
+  emailComercial: "",
+  emailFinanceiro: "",
+  emailSac: "",
+
   statusFranquia: "Ativa",
   dataInicio: new Date().toISOString().split("T")[0],
   responsavelUnidade: "",
@@ -191,6 +205,8 @@ export default function Franqueadora() {
   const { refreshFranqueadas, setSelectedUnidade } = useFranqueada();
   const navigate = useNavigate();
 
+  const [activeViewTab, setActiveViewTab] = useState<"gestao" | "royalties">("gestao");
+
   const [franqueadas, setFranqueadas] = useState<FranqueadaUnitData[]>([]);
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -203,7 +219,7 @@ export default function Franqueadora() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FranqueadaUnitData>(emptyFormData);
   const [activeModalTab, setActiveModalTab] = useState<
-    "Básico" | "Franquia" | "Endereço" | "Fiscal" | "Sócios"
+    "Básico" | "Franquia" | "E-mails" | "Endereço" | "Fiscal" | "Sócios"
   >("Básico");
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -780,7 +796,34 @@ export default function Franqueadora() {
           </div>
         </div>
 
-        {/* Cards de Indicadores Globais da Rede */}
+        {/* Navigation Tabs */}
+        <div className="flex space-x-1 p-1 bg-slate-100/80 backdrop-blur-sm rounded-xl max-w-fit border border-slate-200">
+          <button
+            onClick={() => setActiveViewTab("gestao")}
+            className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${
+              activeViewTab === "gestao"
+                ? "bg-white text-slate-900 shadow-sm border border-slate-200/60"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+            }`}
+          >
+            Gestão de Franqueadas (Rede)
+          </button>
+          <button
+            onClick={() => setActiveViewTab("royalties")}
+            className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${
+              activeViewTab === "royalties"
+                ? "bg-white text-slate-900 shadow-sm border border-slate-200/60"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+            }`}
+          >
+            <Sparkles size={16} className={activeViewTab === "royalties" ? "text-amber-500" : "text-slate-400"} />
+            Automação de Royalties
+          </button>
+        </div>
+
+        {activeViewTab === "gestao" ? (
+          <>
+            {/* Cards de Indicadores Globais da Rede */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs flex items-center gap-4">
             <div className="p-3.5 bg-blue-50 text-[#0071e3] rounded-2xl shrink-0">
@@ -1181,6 +1224,10 @@ export default function Franqueadora() {
             </table>
           </div>
         </div>
+          </>
+        ) : (
+          <RoyaltiesSchedulerPanel onRefreshParent={fetchData} />
+        )}
       </div>
 
       {/* Modal Guia de Arquitetura Franqueador ↔ Franqueada */}
@@ -1451,7 +1498,7 @@ export default function Franqueadora() {
             </div>
 
             <div className="flex border-b border-slate-200 bg-slate-50 px-6 shrink-0 overflow-x-auto">
-              {(["Básico", "Franquia", "Endereço", "Fiscal", "Sócios"] as const).map((tab) => (
+              {(["Básico", "Franquia", "E-mails", "Endereço", "Fiscal", "Sócios"] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -1462,7 +1509,7 @@ export default function Franqueadora() {
                       : "border-transparent text-slate-500 hover:text-slate-700"
                   }`}
                 >
-                  {tab}
+                  {tab === "E-mails" ? "E-mails Departamentos" : tab}
                 </button>
               ))}
             </div>
@@ -1673,6 +1720,119 @@ export default function Franqueadora() {
                         value={formData.dataInicio}
                         onChange={handleChange}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab E-mails Departamentos */}
+              {activeModalTab === "E-mails" && (
+                <div className="space-y-5">
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-start gap-3">
+                    <div className="p-2 bg-[#0071e3] text-white rounded-lg shrink-0">
+                      <ExternalLink size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                        Contatos Departamentais da Unidade Franqueada
+                      </h4>
+                      <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                        Defina os e-mails específicos para comunicação institucional, comercial, financeira e de suporte ao cliente desta filial.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Diretoria Executiva */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 bg-indigo-50 text-indigo-700 rounded-md">
+                          <ShieldCheck size={16} />
+                        </span>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-800">
+                            Diretoria Executiva
+                          </label>
+                          <span className="text-[10px] text-slate-400">Decisões, atas e notificações oficiais</span>
+                        </div>
+                      </div>
+                      <input
+                        type="email"
+                        name="emailDiretoria"
+                        placeholder="diretoria@unidade.com.br"
+                        value={formData.emailDiretoria || ""}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-brand-dark focus:ring-1 focus:ring-brand-dark"
+                      />
+                    </div>
+
+                    {/* Departamento Comercial */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 bg-emerald-50 text-emerald-700 rounded-md">
+                          <TrendingUp size={16} />
+                        </span>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-800">
+                            Departamento Comercial
+                          </label>
+                          <span className="text-[10px] text-slate-400">Vendas, propostas e captação</span>
+                        </div>
+                      </div>
+                      <input
+                        type="email"
+                        name="emailComercial"
+                        placeholder="comercial@unidade.com.br"
+                        value={formData.emailComercial || ""}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-brand-dark focus:ring-1 focus:ring-brand-dark"
+                      />
+                    </div>
+
+                    {/* Departamento Financeiro */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 bg-amber-50 text-amber-700 rounded-md">
+                          <DollarSign size={16} />
+                        </span>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-800">
+                            Departamento Financeiro
+                          </label>
+                          <span className="text-[10px] text-slate-400">Cobranças, royalties e conciliação</span>
+                        </div>
+                      </div>
+                      <input
+                        type="email"
+                        name="emailFinanceiro"
+                        placeholder="financeiro@unidade.com.br"
+                        value={formData.emailFinanceiro || ""}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-brand-dark focus:ring-1 focus:ring-brand-dark"
+                      />
+                    </div>
+
+                    {/* Serviço de Atendimento ao Cliente (SAC) */}
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 bg-sky-50 text-sky-700 rounded-md">
+                          <Users size={16} />
+                        </span>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-800">
+                            Serviço de Atendimento ao Cliente (SAC)
+                          </label>
+                          <span className="text-[10px] text-slate-400">Atendimento a condôminos e pós-venda</span>
+                        </div>
+                      </div>
+                      <input
+                        type="email"
+                        name="emailSac"
+                        placeholder="sac@unidade.com.br"
+                        value={formData.emailSac || ""}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs outline-none focus:border-brand-dark focus:ring-1 focus:ring-brand-dark"
                       />
                     </div>
                   </div>
@@ -1914,6 +2074,14 @@ export default function Franqueadora() {
               <p><strong>Fundo de Propaganda:</strong> {printingItem.fundoPropaganda}%</p>
               <p><strong>Faturamento Acumulado:</strong> R$ {(printingItem.faturamentoTotal || 0).toFixed(2)}</p>
               <p><strong>Royalties Devidos à Matriz:</strong> R$ {(printingItem.royaltiesEstimados || 0).toFixed(2)}</p>
+            </div>
+
+            <div className="border p-4 rounded space-y-1">
+              <h3 className="font-bold">E-mails para Contato Departamental</h3>
+              <p><strong>Diretoria Executiva:</strong> {printingItem.emailDiretoria || "—"}</p>
+              <p><strong>Departamento Comercial:</strong> {printingItem.emailComercial || "—"}</p>
+              <p><strong>Departamento Financeiro:</strong> {printingItem.emailFinanceiro || "—"}</p>
+              <p><strong>Serviço de Atendimento ao Cliente (SAC):</strong> {printingItem.emailSac || "—"}</p>
             </div>
 
             <div className="border p-4 rounded space-y-1">
