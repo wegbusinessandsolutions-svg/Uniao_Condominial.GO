@@ -305,7 +305,7 @@ export default function ServicosEssenciais() {
         }),
         dataPreferencial: dataPreferencial || "A combinar com departamento comercial",
         observacoes: observacoes || "",
-        status: "Aguardando Confirmação - Equipe União Condominial",
+        status: "Aguardando confirmação - Data",
         createdAt: new Date()
       };
 
@@ -816,7 +816,7 @@ export default function ServicosEssenciais() {
             </h3>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Sua solicitação de serviços com a data de preferência foi encaminhada com sucesso. O status atual é <strong>Aguardando Confirmação - Equipe União Condominial</strong>.
+              Sua solicitação de serviços com a data de preferência foi encaminhada com sucesso. O status atual é <strong>Aguardando confirmação - Data</strong>.
             </p>
 
             <div className="pt-2 space-y-2">

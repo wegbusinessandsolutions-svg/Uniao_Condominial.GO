@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { 
   FileText, Clock, CheckCircle, Calendar, MessageSquare, Wrench, 
   AlertCircle, XCircle, X, Trash2, CheckCircle2, ChevronRight,
-  Filter, Check, Sparkles, AlertTriangle
+  Filter, Check, Sparkles, AlertTriangle, CalendarCheck
 } from "lucide-react";
 
 const parsePrice = (val: any): number => {
@@ -63,21 +63,21 @@ const isInitialPendingStatus = (status?: string) => {
 };
 
 export const getOSStatusDetails = (rawStatus?: string) => {
-  const s = (rawStatus || "aguardando confirmação - Equipe União Condominial").trim();
+  const s = (rawStatus || "Aguardando confirmação - Data").trim();
 
   // Normalize check
   const sLower = s.toLowerCase();
 
   if (sLower.includes("aguardando") || sLower.includes("solicitado") || sLower.includes("pendente") || sLower === "novo") {
     return {
-      label: "aguardando confirmação - Equipe União Condominial",
+      label: "Aguardando confirmação - Data",
       step: 1,
       badgeClass: "bg-amber-50 text-amber-900 border-amber-300",
       badgeDot: "bg-amber-500",
       icon: <Clock size={15} className="text-amber-600 animate-pulse shrink-0" />,
       boxBg: "bg-amber-50/70 border-amber-200/90 text-amber-950",
-      desc: "Sua solicitação de serviço foi registrada com a data de preferência escolhida. A Equipe União Condominial está avaliando o agendamento e confirmará a visita técnica.",
-      highlightText: "Aguardando confirmação da equipe"
+      desc: "Sua solicitação de serviço foi registrada com a data de preferência escolhida. A equipe está avaliando o agendamento e confirmará a visita técnica.",
+      highlightText: "Aguardando confirmação da data"
     };
   }
 
@@ -785,20 +785,58 @@ export default function MinhasOrdensServico() {
                   </div>
                 )}
 
-                {/* Additional details */}
-                <div className="flex flex-wrap gap-3 text-xs text-slate-600 pt-1">
-                  {o.dataPreferencial && (
-                    <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl font-medium">
-                      <Calendar size={14} className="text-[#0071e3]" />
-                      <span>Data de Preferência: <strong>{formatDateBR(o.dataPreferencial)}</strong></span>
+                {/* Additional details & Schedule Info */}
+                <div className="space-y-2 pt-1">
+                  {/* Visita Confirmada / Agendada */}
+                  {o.dataConfirmada || o.dataAgendada ? (
+                    <div className="bg-emerald-50 border border-emerald-200/90 rounded-xl p-3 text-xs text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <CalendarCheck size={16} className="text-emerald-700 shrink-0" />
+                        <div>
+                          <span className="font-bold text-emerald-900 block">
+                            Visita Técnica Confirmada: {formatDateBR(o.dataConfirmada || o.dataAgendada)}
+                          </span>
+                          {o.turnoAgendado && (
+                            <span className="text-[11px] text-emerald-800">
+                              Turno: <strong>{o.turnoAgendado}</strong>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {o.dataAlteradaPorAdmin && (
+                        <span className="text-[10px] bg-emerald-200/70 text-emerald-900 font-bold px-2 py-0.5 rounded-full self-start sm:self-auto">
+                          Ajustada pela equipe
+                        </span>
+                      )}
                     </div>
-                  )}
-                  {o.observacoes && (
-                    <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl font-medium">
-                      <MessageSquare size={14} className="text-[#0071e3]" />
-                      <span>Observações: {o.observacoes}</span>
-                    </div>
-                  )}
+                  ) : null}
+
+                  <div className="flex flex-wrap gap-2.5 text-xs text-slate-600">
+                    {o.dataPreferencial && (
+                      <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl font-medium">
+                        <Calendar size={14} className="text-[#0071e3]" />
+                        <span>
+                          {o.dataConfirmada || o.dataAgendada ? "Data Sugerida Inicialmente:" : "Data de Preferência:"}{" "}
+                          <strong>{formatDateBR(o.dataPreferencial)}</strong>
+                        </span>
+                      </div>
+                    )}
+
+                    {o.observacoesAgendamento && (
+                      <div className="flex items-center gap-1.5 bg-sky-50 text-sky-900 border border-sky-200 px-3 py-1.5 rounded-xl font-medium">
+                        <MessageSquare size={14} className="text-[#0071e3]" />
+                        <span>Nota da Equipe: {o.observacoesAgendamento}</span>
+                      </div>
+                    )}
+
+                    {o.observacoes && (
+                      <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl font-medium">
+                        <MessageSquare size={14} className="text-[#0071e3]" />
+                        <span>Observações: {o.observacoes}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Footer with total price & cancel/delete buttons */}
@@ -1018,7 +1056,7 @@ export default function MinhasOrdensServico() {
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 space-y-1">
                 <p className="font-bold">Atenção:</p>
                 <p>
-                  Esta solicitação permaneceu com o status <strong>'aguardando confirmação - Equipe União Condominial'</strong> por mais de 24 horas sem alteração de status. Ao confirmar, a ordem de serviço será permanentemente excluída do aplicativo.
+                  Esta solicitação permaneceu com o status <strong>'Aguardando confirmação - Data'</strong> por mais de 24 horas sem alteração de status. Ao confirmar, a ordem de serviço será permanentemente excluída do aplicativo.
                 </p>
               </div>
 

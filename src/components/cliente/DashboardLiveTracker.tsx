@@ -257,11 +257,11 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
     const sLower = (rawStatus || "").toLowerCase();
     if (sLower.includes("aguardando") || sLower.includes("solicitado") || sLower.includes("pendente") || sLower === "novo") {
       return {
-        label: "aguardando confirmação - Equipe União Condominial",
+        label: "Aguardando confirmação - Data",
         step: 1,
         badgeBg: "bg-amber-50 text-amber-900 border-amber-300",
         icon: <Clock size={14} className="text-amber-600 animate-pulse" />,
-        desc: "Solicitação recebida com data de preferência. Aguardando confirmação da Equipe União Condominial.",
+        desc: "Solicitação recebida com data de preferência. Aguardando confirmação da data.",
       };
     }
 
