@@ -19,6 +19,11 @@ interface UserProfile {
   status?: string;
   phone?: string;
   telefone?: string;
+  nomeEmpresa?: string;
+  nomeCompleto?: string;
+  nomeResponsavel?: string;
+  condominio?: string;
+  sindico?: string;
   cpf?: string;
   cnpj?: string;
   cpfResponsavel?: string;

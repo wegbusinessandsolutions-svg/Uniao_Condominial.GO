@@ -909,12 +909,17 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                           <h5 className="font-extrabold text-slate-900 text-sm leading-snug">
                             {os.servicoNome || os.itens?.[0]?.nome || "Serviço Condominial"}
                           </h5>
-                          {os.dataPreferencial && (
+                          {os.dataConfirmada || os.dataAgendada ? (
+                            <p className="text-xs text-emerald-700 flex items-center gap-1 mt-1 font-bold">
+                              <Calendar size={12} className="text-emerald-600" />
+                              <span>Visita Confirmada: {os.dataConfirmada || os.dataAgendada} {os.turnoAgendado ? `(${os.turnoAgendado})` : ''}</span>
+                            </p>
+                          ) : os.dataPreferencial ? (
                             <p className="text-xs text-slate-500 flex items-center gap-1 mt-1 font-medium">
                               <Calendar size={12} className="text-sky-600" />
                               <span>Data preferencial: {os.dataPreferencial}</span>
                             </p>
-                          )}
+                          ) : null}
                         </div>
 
                         {/* Visual Progress Steps */}

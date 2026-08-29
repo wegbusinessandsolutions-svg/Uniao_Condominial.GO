@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Search, Filter, Download, Pencil, Trash2, X, Printer, RefreshCw, FileText, Check, Truck, Package, PackageCheck, MessageCircle } from "lucide-react";
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where } from "firebase/firestore";
+import { Link } from "react-router-dom";
+import { Plus, Search, Filter, Download, Pencil, Trash2, X, Printer, RefreshCw, FileText, Check, Truck, Package, PackageCheck, MessageCircle, Navigation, MapPin, Compass, Radio, Map, Route, Sparkles, ExternalLink } from "lucide-react";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot } from "firebase/firestore";
 import { initFirebase } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
 import { registrarMudancaStatusPedido } from "../../lib/orderLogger";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 import DailyDeliverySummary from "../../components/ui/DailyDeliverySummary";
+import DeliveryGeoStatusModal from "../../components/logistica/DeliveryGeoStatusModal";
+import DeliveryRouteMap, { DeliveryLocation } from "../../components/logistica/DeliveryRouteMap";
 
 export default function Entregas() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"tabelas" | "mapa">("tabelas");
+  const [geoModalItem, setGeoModalItem] = useState<any | null>(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -42,7 +47,36 @@ export default function Entregas() {
   };
 
   useEffect(() => {
-    fetchData();
+    let unsubscribe: () => void = () => {};
+
+    const setupRealtimeListener = async () => {
+      setLoading(true);
+      try {
+        const { db } = await initFirebase();
+        const q = collection(db, "entregas");
+        unsubscribe = onSnapshot(
+          q,
+          (snapshot) => {
+            const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+            setData(items);
+            setLoading(false);
+          },
+          (err) => {
+            console.error("Erro no listener de entregas:", err);
+            fetchData();
+          }
+        );
+      } catch (err) {
+        console.error(err);
+        fetchData();
+      }
+    };
+
+    setupRealtimeListener();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const openAddModal = () => {
@@ -418,8 +452,74 @@ export default function Entregas() {
     window.open(url, "_blank");
   };
 
+  const renderGeoStatusBadge = (item: any) => {
+    const isArrived = item.statusChegada === "No Local";
+    const isInTransit = item.status === "Em trânsito";
+    const isDelivered = item.status === "Entregue";
+    const isFailed = item.status === "Falha";
+
+    if (isArrived) {
+      return (
+        <button
+          onClick={() => setGeoModalItem(item)}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200 transition-all shadow-2xs group cursor-pointer"
+          title="Clique para ver localização geográfica exata da chegada"
+        >
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <MapPin size={12} className="text-emerald-700" />
+          <span>No Local {item.horaChegada ? `(${item.horaChegada})` : ""}</span>
+        </button>
+      );
+    }
+
+    if (isInTransit) {
+      return (
+        <button
+          onClick={() => setGeoModalItem(item)}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-sky-100 text-sky-800 border border-sky-300 hover:bg-sky-200 transition-all shadow-2xs group cursor-pointer"
+          title="Clique para ver o status geográfico e rota do entregador"
+        >
+          <Radio size={12} className="text-sky-600 animate-pulse" />
+          <span>Em Rota {item.horaSaida ? `(${item.horaSaida})` : ""}</span>
+        </button>
+      );
+    }
+
+    if (isDelivered && (item.geolocalizacao || item.latChegada || item.horaEntrega)) {
+      return (
+        <button
+          onClick={() => setGeoModalItem(item)}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+          title="Ver registro geográfico da conclusão"
+        >
+          <Check size={11} className="text-emerald-600" />
+          <span>GPS Salvo</span>
+        </button>
+      );
+    }
+
+    return (
+      <button
+        onClick={() => setGeoModalItem(item)}
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-slate-500 hover:text-blue-700 hover:bg-blue-50 transition-colors cursor-pointer"
+        title="Ver coordenadas do destino"
+      >
+        <Compass size={12} className="text-slate-400" />
+        <span>Ver Ponto</span>
+      </button>
+    );
+  };
+
   const renderActionButtons = (item: any) => (
-    <div className="flex items-center justify-end gap-3">
+    <div className="flex items-center justify-end gap-2.5">
+      <button
+        onClick={() => setGeoModalItem(item)}
+        className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+        title="Visualizar Status Geográfico e Localização GPS"
+      >
+        <Compass size={17} className="text-blue-600" />
+      </button>
+
       {item.status === "Pronta para Envio" && (
         <button
           onClick={() => {
@@ -486,11 +586,51 @@ export default function Entregas() {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Entregas</h1>
-          <p className="text-sm text-slate-500 mt-1">Roteirização e acompanhamento de status logístico.</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-slate-900">Entregas</h1>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200">
+              <Radio size={12} className="animate-pulse text-blue-600" />
+              GPS Live
+            </span>
+          </div>
+          <p className="text-sm text-slate-500 mt-1">Roteirização, telemetria e acompanhamento de status logístico.</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* View Mode Toggle: Tabelas vs Mapa */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button
+              onClick={() => setViewMode("tabelas")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                viewMode === "tabelas"
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <FileText size={14} />
+              Listas
+            </button>
+            <button
+              onClick={() => setViewMode("mapa")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                viewMode === "mapa"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <Map size={14} />
+              Mapa da Frota
+            </button>
+          </div>
+
+          <Link
+            to="/admin/expedicao/logistica-roteirizacao"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition-colors shadow-xs"
+          >
+            <Route size={14} className="text-blue-400" />
+            Otimizador de Rotas
+          </Link>
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
@@ -498,25 +638,166 @@ export default function Entregas() {
               placeholder="Buscar pedido, NF, cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[250px]"
+              className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
             />
           </div>
           <button
             onClick={fetchData}
-            className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm"
+            className="flex items-center gap-2 px-3.5 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium shadow-xs"
+            title="Atualizar lista"
           >
-            <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
             Atualizar
           </button>
           <button
             onClick={openAddModal}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-xs"
           >
             <Plus size={16} />
             Nova Rota
           </button>
         </div>
       </div>
+
+      {/* Live Fleet GPS Tracker Banner */}
+      {groupedData.EmTransito.length > 0 && (
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-blue-950 text-white p-4 sm:p-5 rounded-2xl shadow-md border border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 border-b border-slate-700/60 pb-3">
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              <div>
+                <h3 className="font-extrabold text-sm sm:text-base text-white flex items-center gap-2">
+                  Monitoramento Geográfico da Frota em Campo
+                </h3>
+                <p className="text-xs text-slate-300">
+                  {groupedData.EmTransito.length} {groupedData.EmTransito.length === 1 ? "entrega em rota ativa" : "entregas em rotas ativas"} com telemetria GPS conectada.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setViewMode(viewMode === "mapa" ? "tabelas" : "mapa")}
+              className="self-start sm:self-auto px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-xs"
+            >
+              <Compass size={14} />
+              {viewMode === "mapa" ? "Ver Listas de Paradas" : "Abrir Mapa de Satélite"}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {groupedData.EmTransito.map((item) => {
+              const clientName = typeof item.cliente === "object" ? item.cliente?.nome : item.cliente;
+              const isArrived = item.statusChegada === "No Local";
+              return (
+                <div
+                  key={item.id}
+                  className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700 rounded-xl p-3 flex items-center justify-between gap-2.5 transition-colors"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-white truncate">
+                        {item.entregador || "Entregador da Frota"}
+                      </span>
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                          isArrived
+                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
+                            : "bg-blue-500/20 text-blue-300 border border-blue-400/30"
+                        }`}
+                      >
+                        {isArrived ? "📍 No Local" : "🚚 Em Trânsito"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 truncate mt-0.5">
+                      {clientName || "Cliente"} - Pedido #{item.pedidoId || item.id?.substring(0, 5)}
+                    </p>
+                    <p className="text-[11px] text-slate-400 truncate">
+                      {item.endereco || "Endereço em Goiânia"}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setGeoModalItem(item)}
+                    className="px-2.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 shrink-0 transition-colors shadow-xs"
+                    title="Ver telemetria geográfica e GPS desta entrega"
+                  >
+                    <Compass size={14} />
+                    <span>GPS</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Embedded Route Map View (when viewMode is 'mapa') */}
+      {viewMode === "mapa" && (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <Map className="text-blue-600" size={20} />
+                Visualização Geográfica em Tempo Real
+              </h2>
+              <p className="text-xs text-slate-500">
+                Acompanhe o posicionamento dos veículos e as paradas programadas.
+              </p>
+            </div>
+            <button
+              onClick={() => setViewMode("tabelas")}
+              className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Voltar para Tabelas
+            </button>
+          </div>
+
+          <DeliveryRouteMap
+            deliveries={data.map((d, index) => {
+              const b = (d.bairro || "").toLowerCase();
+              let lat = d.lat ? Number(d.lat) : -16.6869;
+              let lng = d.lng ? Number(d.lng) : -49.2648;
+              if (!d.lat) {
+                if (b.includes("bueno")) { lat = -16.7025; lng = -49.255; }
+                else if (b.includes("marista")) { lat = -16.715; lng = -49.268; }
+                else if (b.includes("sul")) { lat = -16.678; lng = -49.243; }
+                else if (b.includes("oeste")) { lat = -16.695; lng = -49.279; }
+                else {
+                  lat = -16.69 + (Math.sin((index + 1) * 2) * 0.025);
+                  lng = -49.26 + (Math.cos((index + 1) * 2) * 0.025);
+                }
+              }
+              return {
+                id: d.id,
+                pedidoId: d.pedidoId || `PED-${index + 1}`,
+                nf: d.nf,
+                cliente: typeof d.cliente === "object" ? d.cliente?.nome : d.cliente,
+                endereco: d.endereco || "Goiânia - GO",
+                bairro: d.bairro,
+                cidade: d.cidade || "Goiânia",
+                lat,
+                lng,
+                status: d.status || "Separando",
+                sequencia: d.sequencia || index + 1,
+                valorTotal: d.valorTotal,
+                entregador: d.entregador,
+                horaSaida: d.horaSaida,
+                horaChegada: d.horaChegada,
+                horaEntrega: d.horaEntrega,
+              };
+            })}
+            selectedDeliveryId={selectedDeliveryId}
+            onSelectDelivery={(id) => {
+              setSelectedDeliveryId(id);
+              const found = data.find((x) => x.id === id);
+              if (found) setGeoModalItem(found);
+            }}
+          />
+        </div>
+      )}
 
       <DailyDeliverySummary data={data} />
 
@@ -605,7 +886,12 @@ export default function Entregas() {
       {/* Grid Em trânsito */}
       <div className="bg-white rounded-xl shadow-sm border border-blue-200 overflow-hidden">
         <div className="bg-blue-50 px-6 py-4 border-b border-blue-100 flex justify-between items-center">
-          <h2 className="text-lg font-bold text-blue-800">Em trânsito ({groupedData.EmTransito.length})</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold text-blue-800">Em trânsito ({groupedData.EmTransito.length})</h2>
+            <span className="text-xs bg-blue-200/80 text-blue-900 font-bold px-2 py-0.5 rounded-full">
+              GPS Ativo
+            </span>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-600">
@@ -617,6 +903,7 @@ export default function Entregas() {
                 <th className="px-6 py-3">Hora Saída</th>
                 <th className="px-6 py-3">Valor Total</th>
                 <th className="px-6 py-3">Entregador</th>
+                <th className="px-6 py-3">Status GPS / Chegada</th>
                 <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3 text-right">Ações</th>
               </tr>
@@ -624,7 +911,7 @@ export default function Entregas() {
             <tbody className="divide-y divide-slate-100">
               {groupedData.EmTransito.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-4 text-center text-slate-500">Nenhum registro encontrado.</td>
+                  <td colSpan={9} className="px-6 py-4 text-center text-slate-500">Nenhum registro encontrado.</td>
                 </tr>
               ) : (
                 groupedData.EmTransito.map(item => (
@@ -634,7 +921,8 @@ export default function Entregas() {
                     <td className="px-6 py-3">{item.data || "-"}</td>
                     <td className="px-6 py-3">{item.horaSaida || "-"}</td>
                     <td className="px-6 py-3">{item.valorTotal || "-"}</td>
-                    <td className="px-6 py-3">{item.entregador || "-"}</td>
+                    <td className="px-6 py-3 font-medium text-slate-800">{item.entregador || "-"}</td>
+                    <td className="px-6 py-3">{renderGeoStatusBadge(item)}</td>
                     <td className="px-6 py-3">{renderStatusTracker(item)}</td>
                     <td className="px-6 py-3">{renderActionButtons(item)}</td>
                   </tr>
@@ -1031,6 +1319,13 @@ export default function Entregas() {
           </div>
         </div>
       )}
+
+      {/* Geographic Status Modal for Couriers and Deliveries */}
+      <DeliveryGeoStatusModal
+        isOpen={!!geoModalItem}
+        onClose={() => setGeoModalItem(null)}
+        deliveryItem={geoModalItem}
+      />
     </div>
   );
 }

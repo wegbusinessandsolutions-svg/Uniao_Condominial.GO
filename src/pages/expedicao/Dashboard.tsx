@@ -10,13 +10,23 @@ import {
   Sliders,
   Clock,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Route
 } from "lucide-react";
 import { initFirebase } from "../../lib/firebase";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { useAuth } from "../../context/AuthContext";
 
 const allExpedicaoModules = [
+  {
+    key: "moduloLogisticaRoteirizacao",
+    title: "Logística e Roteirização",
+    description: "Mapa interativo, monitoramento de rotas e despacho de entregas.",
+    link: "/admin/expedicao/logistica-roteirizacao",
+    icon: Route,
+    iconColor: "text-indigo-500",
+    iconBg: "bg-indigo-50",
+  },
   {
     key: "moduloEntregas",
     title: "Entregas",

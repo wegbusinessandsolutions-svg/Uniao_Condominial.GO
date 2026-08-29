@@ -90,6 +90,7 @@ const ExpedicaoDashboard = lazy(() => import("./pages/expedicao/Dashboard"));
 const Entregas = lazy(() => import("./pages/expedicao/Entregas"));
 const ExpedicaoPedidosOnline = lazy(() => import("./pages/expedicao/PedidosOnline"));
 const ExpedicaoEstoque = lazy(() => import("./pages/expedicao/Estoque"));
+const LogisticaRoteirizacao = lazy(() => import("./pages/admin/LogisticaRoteirizacao"));
 const EntregadorDashboard = lazy(() => import("./pages/entregador/Dashboard"));
 
 const FinanceiroFaturamento = lazy(() => import("./pages/financeiro/Faturamento"));
@@ -539,11 +540,13 @@ export default function App() {
             </Route>
 
             <Route path="entrega-mercadorias" element={<EntregadorDashboard />} />
+            <Route path="logistica-roteirizacao" element={<LogisticaRoteirizacao />} />
             <Route path="expedicao">
               <Route index element={<ExpedicaoDashboard />} />
               <Route path="entregas" element={<Entregas />} />
               <Route path="estoque" element={<ExpedicaoEstoque />} />
               <Route path="pedidos-online" element={<ExpedicaoPedidosOnline />} />
+              <Route path="logistica-roteirizacao" element={<LogisticaRoteirizacao />} />
             </Route>
           </Route>
             </Routes>

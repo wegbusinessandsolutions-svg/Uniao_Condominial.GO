@@ -47,12 +47,12 @@ export default function Sobre() {
             </p>
           </div>
           
-          <div className="flex-1 w-full relative">
-            <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-lg border border-slate-100 bg-slate-100">
+          <div className="flex-1 w-full max-w-full relative">
+            <div className="w-full max-w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-lg border border-slate-100 bg-slate-100 flex items-center justify-center">
               <img 
                  src="/img_end_page.png" 
                  alt="União Condominial.GO"
-                className="w-full h-full object-cover"
+                className="w-full max-w-full h-auto sm:h-full object-contain sm:object-cover block"
               />
             </div>
             <div className="absolute -bottom-4 -right-4 h-24 w-24 bg-[#0071e3]/20 rounded-full blur-2xl -z-10"></div>

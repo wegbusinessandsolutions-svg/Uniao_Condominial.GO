@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { ShoppingCart, Receipt, ArrowRight, HeartHandshake, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
-import { doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
+import { Link, useLocation } from "react-router-dom";
+import { doc, getDoc, getDocs, collection, query, where, addDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import PartnersCarousel from "../../components/cliente/PartnersCarousel";
 import MuralCondominial from "../../components/cliente/MuralCondominial";
@@ -14,10 +14,10 @@ import badgePrata from "../../assets/images/badge_prata_1787100145745.jpg";
 import badgeOuro from "../../assets/images/badge_ouro_1787100156882.jpg";
 import badgeDiamante from "../../assets/images/badge_diamante_1787100168869.jpg";
 import { Lightbulb, X } from "lucide-react";
-import { addDoc } from "firebase/firestore";
 
 export default function CustomerDashboard() {
   const { profile, user } = useAuth();
+  const location = useLocation();
   const [isAfiliado, setIsAfiliado] = useState<boolean | null>(null);
   const [loadingAfiliado, setLoadingAfiliado] = useState(true);
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
@@ -27,11 +27,16 @@ export default function CustomerDashboard() {
   const [isClassificationModalOpen, setIsClassificationModalOpen] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem("openSuggestion") === "true") {
+    const queryParams = new URLSearchParams(location.search);
+    const hasSugestaoQuery = queryParams.get("sugestao") === "true";
+    const hasStoredFlag = localStorage.getItem("openSuggestion") === "true" || sessionStorage.getItem("openSuggestion") === "true";
+
+    if (hasSugestaoQuery || hasStoredFlag) {
       setIsSuggestionModalOpen(true);
       localStorage.removeItem("openSuggestion");
+      sessionStorage.removeItem("openSuggestion");
     }
-  }, []);
+  }, [location.search]);
 
   const handleSubmitSuggestion = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,14 +44,21 @@ export default function CustomerDashboard() {
     
     setIsSubmittingSuggestion(true);
     try {
+      const nomeCondominio = (profile as any)?.nomeEmpresa || (profile as any)?.condominio || profile?.displayName || (profile as any)?.nomeCompleto || "Condomínio Não Informado";
+      const nomeSindico = (profile as any)?.nomeResponsavel || (profile as any)?.sindico || (profile as any)?.nomeCompleto || profile?.displayName || "Síndico Não Informado";
+      const telefone = (profile as any)?.telefone || (profile as any)?.phone || "";
+      const email = profile?.email || user?.email || "";
+
       await addDoc(collection(db, "sugestoes"), {
         userId: user?.uid || null,
-        condominio: (profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || "",
-        sindico: (profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || "",
-        telefone: (profile as any)?.telefone || "",
-        email: profile?.email || user?.email || "",
+        condominio: nomeCondominio,
+        sindico: nomeSindico,
+        nomeEmpresa: nomeCondominio,
+        nomeResponsavel: nomeSindico,
+        telefone: telefone,
+        email: email,
         titulo: "Sugestão",
-        mensagem: suggestionText,
+        mensagem: suggestionText.trim(),
         status: "Nova",
         createdAt: new Date(),
       });
@@ -58,13 +70,13 @@ export default function CustomerDashboard() {
             subject: "Nova Sugestão Recebida - Aplicativo",
             html: `
               <h3>Nova Sugestão Recebida</h3>
-              <p><strong>Condomínio/Empresa:</strong> ${(profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
-              <p><strong>Responsável:</strong> ${(profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
-              <p><strong>Telefone:</strong> ${(profile as any)?.telefone || ""}</p>
-              <p><strong>E-mail:</strong> ${profile?.email || user?.email || ""}</p>
+              <p><strong>Condomínio/Empresa:</strong> ${nomeCondominio}</p>
+              <p><strong>Responsável/Síndico:</strong> ${nomeSindico}</p>
+              <p><strong>Telefone:</strong> ${telefone}</p>
+              <p><strong>E-mail:</strong> ${email}</p>
               <br />
               <p><strong>Sugestão:</strong></p>
-              <p>${suggestionText.replace(/\n/g, '<br/>')}</p>
+              <p>${suggestionText.trim().replace(/\n/g, '<br/>')}</p>
             `
           }
         });
@@ -403,7 +415,7 @@ export default function CustomerDashboard() {
                     type="text" 
                     readOnly 
                     disabled
-                    value={(profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || ""}
+                    value={(profile as any)?.nomeEmpresa || (profile as any)?.condominio || profile?.displayName || (profile as any)?.nomeCompleto || ""}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
                   />
                 </div>
@@ -413,7 +425,7 @@ export default function CustomerDashboard() {
                     type="text" 
                     readOnly 
                     disabled
-                    value={(profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || ""}
+                    value={(profile as any)?.nomeResponsavel || (profile as any)?.sindico || (profile as any)?.nomeCompleto || profile?.displayName || ""}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
                   />
                 </div>
@@ -423,7 +435,7 @@ export default function CustomerDashboard() {
                     type="text" 
                     readOnly 
                     disabled
-                    value={(profile as any)?.telefone || ""}
+                    value={(profile as any)?.telefone || (profile as any)?.phone || ""}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
                   />
                 </div>

@@ -111,7 +111,7 @@ export default function OptimizedImage({
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-hidden w-full h-full flex items-center justify-center bg-slate-50 ${containerClassName}`}
+      className={`relative overflow-hidden w-full max-w-full h-full flex items-center justify-center bg-slate-50 ${containerClassName}`}
     >
       {/* 1. Blur-Up/Shimmer Placeholder */}
       {!isLoaded && !hasError && (
@@ -130,7 +130,7 @@ export default function OptimizedImage({
           transition={{ duration: 0.35, ease: "easeOut" }}
           onLoad={() => setIsLoaded(true)}
           onError={() => setHasError(true)}
-          className={`w-full h-full transition-all ${
+          className={`w-full max-w-full h-full max-h-full transition-all ${
             objectFit === "cover" ? "object-cover" :
             objectFit === "contain" ? "object-contain" :
             objectFit === "fill" ? "object-fill" :

@@ -7,6 +7,7 @@ import { initFirebase } from "../../lib/firebase";
 import SignupForm from "./SignupForm";
 import { CompanyLogo } from "../../components/ui/CompanyLogo";
 import { getDefaultDashboardForRole, isStaffRole } from "../../lib/permissions";
+import { Lightbulb } from "lucide-react";
 
 export default function CustomerArea() {
   const { profile } = useAuth();
@@ -15,6 +16,7 @@ export default function CustomerArea() {
   
   const queryParams = new URLSearchParams(location.search);
   const startAsSignup = queryParams.get("signup") === "true" || location.state?.signup === true;
+  const isSugestaoFlow = queryParams.get("redirect") === "sugestao" || queryParams.get("sugestao") === "true" || sessionStorage.getItem("openSuggestion") === "true" || localStorage.getItem("openSuggestion") === "true";
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -87,6 +89,9 @@ export default function CustomerArea() {
     if (isStaffRole(profile.role)) {
       const targetDashboard = getDefaultDashboardForRole(profile.role);
       return <Navigate to={targetDashboard} replace />;
+    }
+    if (isSugestaoFlow) {
+      return <Navigate to="/cliente?sugestao=true" replace />;
     }
     return <Navigate to="/cliente" replace />;
   }
@@ -164,6 +169,18 @@ export default function CustomerArea() {
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Entrar</h1>
         <p className="text-[16.1px] text-slate-500">Acesse sua Área do Cliente.</p>
       </div>
+
+      {isSugestaoFlow && (
+        <div className="mb-5 bg-sky-50 border border-sky-200/90 rounded-2xl p-4 flex items-start gap-3 text-sky-950 text-xs sm:text-sm">
+          <div className="p-2 bg-sky-100 text-[#0071e3] rounded-xl shrink-0">
+            <Lightbulb size={18} />
+          </div>
+          <div>
+            <span className="font-bold text-sky-900 block mb-0.5">Envio de Sugestão</span>
+            <span>Identifique-se ou cadastre-se para prosseguir. Após o login, você retornará automaticamente para o formulário de sugestão.</span>
+          </div>
+        </div>
+      )}
       
       <form
         onSubmit={handleAuth}

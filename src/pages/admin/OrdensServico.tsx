@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { collection, getDocs, getDoc, updateDoc, addDoc, doc, query, orderBy } from "firebase/firestore";
+import { Link } from "react-router-dom";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { 
@@ -20,7 +21,11 @@ import {
   Check,
   AlertTriangle,
   Info,
-  Building
+  Building,
+  Activity,
+  UserCheck,
+  Camera,
+  PenTool
 } from "lucide-react";
 import { parseServiceValue, formatCurrencyBR } from "../../lib/serviceUtils";
 import { sendEmailWithLog } from "../../lib/emailService";
@@ -443,12 +448,26 @@ export default function OrdensServicoAdmin() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Ordens de Serviço (CRM Comercial)</h1>
           <p className="text-slate-500 text-sm">Gerencie o fluxo de atendimento, agendamento de visitas na agenda e conclusão de serviços.</p>
         </div>
-        <button
-          onClick={fetchOrdens}
-          className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs transition-colors cursor-pointer"
-        >
-          Atualizar Lista
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to="/admin/monitoria-servicos"
+            className="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold px-3.5 py-2 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-xs"
+          >
+            <Activity size={14} /> Monitoria Interna & SLA
+          </Link>
+          <Link
+            to="/admin/execucao-servicos"
+            className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold px-3.5 py-2 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-xs"
+          >
+            <UserCheck size={14} /> Dashboard de Execução do Técnico
+          </Link>
+          <button
+            onClick={fetchOrdens}
+            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs transition-colors cursor-pointer"
+          >
+            Atualizar Lista
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -627,6 +646,37 @@ export default function OrdensServicoAdmin() {
                         </div>
                       </div>
                     )}
+
+                    {/* Bloco de Execução em Campo e Evidências */}
+                    <div className="bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-900/40 p-2.5 rounded-xl text-xs space-y-1.5 mt-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 font-bold text-purple-900 dark:text-purple-300">
+                          <UserCheck size={14} className="text-purple-600" />
+                          <span>Técnico: {o.colaboradorNome || "Ainda não designado"}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            Array.isArray(o.fotosAntes) && o.fotosAntes.length >= 3
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-slate-200 text-slate-600"
+                          }`}>
+                            <Camera size={11} /> Antes: {Array.isArray(o.fotosAntes) ? o.fotosAntes.length : 0}/3
+                          </span>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            Array.isArray(o.fotosDepois) && o.fotosDepois.length >= 3
+                              ? "bg-teal-100 text-teal-800"
+                              : "bg-slate-200 text-slate-600"
+                          }`}>
+                            <Camera size={11} /> Depois: {Array.isArray(o.fotosDepois) ? o.fotosDepois.length : 0}/3
+                          </span>
+                          {o.assinaturaResponsavel && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                              <PenTool size={11} /> Assinado
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Items list */}

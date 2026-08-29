@@ -168,12 +168,12 @@ export default function ComercialDashboard() {
   const showTopCards = config.cardTotalClientes !== false || config.cardPedidosMes !== false || config.cardFaturamentoComercial !== false;
 
   return (
-    <div className="max-w-6xl mx-auto pb-10">
-      <div className="bg-[#f8f9fc] rounded-t-2xl p-8 pb-10 mt-6 relative">
+    <div className="max-w-6xl mx-auto pb-10 min-w-0 w-full">
+      <div className="bg-[#f8f9fc] rounded-t-2xl p-4 sm:p-8 pb-8 sm:pb-10 mt-4 sm:mt-6 relative min-w-0">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">Comercial</h1>
-            <p className="text-slate-500 text-sm">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1 sm:mb-2">Comercial</h1>
+            <p className="text-slate-500 text-xs sm:text-sm">
               Visão geral das vendas, clientes, pedidos e prospecção.
             </p>
           </div>
@@ -192,42 +192,42 @@ export default function ComercialDashboard() {
 
         {/* Indicadores do Topo */}
         {showTopCards && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
             {config.cardTotalClientes !== false && (
-              <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-xs flex items-center justify-between">
+              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-xs flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Clientes Cadastrados</p>
-                  <p className="text-2xl font-black text-slate-900 mt-1">
+                  <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
                     {loading ? "..." : stats.totalClientes}
                   </p>
                 </div>
-                <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                   <Users size={20} />
                 </div>
               </div>
             )}
             {config.cardPedidosMes !== false && (
-              <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-xs flex items-center justify-between">
+              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-xs flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pedidos Emitidos</p>
-                  <p className="text-2xl font-black text-emerald-600 mt-1">
+                  <p className="text-xl sm:text-2xl font-black text-emerald-600 mt-1">
                     {loading ? "..." : stats.pedidosMes}
                   </p>
                 </div>
-                <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                   <ShoppingCart size={20} />
                 </div>
               </div>
             )}
             {config.cardFaturamentoComercial !== false && (
-              <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-xs flex items-center justify-between">
+              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-xs flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Faturamento Comercial</p>
-                  <p className="text-2xl font-black text-slate-900 mt-1">
+                  <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
                     {loading ? "..." : stats.faturamento.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                   </p>
                 </div>
-                <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
                   <TrendingUp size={20} />
                 </div>
               </div>
@@ -237,7 +237,7 @@ export default function ComercialDashboard() {
 
         {/* Dashboard de Metas de Vendas (Gráfico Recharts vs Metas) Lazy Loaded */}
         {config.dashboardMetasVendas !== false && (
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8 min-w-0 w-full">
             <Suspense fallback={<SkeletonCharts />}>
               <DashboardMetasVendas />
             </Suspense>

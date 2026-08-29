@@ -42,6 +42,18 @@ export default function Home() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hasSugestaoParam = params.get("sugestao") === "true";
+    const hasStoredFlag = localStorage.getItem("openSuggestion") === "true" || sessionStorage.getItem("openSuggestion") === "true";
+    
+    if (user && (hasSugestaoParam || hasStoredFlag)) {
+      setIsSuggestionModalOpen(true);
+      localStorage.removeItem("openSuggestion");
+      sessionStorage.removeItem("openSuggestion");
+    }
+  }, [user]);
+
   const handleSuggestionClick = () => {
     if (user) {
       setIsSuggestionModalOpen(true);
@@ -56,14 +68,21 @@ export default function Home() {
     
     setIsSubmittingSuggestion(true);
     try {
+      const nomeCondominio = (profile as any)?.nomeEmpresa || (profile as any)?.condominio || profile?.displayName || (profile as any)?.nomeCompleto || "Condomínio Não Informado";
+      const nomeSindico = (profile as any)?.nomeResponsavel || (profile as any)?.sindico || (profile as any)?.nomeCompleto || profile?.displayName || "Síndico Não Informado";
+      const telefone = (profile as any)?.telefone || (profile as any)?.phone || "";
+      const email = profile?.email || user?.email || "";
+
       await addDoc(collection(db, "sugestoes"), {
         userId: user?.uid || null,
-        condominio: (profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || "",
-        sindico: (profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || "",
-        telefone: (profile as any)?.telefone || "",
-        email: profile?.email || user?.email || "",
+        condominio: nomeCondominio,
+        sindico: nomeSindico,
+        nomeEmpresa: nomeCondominio,
+        nomeResponsavel: nomeSindico,
+        telefone: telefone,
+        email: email,
         titulo: "Sugestão",
-        mensagem: suggestionText,
+        mensagem: suggestionText.trim(),
         status: "Nova",
         createdAt: new Date(),
       });
@@ -75,13 +94,13 @@ export default function Home() {
             subject: "Nova Sugestão Recebida - Aplicativo",
             html: `
               <h3>Nova Sugestão Recebida</h3>
-              <p><strong>Condomínio/Empresa:</strong> ${(profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
-              <p><strong>Responsável:</strong> ${(profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || ""}</p>
-              <p><strong>Telefone:</strong> ${(profile as any)?.telefone || ""}</p>
-              <p><strong>E-mail:</strong> ${profile?.email || user?.email || ""}</p>
+              <p><strong>Condomínio/Empresa:</strong> ${nomeCondominio}</p>
+              <p><strong>Responsável/Síndico:</strong> ${nomeSindico}</p>
+              <p><strong>Telefone:</strong> ${telefone}</p>
+              <p><strong>E-mail:</strong> ${email}</p>
               <br />
               <p><strong>Sugestão:</strong></p>
-              <p>${suggestionText.replace(/\n/g, '<br/>')}</p>
+              <p>${suggestionText.trim().replace(/\n/g, '<br/>')}</p>
             `
           }
         });
@@ -160,12 +179,12 @@ export default function Home() {
             Por que nos escolher?
           </h2>
           
-          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md w-full bg-slate-100">
-            <picture className="w-full block">
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md w-full max-w-full bg-slate-100 flex items-center justify-center">
+            <picture className="w-full max-w-full block">
               <img
                 src="/Cond_Vert_Horiz_UC.png"
                 alt="Goiânia é feita de grandes condomínios. Verticais e horizontais. Todos precisam de soluções. Todos podem ganhar juntos."
-                className="w-full h-auto object-cover block"
+                className="w-full max-w-full h-auto object-contain sm:object-cover block"
                 loading="eager"
                 decoding="async"
               />
@@ -279,13 +298,13 @@ export default function Home() {
             </div>
 
             {/* Right Banner Image */}
-            <div className="w-full lg:w-[480px] xl:w-[520px] shrink-0 self-center lg:self-start">
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white">
-                <picture className="w-full block">
+            <div className="w-full max-w-full lg:w-[480px] xl:w-[520px] shrink-0 self-center lg:self-start">
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 bg-white w-full max-w-full flex items-center justify-center">
+                <picture className="w-full max-w-full block">
                   <img
                     src="/servicos-rotineiros-oficial.png"
                     alt="São mais de 10 Serviços a disposição - União Condominial"
-                    className="w-full h-auto object-cover block"
+                    className="w-full max-w-full h-auto object-contain sm:object-cover block"
                     loading="lazy"
                     decoding="async"
                   />
@@ -386,18 +405,19 @@ export default function Home() {
               Ver todos os produtos <ArrowRight size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-6">
             {categories.map((cat) => (
               <Link
                 key={cat.id}
                 to={`/produtos?categoria=${cat.nome}`}
-                className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300"
+                className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full"
               >
-                <div className="aspect-[4/3] bg-slate-50 relative overflow-hidden flex items-center justify-center border-b border-slate-100">
+                <div className="aspect-[4/3] bg-slate-50 relative overflow-hidden flex items-center justify-center border-b border-slate-100 w-full max-w-full p-2">
                   <OptimizedImage
                     src={cat.imagem}
                     alt={cat.nome}
-                    className="group-hover:scale-105 transition-transform duration-500"
+                    objectFit="contain"
+                    className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain"
                   />
                 </div>
                 <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
@@ -442,13 +462,14 @@ export default function Home() {
               <Link
                 key={product.id}
                 to={`/produto/${product.id}`}
-                className="group bg-white rounded-2xl shadow-sm hover:shadow-md border border-slate-100 overflow-hidden transition-all duration-300 flex flex-col"
+                className="group bg-white rounded-2xl shadow-sm hover:shadow-md border border-slate-100 overflow-hidden transition-all duration-300 flex flex-col w-full max-w-full"
               >
-                <div className="aspect-square bg-slate-50 relative overflow-hidden flex items-center justify-center">
+                <div className="aspect-square bg-slate-50 relative overflow-hidden flex items-center justify-center w-full max-w-full p-2 sm:p-4">
                   <OptimizedImage
                     src={product.imagemPrincipal || product.imageUrl}
                     alt={product.nome || product.name}
-                    className="group-hover:scale-105 transition-transform duration-500"
+                    objectFit="contain"
+                    className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain"
                   />
                 </div>
                 <div className="p-3.5 sm:p-5 flex-1 flex flex-col">
@@ -494,13 +515,13 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div className="flex-1 w-full max-w-lg lg:max-w-none relative">
-            <div className="aspect-[4/3] sm:aspect-[16/10] md:aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border border-slate-100 bg-slate-50 relative">
-              <picture className="w-full h-full block">
+          <div className="flex-1 w-full max-w-full lg:max-w-none relative">
+            <div className="w-full max-w-full aspect-[4/3] sm:aspect-[16/10] md:aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border border-slate-100 bg-slate-50 relative flex items-center justify-center">
+              <picture className="w-full max-w-full h-full block">
                 <img 
                   src="/img_end_page.png" 
                   alt="A união que transforma a gestão condominial na Grande Goiânia"
-                  className="w-full h-full object-cover sm:object-contain md:object-cover block"
+                  className="w-full max-w-full h-auto sm:h-full object-contain sm:object-contain md:object-cover block"
                   loading="lazy"
                   decoding="async"
                 />
@@ -539,9 +560,10 @@ export default function Home() {
                 Cancelar
               </button>
               <Link 
-                to="/minha-conta"
+                to="/minha-conta?redirect=sugestao"
                 onClick={() => {
                   localStorage.setItem('openSuggestion', 'true');
+                  sessionStorage.setItem('openSuggestion', 'true');
                   setIsAuthPromptOpen(false);
                 }}
                 className="flex-1 px-5 py-3 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold text-center shadow-sm transition-colors"
@@ -582,7 +604,7 @@ export default function Home() {
                     type="text" 
                     readOnly 
                     disabled
-                    value={(profile as any)?.nomeEmpresa || (profile as any)?.nomeCompleto || profile?.displayName || ""}
+                    value={(profile as any)?.nomeEmpresa || (profile as any)?.condominio || profile?.displayName || (profile as any)?.nomeCompleto || ""}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
                   />
                 </div>
@@ -592,7 +614,7 @@ export default function Home() {
                     type="text" 
                     readOnly 
                     disabled
-                    value={(profile as any)?.nomeResponsavel || (profile as any)?.nomeCompleto || profile?.displayName || ""}
+                    value={(profile as any)?.nomeResponsavel || (profile as any)?.sindico || (profile as any)?.nomeCompleto || profile?.displayName || ""}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
                   />
                 </div>
@@ -602,7 +624,7 @@ export default function Home() {
                     type="text" 
                     readOnly 
                     disabled
-                    value={(profile as any)?.telefone || ""}
+                    value={(profile as any)?.telefone || (profile as any)?.phone || ""}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
                   />
                 </div>

@@ -107,6 +107,19 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
   const [annualBulkValue, setAnnualBulkValue] = useState<string>("");
   const [observacoesMeta, setObservacoesMeta] = useState<string>("");
 
+  // Responsive mobile detector (< 768px)
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // Load metas_vendas and pedidos_venda
   useEffect(() => {
     let unsubMetas: (() => void) | undefined;
@@ -306,6 +319,16 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
     return `R$ ${val.toFixed(0)}`;
   };
 
+  const formatMobileShortBRL = (val: number) => {
+    if (val >= 1000000) {
+      return `${(val / 1000000).toFixed(1)}M`;
+    }
+    if (val >= 1000) {
+      return `${(val / 1000).toFixed(0)}k`;
+    }
+    return `${val.toFixed(0)}`;
+  };
+
   // Helper for sum of record
   const getSumOfMetas = (metas: Record<string, number>): number => {
     let sum = 0;
@@ -391,14 +414,14 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
       const isSuperada = atingimento >= 100;
 
       return (
-        <div className="bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-slate-200 text-xs min-w-[240px] animate-in fade-in zoom-in-95 duration-150">
+        <div className="bg-white/95 backdrop-blur-md p-3 sm:p-4 rounded-2xl shadow-xl border border-slate-200 text-xs w-[calc(100vw-48px)] max-w-[280px] z-50 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 mb-2.5">
-            <span className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-              <Calendar size={14} className="text-blue-600" />
+            <span className="font-bold text-slate-900 text-sm flex items-center gap-1.5 truncate">
+              <Calendar size={14} className="text-blue-600 shrink-0" />
               {data.mesFull} de {selectedYear}
             </span>
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+              className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
                 isSuperada
                   ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                   : atingimento >= 80
@@ -406,29 +429,29 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
                   : "bg-amber-100 text-amber-800 border border-amber-200"
               }`}
             >
-              {atingimento.toFixed(1)}% da Meta
+              {atingimento.toFixed(1)}%
             </span>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-slate-500 flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block" />
-                Vendas Realizadas:
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block shrink-0" />
+                Vendas:
               </span>
               <span className="font-bold text-slate-900">{formatBRL(data.vendas)}</span>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-slate-500 flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-slate-300 inline-block" />
-                Meta Estabelecida:
+                <span className="w-2.5 h-2.5 rounded-full bg-slate-300 inline-block shrink-0" />
+                Meta:
               </span>
               <span className="font-semibold text-slate-700">{formatBRL(data.meta)}</span>
             </div>
 
             <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-              <span className="text-slate-500">Diferença (Gap):</span>
+              <span className="text-slate-500">Diferença:</span>
               <span
                 className={`font-bold ${
                   data.diferenca >= 0 ? "text-emerald-600" : "text-red-600"
@@ -440,7 +463,7 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
             </div>
 
             <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-              <span>Volume de Pedidos:</span>
+              <span>Pedidos:</span>
               <span className="font-medium text-slate-600">{data.pedidosCount} pedidos</span>
             </div>
             {data.pedidosCount > 0 && (
@@ -458,10 +481,10 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
 
   return (
     <div
-      className={`bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden ${className}`}
+      className={`bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden min-w-0 ${className}`}
     >
       {/* Top Banner & Header */}
-      <div className="p-6 pb-5 border-b border-slate-100 bg-gradient-to-r from-slate-900 via-[#004b9e] to-blue-700 text-white relative">
+      <div className="p-4 sm:p-6 pb-5 border-b border-slate-100 bg-gradient-to-r from-slate-900 via-[#004b9e] to-blue-700 text-white relative">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-blue-100 mb-2 border border-white/15">
@@ -484,7 +507,7 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
                 <button
                   key={y}
                   onClick={() => setSelectedYear(y)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     selectedYear === y
                       ? "bg-white text-slate-900 shadow-xs"
                       : "text-white/80 hover:text-white hover:bg-white/10"
@@ -519,16 +542,16 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="p-6 bg-[#f8f9fc] border-b border-slate-200/80">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="p-4 sm:p-6 bg-[#f8f9fc] border-b border-slate-200/80">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Card 1: Meta do Mês Atual */}
-          <div className="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-sm transition-shadow">
+          <div className="bg-white rounded-2xl p-4 sm:p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-sm transition-shadow min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">
                 Meta do Mês ({currentMonthData.mesShort}/{selectedYear})
               </span>
               <div
-                className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
                   currentMonthData.percentual >= 100
                     ? "bg-emerald-50 text-emerald-600"
                     : "bg-blue-50 text-blue-600"
@@ -538,12 +561,12 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
               </div>
             </div>
 
-            <div className="flex items-baseline justify-between mt-1">
-              <span className="text-xl font-black text-slate-900">
+            <div className="flex items-baseline justify-between mt-1 gap-2">
+              <span className="text-xl font-black text-slate-900 truncate">
                 {formatBRL(currentMonthData.vendas)}
               </span>
               <span
-                className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
                   currentMonthData.percentual >= 100
                     ? "bg-emerald-100 text-emerald-800"
                     : currentMonthData.percentual >= 80
@@ -569,9 +592,9 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
                   style={{ width: `${Math.min(currentMonthData.percentual, 100)}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[11px] text-slate-400 mt-1">
-                <span>Alvo: {formatBRL(currentMonthData.meta)}</span>
-                <span className="font-semibold text-slate-600">
+              <div className="flex justify-between text-[11px] text-slate-400 mt-1 gap-2">
+                <span className="truncate">Alvo: {formatBRL(currentMonthData.meta)}</span>
+                <span className="font-semibold text-slate-600 shrink-0">
                   {currentMonthData.diferenca >= 0
                     ? `+${formatBRL(currentMonthData.diferenca)}`
                     : formatBRL(currentMonthData.diferenca)}
@@ -581,22 +604,22 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
           </div>
 
           {/* Card 2: Vendas Acumuladas no Ano */}
-          <div className="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-sm transition-shadow">
+          <div className="bg-white rounded-2xl p-4 sm:p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-sm transition-shadow min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">
                 Acumulado Ano ({selectedYear})
               </span>
-              <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                 <TrendingUp size={16} />
               </div>
             </div>
 
-            <div className="flex items-baseline justify-between mt-1">
-              <span className="text-xl font-black text-slate-900">
+            <div className="flex items-baseline justify-between mt-1 gap-2">
+              <span className="text-xl font-black text-slate-900 truncate">
                 {formatBRL(totalVendasAno)}
               </span>
               <span
-                className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
                   percentualAnoGeral >= 100
                     ? "bg-emerald-100 text-emerald-800"
                     : "bg-indigo-100 text-indigo-800"
@@ -613,81 +636,83 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
                   style={{ width: `${Math.min(percentualAnoGeral, 100)}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[11px] text-slate-400 mt-1">
-                <span>Meta Anual: {formatBRL(totalMetaAno)}</span>
-                <span className="font-semibold text-slate-600">{totalPedidosAno} pedidos</span>
+              <div className="flex justify-between text-[11px] text-slate-400 mt-1 gap-2">
+                <span className="truncate">Meta: {formatBRL(totalMetaAno)}</span>
+                <span className="font-semibold text-slate-600 shrink-0">{totalPedidosAno} ped.</span>
               </div>
             </div>
           </div>
 
           {/* Card 3: YTD vs Meta Período */}
-          <div className="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-sm transition-shadow">
+          <div className="bg-white rounded-2xl p-4 sm:p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-sm transition-shadow min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                Atingimento YTD (Até {MONTH_NAMES[currentMonthNum - 1]?.short})
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">
+                YTD (Até {MONTH_NAMES[currentMonthNum - 1]?.short})
               </span>
-              <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
                 <Percent size={16} />
               </div>
             </div>
 
-            <div className="flex items-baseline justify-between mt-1">
-              <span className="text-xl font-black text-purple-700">
+            <div className="flex items-baseline justify-between mt-1 gap-2">
+              <span className="text-xl font-black text-purple-700 truncate">
                 {ytdMetrics.pctYtd.toFixed(1)}%
               </span>
-              <span className="text-xs text-slate-500 font-medium">
+              <span className="text-xs text-slate-500 font-medium shrink-0">
                 {formatShortBRL(ytdMetrics.vendasYtd)} / {formatShortBRL(ytdMetrics.metaYtd)}
               </span>
             </div>
 
             <div className="mt-3 flex items-center gap-2 text-[11px]">
               <span
-                className={`inline-flex items-center gap-1 font-bold ${
+                className={`inline-flex items-center gap-1 font-bold truncate ${
                   ytdMetrics.vendasYtd >= ytdMetrics.metaYtd
                     ? "text-emerald-600"
                     : "text-amber-600"
                 }`}
               >
                 {ytdMetrics.vendasYtd >= ytdMetrics.metaYtd ? (
-                  <ArrowUpRight size={13} />
+                  <ArrowUpRight size={13} className="shrink-0" />
                 ) : (
-                  <ArrowDownRight size={13} />
+                  <ArrowDownRight size={13} className="shrink-0" />
                 )}
-                {ytdMetrics.vendasYtd >= ytdMetrics.metaYtd
-                  ? "Dentro do ritmo previsto"
-                  : "Abaixo da meta programada"}
+                <span className="truncate">
+                  {ytdMetrics.vendasYtd >= ytdMetrics.metaYtd
+                    ? "Ritmo previsto"
+                    : "Abaixo da meta"}
+                </span>
               </span>
             </div>
           </div>
 
           {/* Card 4: Melhor Mês */}
-          <div className="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-sm transition-shadow">
+          <div className="bg-white rounded-2xl p-4 sm:p-4.5 border border-slate-200/80 shadow-2xs hover:shadow-sm transition-shadow min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                Mês Destaque ({selectedYear})
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">
+                Destaque ({selectedYear})
               </span>
-              <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
                 <Award size={16} />
               </div>
             </div>
 
-            <div className="flex items-baseline justify-between mt-1">
-              <div>
-                <span className="text-xl font-black text-slate-900">
+            <div className="flex items-baseline justify-between mt-1 gap-2">
+              <div className="min-w-0">
+                <span className="text-xl font-black text-slate-900 truncate block">
                   {bestMonth ? bestMonth.mesFull : "—"}
                 </span>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5 truncate">
                   {bestMonth ? formatBRL(bestMonth.vendas) : "R$ 0,00"}
                 </p>
               </div>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">
-                {bestMonth?.percentual?.toFixed(0) || 0}% meta
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 shrink-0">
+                {bestMonth?.percentual?.toFixed(0) || 0}%
               </span>
             </div>
 
-            <div className="mt-3 text-[11px] text-slate-400 flex justify-between">
-              <span>{bestMonth?.pedidosCount || 0} pedidos faturados</span>
-              <span className="font-semibold text-slate-600">
+            <div className="mt-3 text-[11px] text-slate-400 flex justify-between gap-2">
+              <span className="truncate">{bestMonth?.pedidosCount || 0} ped.</span>
+              <span className="font-semibold text-slate-600 shrink-0">
                 TM: {formatBRL(bestMonth?.ticketMedio || 0)}
               </span>
             </div>
@@ -696,14 +721,14 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
       </div>
 
       {/* Main Content Area: Filter toolbar + Chart + Table */}
-      <div className="p-6">
+      <div className="p-4 sm:p-6 min-w-0">
         {/* Controls Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          {/* Quarter Filters */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
+          {/* Quarter Filters (scrollable on mobile) */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto max-w-full scrollbar-none">
             <button
               onClick={() => setSelectedQuarter("todos")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 selectedQuarter === "todos"
                   ? "bg-white text-slate-900 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
@@ -713,48 +738,48 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
             </button>
             <button
               onClick={() => setSelectedQuarter("q1")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 selectedQuarter === "q1"
                   ? "bg-white text-slate-900 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              1º Tri (Jan-Mar)
+              1º Tri
             </button>
             <button
               onClick={() => setSelectedQuarter("q2")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 selectedQuarter === "q2"
                   ? "bg-white text-slate-900 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              2º Tri (Abr-Jun)
+              2º Tri
             </button>
             <button
               onClick={() => setSelectedQuarter("q3")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 selectedQuarter === "q3"
                   ? "bg-white text-slate-900 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              3º Tri (Jul-Set)
+              3º Tri
             </button>
             <button
               onClick={() => setSelectedQuarter("q4")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 selectedQuarter === "q4"
                   ? "bg-white text-slate-900 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              4º Tri (Out-Dez)
+              4º Tri
             </button>
           </div>
 
           {/* View Mode Toggle */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 self-end sm:self-auto">
             <span className="text-xs text-slate-400 font-medium hidden md:inline">Visualização:</span>
             <div className="flex items-center bg-slate-100 p-1 rounded-xl">
               <button
@@ -793,20 +818,20 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
 
         {/* Gráfico Recharts de Barras */}
         {(viewMode === "chart" || viewMode === "both") && (
-          <div className="bg-slate-50/70 rounded-2xl p-5 border border-slate-200/80 mb-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-slate-50/80 rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 mb-6 min-w-0 overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div>
-                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                  <TrendingUp size={16} className="text-blue-600" />
-                  <span>Comparativo Mensal: Vendas Realizadas vs. Meta Estabelecida</span>
+                <h3 className="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
+                  <TrendingUp size={16} className="text-blue-600 shrink-0" />
+                  <span>Comparativo Mensal: Vendas vs. Meta</span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Valores expressos em Reais (R$). Passe o cursor sobre as barras para ver detalhes completos.
+                <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                  Passe o cursor sobre as barras para ver detalhes completos de cada mês.
                 </p>
               </div>
 
               {/* Legend Badges */}
-              <div className="flex items-center gap-4 text-xs">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs shrink-0">
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded-md bg-[#0071e3]" />
                   <span className="font-semibold text-slate-700">Vendas (R$)</span>
@@ -818,26 +843,38 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
               </div>
             </div>
 
-            <div className="w-full h-[320px] sm:h-[360px]">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full h-[280px] sm:h-[340px] md:h-[380px] min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} debounce={50}>
                 <BarChart
                   data={filteredData}
-                  margin={{ top: 20, right: 15, left: 0, bottom: 5 }}
-                  barGap={6}
+                  margin={
+                    isMobile
+                      ? { top: 15, right: 6, left: -22, bottom: 0 }
+                      : { top: 20, right: 15, left: 0, bottom: 5 }
+                  }
+                  barGap={isMobile ? 2 : 6}
                 >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis
                     dataKey="mesShort"
                     tickLine={false}
                     axisLine={{ stroke: "#cbd5e1" }}
-                    tick={{ fill: "#64748b", fontSize: 12, fontWeight: 600 }}
+                    interval={0}
+                    tick={{
+                      fill: "#64748b",
+                      fontSize: isMobile ? 10 : 12,
+                      fontWeight: 600,
+                    }}
+                    dy={isMobile ? 4 : 2}
                   />
                   <YAxis
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(val) => formatShortBRL(val)}
-                    tick={{ fill: "#94a3b8", fontSize: 11 }}
-                    width={65}
+                    tickFormatter={(val) =>
+                      isMobile ? formatMobileShortBRL(val) : formatShortBRL(val)
+                    }
+                    tick={{ fill: "#94a3b8", fontSize: isMobile ? 10 : 11 }}
+                    width={isMobile ? 38 : 65}
                   />
                   <Tooltip content={<CustomTooltip />} />
 
@@ -846,16 +883,16 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
                     dataKey="meta"
                     name="Meta Estabelecida"
                     fill="#cbd5e1"
-                    radius={[6, 6, 0, 0]}
-                    maxBarSize={38}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={isMobile ? 18 : 38}
                   />
 
                   {/* Barra de Vendas Realizadas */}
                   <Bar
                     dataKey="vendas"
                     name="Vendas Realizadas"
-                    radius={[6, 6, 0, 0]}
-                    maxBarSize={38}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={isMobile ? 18 : 38}
                   >
                     {filteredData.map((entry, index) => {
                       const reached = entry.percentual >= 100;
@@ -876,8 +913,8 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
 
         {/* Tabela de Acompanhamento Mensal */}
         {(viewMode === "table" || viewMode === "both") && (
-          <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white">
-            <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-2xs">
+            <table className="w-full min-w-[650px] text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10px] tracking-wider">
                   <th className="px-4 py-3.5">Mês</th>
@@ -885,7 +922,7 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
                   <th className="px-4 py-3.5 text-right">Realizado (R$)</th>
                   <th className="px-4 py-3.5 text-center">Pedidos</th>
                   <th className="px-4 py-3.5 text-right">Ticket Médio</th>
-                  <th className="px-4 py-3.5 w-44">Atingimento (%)</th>
+                  <th className="px-4 py-3.5 w-40">Atingimento (%)</th>
                   <th className="px-4 py-3.5 text-right">Diferença (Gap)</th>
                   <th className="px-4 py-3.5 text-center">Status</th>
                 </tr>
@@ -961,7 +998,7 @@ export default function DashboardMetasVendas({ className = "" }: DashboardMetasV
                           }`}
                         >
                           {m.percentual >= 100
-                            ? "🎯 Meta Superada"
+                            ? "🎯 Atingida"
                             : m.percentual >= 80
                             ? "⚡ Em Progresso"
                             : "⚠️ Abaixo"}

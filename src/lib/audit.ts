@@ -6,7 +6,7 @@ export interface SystemLog {
   userEmail: string;
   userName: string;
   action: string;
-  category: "Administrativo" | "Comercial" | "Financeiro" | "Estoque" | "Sistema";
+  category: "Administrativo" | "Comercial" | "Financeiro" | "Estoque" | "Logística" | "Sistema";
   ip: string;
   userAgent: string;
   date: any;
@@ -50,7 +50,7 @@ async function fetchUserIp(): Promise<string> {
  */
 export async function logAction(
   action: string,
-  category: "Administrativo" | "Comercial" | "Financeiro" | "Estoque" | "Sistema",
+  category: "Administrativo" | "Comercial" | "Financeiro" | "Estoque" | "Logística" | "Sistema",
   details?: any,
   before?: any,
   after?: any

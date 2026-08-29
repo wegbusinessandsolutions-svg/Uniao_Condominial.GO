@@ -178,6 +178,7 @@ export function getDefaultPermissionsMapForRole(role?: string): PermissionsMap {
           // Expedição Submodules
           "Dashboard - Entrega de Mercadorias": true,
           "Dashboard - Expedição": true,
+          "Logística e Roteirização": true,
           "Entregas": true,
           "Estoque – Compras": true,
           "Pedidos Online": true,
@@ -260,6 +261,7 @@ export function getDefaultPermissionsMapForRole(role?: string): PermissionsMap {
           "Franqueada - Empresa": true,
           "Expedição": true,
           "Dashboard - Entrega de Mercadorias": true,
+          "Logística e Roteirização": true,
           "Entregas": true,
         },
       },
@@ -275,6 +277,7 @@ export function getDefaultPermissionsMapForRole(role?: string): PermissionsMap {
           "Expedição": true,
           "Dashboard - Expedição": true,
           "Dashboard - Entrega de Mercadorias": true,
+          "Logística e Roteirização": true,
           "Entregas": true,
           "Estoque – Compras": true,
           "Pedidos Online": true,
@@ -332,13 +335,13 @@ export function isUserAuthorizedForPath(pathname: string, role?: string, permiss
     return r === "comercial";
   }
 
-  if (cleanPath === "/admin/entrega-mercadorias") {
+  if (cleanPath === "/admin/entrega-mercadorias" || cleanPath === "/admin/logistica-roteirizacao") {
     return ["entregador", "expedição", "expedicao", "estoquista"].includes(r);
   }
 
   if (cleanPath.startsWith("/admin/expedicao")) {
     if (r === "entregador") {
-      return cleanPath.includes("/entregas");
+      return cleanPath.includes("/entregas") || cleanPath.includes("/logistica-roteirizacao");
     }
     return ["expedição", "expedicao", "estoquista"].includes(r);
   }
