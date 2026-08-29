@@ -71,14 +71,39 @@ export function formatDateTimeBR(isoString?: string): string {
 
 /**
  * Computes all internal monitoring metrics for a routine service order
+ * Tracking the 5 core milestones:
+ * 1. Recebimento (recebidoEm / designadoEm)
+ * 2. Aceite (aceitoEm)
+ * 3. Chegada no Local (chegadaEm)
+ * 4. Início dos Trabalhos (inicioTrabalhoEm / fotosAntesEm)
+ * 5. Conclusão & Assinatura (concluidoEm / assinaturaEm)
  */
 export function computeOrderInternalMetrics(order: Partial<RoutineServiceOrder>) {
-  const tempoReacaoMinutos = calculateMinutesBetween(order.designadoEm, order.aceitoEm);
-  const tempoDeslocamentoMinutos = calculateMinutesBetween(order.deslocamentoInicioEm || order.aceitoEm, order.chegadaEm);
-  const tempoVistoriaAntesMinutos = calculateMinutesBetween(order.chegadaEm, order.fotosAntesEm || order.inicioTrabalhoEm);
-  const tempoExecucaoMinutos = calculateMinutesBetween(order.inicioTrabalhoEm, order.fotosDepoisEm || order.concluidoEm);
-  const tempoAssinaturaMinutos = calculateMinutesBetween(order.fotosDepoisEm || order.inicioTrabalhoEm, order.concluidoEm);
-  const tempoTotalCicloMinutos = calculateMinutesBetween(order.aceitoEm || order.designadoEm, order.concluidoEm);
+  const tempoRecebimentoParaAceiteMinutos = calculateMinutesBetween(
+    order.recebidoEm || order.designadoEm || (order.createdAt ? (typeof order.createdAt === "string" ? order.createdAt : new Date().toISOString()) : undefined),
+    order.aceitoEm
+  );
+  const tempoReacaoMinutos = tempoRecebimentoParaAceiteMinutos;
+  const tempoDeslocamentoMinutos = calculateMinutesBetween(
+    order.deslocamentoInicioEm || order.aceitoEm,
+    order.chegadaEm
+  );
+  const tempoVistoriaAntesMinutos = calculateMinutesBetween(
+    order.chegadaEm,
+    order.fotosAntesEm || order.inicioTrabalhoEm
+  );
+  const tempoExecucaoMinutos = calculateMinutesBetween(
+    order.inicioTrabalhoEm || order.fotosAntesEm,
+    order.fotosDepoisEm || order.concluidoEm
+  );
+  const tempoAssinaturaMinutos = calculateMinutesBetween(
+    order.fotosDepoisEm || order.inicioTrabalhoEm,
+    order.concluidoEm || order.assinaturaEm
+  );
+  const tempoTotalCicloMinutos = calculateMinutesBetween(
+    order.recebidoEm || order.designadoEm || order.aceitoEm,
+    order.concluidoEm
+  );
 
   // Prazo previsto em minutos
   let previstoMinutos = 120; // padrão 2 horas
@@ -101,6 +126,7 @@ export function computeOrderInternalMetrics(order: Partial<RoutineServiceOrder>)
   }
 
   return {
+    tempoRecebimentoParaAceiteMinutos,
     tempoReacaoMinutos,
     tempoDeslocamentoMinutos,
     tempoVistoriaAntesMinutos,
@@ -108,6 +134,7 @@ export function computeOrderInternalMetrics(order: Partial<RoutineServiceOrder>)
     tempoAssinaturaMinutos,
     tempoTotalCicloMinutos,
     slaStatus,
+    previstoMinutos,
     desvioHorasPrevistas: tempoExecucaoMinutos > 0 ? (tempoExecucaoMinutos - previstoMinutos) / 60 : 0
   };
 }

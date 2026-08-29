@@ -24,6 +24,10 @@ import {
 } from "firebase/firestore";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 import { useFranqueada } from "../../context/FranqueadaContext";
+import { DataTableToolbar } from "../../components/common/DataTableToolbar";
+import { StatMetricCard } from "../../components/common/StatMetricCard";
+import { EmptyState } from "../../components/common/EmptyState";
+import { Package, Boxes, AlertCircle, DollarSign } from "lucide-react";
 
 interface Produto {
   id?: string;
@@ -346,39 +350,152 @@ export default function Produtos() {
     }
   };
 
-  const filteredData = filterByFranqueada(data).filter((item) =>
-    JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [stockFilter, setStockFilter] = useState("all");
+
+  const baseData = filterByFranqueada(data);
+
+  const kpis = {
+    total: baseData.length,
+    emEstoque: baseData.filter((item) => Number(item.qtdAtual || 0) >= 5).length,
+    estoqueBaixo: baseData.filter((item) => {
+      const q = Number(item.qtdAtual || 0);
+      return q > 0 && q < 5;
+    }).length,
+    semEstoque: baseData.filter((item) => Number(item.qtdAtual || 0) <= 0).length,
+  };
+
+  const filteredData = baseData.filter((item) => {
+    const qtd = Number(item.qtdAtual || 0);
+    if (stockFilter === "emEstoque" && qtd < 5) return false;
+    if (stockFilter === "baixo" && (qtd <= 0 || qtd >= 5)) return false;
+    if (stockFilter === "zerado" && qtd > 0) return false;
+
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      (item.nome || "").toLowerCase().includes(term) ||
+      (item.sku || "").toLowerCase().includes(term) ||
+      (item.ean || "").toLowerCase().includes(term) ||
+      (item.marca || "").toLowerCase().includes(term) ||
+      (item.categoria || "").toLowerCase().includes(term) ||
+      (item.categorias || []).some((c) => c.toLowerCase().includes(term))
+    );
+  });
+
+  const handleExportCsv = () => {
+    if (filteredData.length === 0) {
+      alert("Nenhum produto para exportar.");
+      return;
+    }
+
+    const headers = [
+      "SKU",
+      "Nome",
+      "Marca",
+      "Categoria",
+      "Preco_Venda",
+      "Estoque_Atual",
+      "Estoque_Minimo",
+      "Localizacao",
+      "Ativo"
+    ];
+
+    const rows = filteredData.map((p) => [
+      `"${p.sku || ""}"`,
+      `"${(p.nome || "").replace(/"/g, '""')}"`,
+      `"${(p.marca || "").replace(/"/g, '""')}"`,
+      `"${(p.categorias?.length ? p.categorias.join(", ") : p.categoria || "").replace(/"/g, '""')}"`,
+      `"${Number(p.precoVenda || 0).toFixed(2)}"`,
+      `"${p.qtdAtual || "0"}"`,
+      `"${p.estoqueMinimo || "0"}"`,
+      `"${p.localizacao || ""}"`,
+      `"${p.ativo !== false ? "Sim" : "Não"}"`
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `produtos_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Cadastro de Produto/mercadoria</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Cadastro de Produto/Mercadoria</h1>
+          <p className="text-sm text-slate-500 mt-1">Gerencie catálogo, preços, estoque, tributação e dados fiscais.</p>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="bg-[#0071e3] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#0071e3]/90 transition shadow-sm flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Novo Produto
-        </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Buscar produto..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
-            />
-          </div>
-        </div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatMetricCard
+          title="Total de Produtos"
+          value={kpis.total}
+          icon={Package}
+          iconBgColor="bg-blue-50 dark:bg-blue-950/60"
+          iconColor="text-[#0071e3]"
+          subtitle="Itens cadastrados"
+          onClick={() => setStockFilter("all")}
+        />
+        <StatMetricCard
+          title="Estoque Normal"
+          value={kpis.emEstoque}
+          icon={Boxes}
+          iconBgColor="bg-emerald-50 dark:bg-emerald-950/60"
+          iconColor="text-emerald-600"
+          subtitle="Acima de 5 unidades"
+          onClick={() => setStockFilter("emEstoque")}
+        />
+        <StatMetricCard
+          title="Estoque Baixo"
+          value={kpis.estoqueBaixo}
+          icon={AlertCircle}
+          iconBgColor="bg-amber-50 dark:bg-amber-950/60"
+          iconColor="text-amber-600"
+          badge={kpis.estoqueBaixo > 0 ? "Atenção" : undefined}
+          subtitle="Menos de 5 unidades"
+          onClick={() => setStockFilter("baixo")}
+        />
+        <StatMetricCard
+          title="Sem Estoque (Zerados)"
+          value={kpis.semEstoque}
+          icon={Package}
+          iconBgColor="bg-rose-50 dark:bg-rose-950/60"
+          iconColor="text-rose-600"
+          badge={kpis.semEstoque > 0 ? "Reposição" : undefined}
+          subtitle="0 unidades disponíveis"
+          onClick={() => setStockFilter("zerado")}
+        />
+      </div>
 
+      {/* DataTableToolbar */}
+      <DataTableToolbar
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Buscar por nome, SKU, EAN, marca ou categoria..."
+        filterOptions={[
+          { label: "Todos", value: "all", count: kpis.total },
+          { label: "Estoque Normal", value: "emEstoque", count: kpis.emEstoque },
+          { label: "Estoque Baixo (<5)", value: "baixo", count: kpis.estoqueBaixo },
+          { label: "Sem Estoque", value: "zerado", count: kpis.semEstoque },
+        ]}
+        activeFilter={stockFilter}
+        onFilterChange={setStockFilter}
+        onRefresh={fetchData}
+        onExportCsv={handleExportCsv}
+        primaryActionLabel="Novo Produto"
+        primaryActionIcon={Plus}
+        onPrimaryAction={() => handleOpenModal()}
+        totalRecords={baseData.length}
+        filteredRecords={filteredData.length}
+      />
+
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -421,8 +538,25 @@ export default function Produtos() {
                 ))
               ) : filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-500">
-                    Nenhum produto encontrado.
+                  <td colSpan={7} className="p-8 text-center">
+                    <EmptyState
+                      title={searchTerm || stockFilter !== "all" ? "Nenhum produto encontrado" : "Nenhum produto cadastrado"}
+                      description={
+                        searchTerm || stockFilter !== "all"
+                          ? "Tente ajustar os termos de busca ou mudar o filtro de estoque."
+                          : "Cadastre produtos no catálogo para gerenciar preços, estoque e emissão fiscal."
+                      }
+                      icon={Package}
+                      actionLabel={searchTerm || stockFilter !== "all" ? "Limpar Filtros" : "Novo Produto"}
+                      onAction={
+                        searchTerm || stockFilter !== "all"
+                          ? () => {
+                              setSearchTerm("");
+                              setStockFilter("all");
+                            }
+                          : () => handleOpenModal()
+                      }
+                    />
                   </td>
                 </tr>
               ) : (

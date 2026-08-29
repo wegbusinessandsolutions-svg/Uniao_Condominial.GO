@@ -29,6 +29,9 @@ import {
 } from "lucide-react";
 import { parseServiceValue, formatCurrencyBR } from "../../lib/serviceUtils";
 import { sendEmailWithLog } from "../../lib/emailService";
+import { DataTableToolbar } from "../../components/common/DataTableToolbar";
+import { StatMetricCard } from "../../components/common/StatMetricCard";
+import { EmptyState } from "../../components/common/EmptyState";
 
 const formatDateBR = (dateStr?: string) => {
   if (!dateStr) return "";
@@ -64,6 +67,10 @@ export default function OrdensServicoAdmin() {
   const [observacaoAgendamento, setObservacaoAgendamento] = useState<string>("");
   const [isProcessingSchedule, setIsProcessingSchedule] = useState<boolean>(false);
   const [scheduleFeedback, setScheduleFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Search and Status Filters
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeStatusFilter, setActiveStatusFilter] = useState("all");
 
   const fetchOrdens = async () => {
     setLoading(true);
@@ -441,8 +448,140 @@ export default function OrdensServicoAdmin() {
     return scheduledOrdersByDate[selectedScheduleDate] || [];
   }, [selectedScheduleDate, scheduledOrdersByDate]);
 
+  // KPI calculations
+  const kpis = useMemo(() => {
+    const total = ordens.length;
+    const aguardando = ordens.filter(
+      (o) =>
+        o.status === "Solicitado o Serviço" ||
+        o.status === "Aguardando confirmação - Data" ||
+        o.status === "aguardando confirmação - Equipe União Condominial" ||
+        o.status === "Aguardando Confirmação - Equipe União Condominial" ||
+        o.status === "Pendente" ||
+        !o.status
+    ).length;
+    const confirmadas = ordens.filter(
+      (o) =>
+        o.status === "Confirmada a Visita" ||
+        o.status === "Agendado" ||
+        o.status === "Visita Agendada" ||
+        o.status === "Em Execução" ||
+        o.status === "Em Andamento"
+    ).length;
+    const concluidas = ordens.filter((o) => o.status === "Serviço Concluído").length;
+    const canceladas = ordens.filter(
+      (o) => o.status === "Cancelada pelo Cliente" || o.status === "Cancelado"
+    ).length;
+
+    return { total, aguardando, confirmadas, concluidas, canceladas };
+  }, [ordens]);
+
+  // Filtered orders list
+  const filteredOrdens = useMemo(() => {
+    return ordens.filter((o) => {
+      // Status filter
+      if (activeStatusFilter === "aguardando") {
+        const isWaiting =
+          o.status === "Solicitado o Serviço" ||
+          o.status === "Aguardando confirmação - Data" ||
+          o.status === "aguardando confirmação - Equipe União Condominial" ||
+          o.status === "Aguardando Confirmação - Equipe União Condominial" ||
+          o.status === "Pendente" ||
+          !o.status;
+        if (!isWaiting) return false;
+      } else if (activeStatusFilter === "confirmadas") {
+        const isConfirmed =
+          o.status === "Confirmada a Visita" ||
+          o.status === "Agendado" ||
+          o.status === "Visita Agendada" ||
+          o.status === "Em Execução" ||
+          o.status === "Em Andamento";
+        if (!isConfirmed) return false;
+      } else if (activeStatusFilter === "concluidas") {
+        if (o.status !== "Serviço Concluído") return false;
+      } else if (activeStatusFilter === "canceladas") {
+        if (o.status !== "Cancelada pelo Cliente" && o.status !== "Cancelado") return false;
+      }
+
+      // Search term filter
+      if (searchTerm.trim()) {
+        const term = searchTerm.toLowerCase().trim();
+        const clientName = getClientName(o).toLowerCase();
+        const servName = (o.servicoNome || "").toLowerCase();
+        const numOS = (o.numeroOS || o.id || "").toLowerCase();
+        const email = (o.clienteEmail || "").toLowerCase();
+        const condo = (o.condominioNome || o.nomeCondominio || "").toLowerCase();
+
+        return (
+          clientName.includes(term) ||
+          servName.includes(term) ||
+          numOS.includes(term) ||
+          email.includes(term) ||
+          condo.includes(term)
+        );
+      }
+
+      return true;
+    });
+  }, [ordens, activeStatusFilter, searchTerm, usersMap]);
+
+  // Export Filtered Orders to CSV
+  const handleExportCsv = () => {
+    if (filteredOrdens.length === 0) {
+      alert("Nenhum registro para exportar com os filtros atuais.");
+      return;
+    }
+
+    const headers = [
+      "Numero_OS",
+      "Servico",
+      "Cliente",
+      "Email",
+      "Status",
+      "Data_Agendada",
+      "Turno",
+      "Valor_Total",
+      "Cashback_Abatido",
+      "Valor_Faturar",
+      "Criado_Em"
+    ];
+
+    const rows = filteredOrdens.map((o) => {
+      const clientName = getClientName(o);
+      const dataAgenda = o.dataConfirmada || o.dataAgendada || o.dataPreferencial || "";
+      const valTotal = parseServiceValue(o.valor).toFixed(2);
+      const valCashback = parseServiceValue(o.cashbackUsado).toFixed(2);
+      const valFaturar = (o.valorFaturar !== undefined ? parseServiceValue(o.valorFaturar) : parseServiceValue(o.valor)).toFixed(2);
+      const criadoEm = o.createdAt ? new Date(o.createdAt.seconds * 1000).toISOString() : "";
+
+      return [
+        `"${o.numeroOS || o.id}"`,
+        `"${(o.servicoNome || "").replace(/"/g, '""')}"`,
+        `"${clientName.replace(/"/g, '""')}"`,
+        `"${o.clienteEmail || ""}"`,
+        `"${o.status || "Pendente"}"`,
+        `"${dataAgenda}"`,
+        `"${o.turnoAgendado || ""}"`,
+        `"${valTotal}"`,
+        `"${valCashback}"`,
+        `"${valFaturar}"`,
+        `"${criadoEm}"`
+      ].join(";");
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(";"), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ordens_servico_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="w-full max-w-full space-y-6">
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Ordens de Serviço (CRM Comercial)</h1>
@@ -451,24 +590,84 @@ export default function OrdensServicoAdmin() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             to="/admin/monitoria-servicos"
-            className="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold px-3.5 py-2 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-xs"
+            className="bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold px-3.5 py-2 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-xs"
           >
             <Activity size={14} /> Monitoria Interna & SLA
           </Link>
           <Link
             to="/admin/execucao-servicos"
-            className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold px-3.5 py-2 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-xs"
+            className="bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-bold px-3.5 py-2 rounded-xl text-xs transition-colors flex items-center gap-1.5 shadow-xs"
           >
             <UserCheck size={14} /> Dashboard de Execução do Técnico
           </Link>
           <button
             onClick={fetchOrdens}
-            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs transition-colors cursor-pointer"
+            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold px-4 py-2 rounded-xl text-xs transition-colors cursor-pointer"
           >
             Atualizar Lista
           </button>
         </div>
       </div>
+
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatMetricCard
+          title="Total de Ordens"
+          value={kpis.total}
+          icon={Wrench}
+          iconBgColor="bg-blue-50 dark:bg-blue-950/60"
+          iconColor="text-[#0071e3]"
+          subtitle="Cadastradas no sistema"
+          onClick={() => setActiveStatusFilter("all")}
+        />
+        <StatMetricCard
+          title="Aguardando Confirmação"
+          value={kpis.aguardando}
+          icon={Clock}
+          iconBgColor="bg-amber-50 dark:bg-amber-950/60"
+          iconColor="text-amber-600"
+          badge={kpis.aguardando > 0 ? "Ação Pendente" : undefined}
+          subtitle="Demandam validação de data"
+          onClick={() => setActiveStatusFilter("aguardando")}
+        />
+        <StatMetricCard
+          title="Visitas Agendadas / Ativas"
+          value={kpis.confirmadas}
+          icon={CalendarCheck}
+          iconBgColor="bg-sky-50 dark:bg-sky-950/60"
+          iconColor="text-sky-600"
+          subtitle="Em rota ou execução técnica"
+          onClick={() => setActiveStatusFilter("confirmadas")}
+        />
+        <StatMetricCard
+          title="Serviços Concluídos"
+          value={kpis.concluidas}
+          icon={CheckCircle}
+          iconBgColor="bg-emerald-50 dark:bg-emerald-950/60"
+          iconColor="text-emerald-600"
+          subtitle="Com fotos e assinatura"
+          onClick={() => setActiveStatusFilter("concluidas")}
+        />
+      </div>
+
+      {/* Filter and Control Toolbar */}
+      <DataTableToolbar
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Buscar por cliente, condomínio, serviço, e-mail ou Nº da OS..."
+        filterOptions={[
+          { label: "Todas", value: "all", count: kpis.total },
+          { label: "Aguardando Confirmação", value: "aguardando", count: kpis.aguardando },
+          { label: "Visitas Agendadas", value: "confirmadas", count: kpis.confirmadas },
+          { label: "Concluídas", value: "concluidas", count: kpis.concluidas },
+          { label: "Canceladas", value: "canceladas", count: kpis.canceladas },
+        ]}
+        activeFilter={activeStatusFilter}
+        onFilterChange={setActiveStatusFilter}
+        onExportCsv={handleExportCsv}
+        totalRecords={ordens.length}
+        filteredRecords={filteredOrdens.length}
+      />
 
       {loading ? (
         <div className="flex justify-center py-12">
@@ -476,7 +675,7 @@ export default function OrdensServicoAdmin() {
         </div>
       ) : (
         <div className="space-y-4">
-          {ordens.map(o => {
+          {filteredOrdens.map(o => {
             const isWaitingSchedule = 
               o.status === 'Solicitado o Serviço' || 
               o.status === 'Aguardando confirmação - Data' || 
@@ -734,8 +933,25 @@ export default function OrdensServicoAdmin() {
             );
           })}
 
-          {ordens.length === 0 && (
-            <p className="text-slate-500 text-center py-8">Nenhuma ordem de serviço registrada no sistema.</p>
+          {filteredOrdens.length === 0 && (
+            <EmptyState
+              title={searchTerm || activeStatusFilter !== "all" ? "Nenhuma ordem encontrada" : "Nenhuma ordem de serviço"}
+              description={
+                searchTerm || activeStatusFilter !== "all"
+                  ? "Tente ajustar os termos de busca ou selecionar outro status no filtro acima."
+                  : "Não existem ordens de serviço cadastradas ou registradas no sistema até o momento."
+              }
+              icon={Wrench}
+              actionLabel={searchTerm || activeStatusFilter !== "all" ? "Limpar Filtros" : undefined}
+              onAction={
+                searchTerm || activeStatusFilter !== "all"
+                  ? () => {
+                      setSearchTerm("");
+                      setActiveStatusFilter("all");
+                    }
+                  : undefined
+              }
+            />
           )}
         </div>
       )}

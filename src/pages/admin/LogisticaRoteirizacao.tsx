@@ -351,6 +351,8 @@ export default function LogisticaRoteirizacao() {
     window.print();
   };
 
+  const [mapLayoutMode, setMapLayoutMode] = useState<"split" | "map_focus" | "list_focus">("split");
+
   return (
     <div className="space-y-6 pb-12">
       {/* Top Header */}
@@ -377,7 +379,7 @@ export default function LogisticaRoteirizacao() {
           <button
             onClick={fetchDeliveries}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 text-xs font-bold shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 text-xs font-bold shadow-xs transition-all"
           >
             <RefreshCw size={15} className={loading ? "animate-spin text-blue-600" : ""} />
             Atualizar
@@ -385,7 +387,7 @@ export default function LogisticaRoteirizacao() {
 
           <button
             onClick={() => setIsManualReorderModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 text-xs font-bold transition-all shadow-xs"
             title="Reordenar paradas com arrastar e soltar (Drag and drop)"
           >
             <ArrowUpDown size={15} className="text-blue-600" />
@@ -395,7 +397,7 @@ export default function LogisticaRoteirizacao() {
           <button
             onClick={handleSimularEntregas}
             disabled={isSimulating}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 text-xs font-bold transition-all shadow-xs"
           >
             <Sparkles size={15} className="text-indigo-600" />
             {isSimulating ? "Gerando..." : "Simular Cargas"}
@@ -403,7 +405,7 @@ export default function LogisticaRoteirizacao() {
 
           <button
             onClick={handlePrintRomaneio}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 text-xs font-bold shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 text-xs font-bold shadow-xs transition-all"
           >
             <Printer size={15} />
             Romaneio
@@ -411,10 +413,49 @@ export default function LogisticaRoteirizacao() {
         </div>
       </div>
 
+      {/* Driver Quick Filter Pills */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+          Motoristas:
+        </span>
+        <button
+          onClick={() => setSelectedDriver("todos")}
+          className={`px-3 py-1 rounded-full font-bold transition-all shrink-0 ${
+            selectedDriver === "todos"
+              ? "bg-slate-900 text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          Todos ({deliveries.length})
+        </button>
+        {AVAILABLE_DRIVERS.map((d, i) => {
+          const dName = d.split(" ")[0];
+          const count = deliveries.filter((item) => item.entregador === d).length;
+          const isSelected = selectedDriver === d;
+          return (
+            <button
+              key={i}
+              onClick={() => setSelectedDriver(d)}
+              className={`px-3 py-1 rounded-full font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                isSelected
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Truck size={12} />
+              {dName}
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${isSelected ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Em Rota */}
-        <div className="bg-white p-5 rounded-2xl border border-blue-200/80 shadow-sm relative overflow-hidden">
+        <div className="bg-white p-5 rounded-2xl border border-blue-200/80 shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Em Rota de Entrega</span>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -432,7 +473,7 @@ export default function LogisticaRoteirizacao() {
         </div>
 
         {/* Card 2: Para Despachar */}
-        <div className="bg-white p-5 rounded-2xl border border-amber-200/80 shadow-sm relative overflow-hidden">
+        <div className="bg-white p-5 rounded-2xl border border-amber-200/80 shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">Aguardando Despacho</span>
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -452,7 +493,7 @@ export default function LogisticaRoteirizacao() {
         </div>
 
         {/* Card 3: Entregues Hoje */}
-        <div className="bg-white p-5 rounded-2xl border border-emerald-200/80 shadow-sm relative overflow-hidden">
+        <div className="bg-white p-5 rounded-2xl border border-emerald-200/80 shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Entregas Concluídas</span>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -470,7 +511,7 @@ export default function LogisticaRoteirizacao() {
         </div>
 
         {/* Card 4: Ocorrências / Falhas */}
-        <div className="bg-white p-5 rounded-2xl border border-rose-200/80 shadow-sm relative overflow-hidden">
+        <div className="bg-white p-5 rounded-2xl border border-rose-200/80 shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-rose-700 uppercase tracking-wider">Ocorrências na Rota</span>
             <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
@@ -489,14 +530,14 @@ export default function LogisticaRoteirizacao() {
       </div>
 
       {/* View Mode Selector & Filter Toolbar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Navigation Tabs */}
         <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
           <button
             onClick={() => setViewMode("mapa")}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
               viewMode === "mapa"
-                ? "bg-white text-blue-700 shadow-sm"
+                ? "bg-white text-blue-700 shadow-xs"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -507,7 +548,7 @@ export default function LogisticaRoteirizacao() {
             onClick={() => setViewMode("kanban")}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
               viewMode === "kanban"
-                ? "bg-white text-blue-700 shadow-sm"
+                ? "bg-white text-blue-700 shadow-xs"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -518,7 +559,7 @@ export default function LogisticaRoteirizacao() {
             onClick={() => setViewMode("tabela")}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
               viewMode === "tabela"
-                ? "bg-white text-blue-700 shadow-sm"
+                ? "bg-white text-blue-700 shadow-xs"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -529,13 +570,45 @@ export default function LogisticaRoteirizacao() {
 
         {/* Search & Filter Controls */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[220px]">
+          {viewMode === "mapa" && (
+            <div className="hidden sm:flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+              <button
+                onClick={() => setMapLayoutMode("split")}
+                className={`px-2.5 py-1 rounded-lg transition-colors ${
+                  mapLayoutMode === "split" ? "bg-white text-blue-700 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="Divisão equilibrada: Mapa e Lista"
+              >
+                Divisão 50/50
+              </button>
+              <button
+                onClick={() => setMapLayoutMode("map_focus")}
+                className={`px-2.5 py-1 rounded-lg transition-colors ${
+                  mapLayoutMode === "map_focus" ? "bg-white text-blue-700 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="Expandir mapa"
+              >
+                Foco no Mapa
+              </button>
+              <button
+                onClick={() => setMapLayoutMode("list_focus")}
+                className={`px-2.5 py-1 rounded-lg transition-colors ${
+                  mapLayoutMode === "list_focus" ? "bg-white text-blue-700 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                }`}
+                title="Expandir lista de sequenciamento"
+              >
+                Foco na Lista
+              </button>
+            </div>
+          )}
+
+          <div className="relative min-w-[200px]">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar pedido, cliente, endereço..."
+              placeholder="Buscar pedido, cliente..."
               className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
@@ -556,9 +629,17 @@ export default function LogisticaRoteirizacao() {
 
       {/* Main View Area */}
       {viewMode === "mapa" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Map Column (7 Cols) */}
-          <div className="lg:col-span-7">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Map Column */}
+          <div
+            className={`transition-all duration-300 ${
+              mapLayoutMode === "map_focus"
+                ? "lg:col-span-12"
+                : mapLayoutMode === "list_focus"
+                ? "lg:col-span-4"
+                : "lg:col-span-7"
+            }`}
+          >
             <DeliveryRouteMap
               deliveries={formattedDeliveries}
               selectedDeliveryId={selectedDeliveryId}
@@ -568,8 +649,16 @@ export default function LogisticaRoteirizacao() {
             />
           </div>
 
-          {/* Route Optimization & Stops Column (5 Cols) */}
-          <div className="lg:col-span-5">
+          {/* Route Optimization & Stops Column */}
+          <div
+            className={`transition-all duration-300 ${
+              mapLayoutMode === "map_focus"
+                ? "lg:col-span-12"
+                : mapLayoutMode === "list_focus"
+                ? "lg:col-span-8"
+                : "lg:col-span-5"
+            }`}
+          >
             <RouteOptimizerCard
               deliveries={formattedDeliveries}
               selectedDriver={selectedDriver}

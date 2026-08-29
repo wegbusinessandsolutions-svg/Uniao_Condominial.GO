@@ -26,6 +26,10 @@ import {
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 import { validarCPF, formatarCPF } from "../../lib/documentValidators";
+import { DataTableToolbar } from "../../components/common/DataTableToolbar";
+import { StatMetricCard } from "../../components/common/StatMetricCard";
+import { EmptyState } from "../../components/common/EmptyState";
+import { Users, UserCheck, UserX, Briefcase } from "lucide-react";
 
 interface Empregado {
   id?: string;
@@ -332,22 +336,78 @@ export default function Empregados() {
     }
   };
 
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const kpis = {
+    total: data.length,
+    ativos: data.filter((item) => item.ativo).length,
+    inativos: data.filter((item) => !item.ativo).length,
+    departamentos: new Set(data.map((item) => item.departamento).filter(Boolean)).size,
+  };
+
   const filteredData = data.filter((item) => {
+    if (statusFilter === "ativos" && !item.ativo) return false;
+    if (statusFilter === "inativos" && item.ativo) return false;
+
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     return (
       (item.nome || "").toLowerCase().includes(term) ||
       (item.cpf || "").toLowerCase().includes(term) ||
-      (item.cargo || "").toLowerCase().includes(term)
+      (item.cargo || "").toLowerCase().includes(term) ||
+      (item.departamento || "").toLowerCase().includes(term) ||
+      (item.email || "").toLowerCase().includes(term)
     );
   });
+
+  const handleExportCsv = () => {
+    if (filteredData.length === 0) {
+      alert("Nenhum empregado para exportar.");
+      return;
+    }
+
+    const headers = [
+      "Nome",
+      "CPF",
+      "Cargo",
+      "Departamento",
+      "Tipo_Contrato",
+      "Salario",
+      "Admissao",
+      "Telefone",
+      "Email",
+      "Status",
+    ];
+
+    const rows = filteredData.map((emp) => [
+      `"${emp.nome || ""}"`,
+      `"${emp.cpf || ""}"`,
+      `"${emp.cargo || ""}"`,
+      `"${emp.departamento || ""}"`,
+      `"${emp.tipoContrato || ""}"`,
+      `"${emp.salario || ""}"`,
+      `"${emp.admissao || ""}"`,
+      `"${emp.telefone || ""}"`,
+      `"${emp.email || ""}"`,
+      `"${emp.ativo ? "Ativo" : "Inativo"}"`,
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map((r) => r.join(";"))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `empregados_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <>
       <div className="space-y-6 print:hidden">
-        <div className="bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 gap-4 border-b border-slate-200 -mx-6 -mt-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               Empregados
             </h1>
             <p className="text-sm text-slate-500 mt-1">
@@ -356,42 +416,67 @@ export default function Empregados() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-sm font-semibold text-slate-700">
-              {filteredData.length} empregado(s)
-            </div>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <StatMetricCard
+            title="Total de Colaboradores"
+            value={kpis.total}
+            icon={Users}
+            iconBgColor="bg-blue-50 dark:bg-blue-950/60"
+            iconColor="text-[#0071e3]"
+            subtitle="Registrados na base"
+            onClick={() => setStatusFilter("all")}
+          />
+          <StatMetricCard
+            title="Colaboradores Ativos"
+            value={kpis.ativos}
+            icon={UserCheck}
+            iconBgColor="bg-emerald-50 dark:bg-emerald-950/60"
+            iconColor="text-emerald-600"
+            subtitle="Em atividade regular"
+            onClick={() => setStatusFilter("ativos")}
+          />
+          <StatMetricCard
+            title="Colaboradores Inativos"
+            value={kpis.inativos}
+            icon={UserX}
+            iconBgColor="bg-slate-100 dark:bg-slate-800"
+            iconColor="text-slate-500"
+            subtitle="Desligados ou suspensos"
+            onClick={() => setStatusFilter("inativos")}
+          />
+          <StatMetricCard
+            title="Departamentos"
+            value={kpis.departamentos}
+            icon={Briefcase}
+            iconBgColor="bg-purple-50 dark:bg-purple-950/60"
+            iconColor="text-purple-600"
+            subtitle="Setores mapeados"
+          />
+        </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="relative w-full sm:w-64">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={16}
-                />
-                <input
-                  type="text"
-                  placeholder="Nome, CPF ou cargo..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 rounded-full border border-slate-200 outline-none focus:ring-2 focus:ring-brand-light focus:border-transparent text-sm bg-slate-50"
-                />
-              </div>
-              <button
-                onClick={fetchData}
-                className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-transparent hover:border-slate-200 hidden sm:flex items-center gap-2"
-              >
-                <RefreshCw size={16} />{" "}
-                <span className="text-sm font-medium">Atualizar</span>
-              </button>
-              <button
-                onClick={() => handleOpenModal()}
-                className="px-4 py-2 bg-brand-dark text-white rounded-full text-sm font-medium hover:bg-brand-dark/90 transition-colors flex items-center gap-2 whitespace-nowrap"
-              >
-                <Plus size={16} /> Novo
-              </button>
-            </div>
-          </div>
+        {/* Toolbar */}
+        <DataTableToolbar
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Buscar por nome, CPF, cargo, departamento..."
+          filterOptions={[
+            { label: "Todos", value: "all", count: kpis.total },
+            { label: "Ativos", value: "ativos", count: kpis.ativos },
+            { label: "Inativos", value: "inativos", count: kpis.inativos },
+          ]}
+          activeFilter={statusFilter}
+          onFilterChange={setStatusFilter}
+          onRefresh={fetchData}
+          onExportCsv={handleExportCsv}
+          primaryActionLabel="Novo Empregado"
+          primaryActionIcon={Plus}
+          onPrimaryAction={() => handleOpenModal()}
+          totalRecords={data.length}
+          filteredRecords={filteredData.length}
+        />
 
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-700 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-slate-500 border-b border-slate-100">
@@ -436,9 +521,26 @@ export default function Empregados() {
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-6 py-12 text-center text-slate-500"
+                      className="px-6 py-8 text-center"
                     >
-                      Nenhum empregado encontrado.
+                      <EmptyState
+                        title={searchTerm || statusFilter !== "all" ? "Nenhum colaborador encontrado" : "Nenhum colaborador cadastrado"}
+                        description={
+                          searchTerm || statusFilter !== "all"
+                            ? "Tente ajustar os termos de busca ou mudar o filtro de status."
+                            : "Cadastre novos colaboradores para gerenciar contratos, jornadas e comissões."
+                        }
+                        icon={Users}
+                        actionLabel={searchTerm || statusFilter !== "all" ? "Limpar Filtros" : "Novo Empregado"}
+                        onAction={
+                          searchTerm || statusFilter !== "all"
+                            ? () => {
+                                setSearchTerm("");
+                                setStatusFilter("all");
+                              }
+                            : () => handleOpenModal()
+                        }
+                      />
                     </td>
                   </tr>
                 ) : (

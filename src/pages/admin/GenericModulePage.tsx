@@ -119,6 +119,8 @@ export default function GenericModulePage({
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState<number | "all">(15);
+  const [jumpPageInput, setJumpPageInput] = useState<string>("");
+  const tableRef = React.useRef<HTMLDivElement>(null);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -643,6 +645,11 @@ export default function GenericModulePage({
       });
   }, [data, filters, collectionName, title]);
 
+  // Reset to first page whenever filter or collection changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, collectionName]);
+
   // Pagination calculations
   const totalPages = pageSize === "all" ? 1 : Math.max(1, Math.ceil(filteredData.length / pageSize));
   const validCurrentPage = Math.min(currentPage, totalPages);
@@ -902,7 +909,89 @@ export default function GenericModulePage({
         onToggleOpen={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
       />
 
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+      <div ref={tableRef} className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+        {/* Table Top Info & Quick Pagination Bar */}
+        <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 print:hidden">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-slate-700">
+              {filteredData.length === 0 ? (
+                "Nenhum registro"
+              ) : (
+                <>
+                  Página <strong className="text-sky-700">{validCurrentPage}</strong> de{" "}
+                  <strong className="text-slate-800">{totalPages}</strong> • Mostrando{" "}
+                  <strong className="text-slate-800">
+                    {pageSize === "all"
+                      ? `1 - ${filteredData.length}`
+                      : `${(validCurrentPage - 1) * pageSize + 1} - ${Math.min(
+                          validCurrentPage * pageSize,
+                          filteredData.length
+                        )}`}
+                  </strong>{" "}
+                  de <strong className="text-slate-900">{filteredData.length}</strong> itens
+                  {data.length !== filteredData.length && (
+                    <span className="text-slate-400 font-normal ml-1">
+                      (filtrado de {data.length})
+                    </span>
+                  )}
+                </>
+              )}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 font-medium">Itens por pág.:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  const val = e.target.value === "all" ? "all" : Number(e.target.value);
+                  setPageSize(val);
+                  setCurrentPage(1);
+                }}
+                className="bg-white border border-slate-200 rounded-md px-2 py-1 text-xs font-semibold text-slate-700 outline-none cursor-pointer hover:bg-slate-50 focus:ring-1 focus:ring-sky-500"
+              >
+                <option value={10}>10 por pág.</option>
+                <option value={15}>15 por pág.</option>
+                <option value={25}>25 por pág.</option>
+                <option value={50}>50 por pág.</option>
+                <option value={100}>100 por pág.</option>
+                <option value="all">Exibir Todos</option>
+              </select>
+            </div>
+
+            {pageSize !== "all" && totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    setCurrentPage((p) => Math.max(1, p - 1));
+                    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  disabled={validCurrentPage === 1}
+                  className="p-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                  title="Página Anterior"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                <span className="text-slate-700 font-bold px-1 min-w-[32px] text-center">
+                  {validCurrentPage}/{totalPages}
+                </span>
+                <button
+                  onClick={() => {
+                    setCurrentPage((p) => Math.min(totalPages, p + 1));
+                    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  disabled={validCurrentPage === totalPages}
+                  className="p-1 rounded border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                  title="Próxima Página"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
@@ -1047,8 +1136,8 @@ export default function GenericModulePage({
         </div>
 
         {/* Table Footer with Pagination Controls */}
-        <div className="p-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-slate-600 print:hidden bg-slate-50/50">
-          <div className="flex items-center gap-3">
+        <div className="p-4 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-600 print:hidden bg-slate-50/50">
+          <div className="flex flex-wrap items-center gap-3">
             <span className="font-medium">
               {filteredData.length === 0 ? (
                 "0 registros"
@@ -1066,110 +1155,157 @@ export default function GenericModulePage({
                   de <strong>{filteredData.length}</strong> registros
                   {data.length !== filteredData.length && (
                     <span className="text-slate-400 ml-1">
-                      (total: {data.length})
+                      (total cadastrado: {data.length})
                     </span>
                   )}
                 </>
               )}
             </span>
 
-            {filteredData.length > 10 && (
-              <div className="flex items-center gap-1.5 pl-3 border-l border-slate-200">
-                <span className="text-slate-500">Exibir:</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    const val = e.target.value === "all" ? "all" : Number(e.target.value);
-                    setPageSize(val);
-                    setCurrentPage(1);
-                  }}
-                  className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 outline-none cursor-pointer hover:bg-slate-50"
-                >
-                  <option value={10}>10</option>
-                  <option value={15}>15</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                  <option value="all">Todos</option>
-                </select>
-              </div>
-            )}
+            <div className="flex items-center gap-1.5 pl-3 border-l border-slate-200">
+              <span className="text-slate-500">Exibir:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  const val = e.target.value === "all" ? "all" : Number(e.target.value);
+                  setPageSize(val);
+                  setCurrentPage(1);
+                }}
+                className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 outline-none cursor-pointer hover:bg-slate-50 focus:ring-1 focus:ring-sky-500"
+              >
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value="all">Todos</option>
+              </select>
+            </div>
           </div>
 
           {/* Pagination Navigation Buttons */}
           {pageSize !== "all" && totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={validCurrentPage === 1}
-                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-                title="Primeira Página"
-              >
-                <ChevronsLeft size={14} />
-              </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    setCurrentPage(1);
+                    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  disabled={validCurrentPage === 1}
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  title="Primeira Página"
+                >
+                  <ChevronsLeft size={14} />
+                </button>
 
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={validCurrentPage === 1}
-                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-                title="Página Anterior"
-              >
-                <ChevronLeft size={14} />
-              </button>
+                <button
+                  onClick={() => {
+                    setCurrentPage((p) => Math.max(1, p - 1));
+                    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  disabled={validCurrentPage === 1}
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  title="Página Anterior"
+                >
+                  <ChevronLeft size={14} />
+                </button>
 
-              <div className="flex items-center gap-1 px-1">
-                {Array.from({ length: totalPages }).map((_, idx) => {
-                  const pageNum = idx + 1;
-                  // Show current page, first, last, and immediate neighbors
-                  if (
-                    pageNum === 1 ||
-                    pageNum === totalPages ||
-                    (pageNum >= validCurrentPage - 1 && pageNum <= validCurrentPage + 1)
-                  ) {
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`min-w-[28px] h-7 px-2 rounded-lg font-bold text-xs transition-colors ${
-                          validCurrentPage === pageNum
-                            ? "bg-sky-600 text-white shadow-xs"
-                            : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  } else if (
-                    (pageNum === 2 && validCurrentPage > 3) ||
-                    (pageNum === totalPages - 1 && validCurrentPage < totalPages - 2)
-                  ) {
-                    return (
-                      <span key={pageNum} className="px-1 text-slate-400 font-bold">
-                        ...
-                      </span>
-                    );
-                  }
-                  return null;
-                })}
+                <div className="flex items-center gap-1 px-1">
+                  {Array.from({ length: totalPages }).map((_, idx) => {
+                    const pageNum = idx + 1;
+                    // Show current page, first, last, and immediate neighbors
+                    if (
+                      pageNum === 1 ||
+                      pageNum === totalPages ||
+                      (pageNum >= validCurrentPage - 1 && pageNum <= validCurrentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => {
+                            setCurrentPage(pageNum);
+                            tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }}
+                          className={`min-w-[28px] h-7 px-2 rounded-lg font-bold text-xs transition-colors ${
+                            validCurrentPage === pageNum
+                              ? "bg-sky-600 text-white shadow-xs"
+                              : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    } else if (
+                      (pageNum === 2 && validCurrentPage > 3) ||
+                      (pageNum === totalPages - 1 && validCurrentPage < totalPages - 2)
+                    ) {
+                      return (
+                        <span key={pageNum} className="px-1 text-slate-400 font-bold">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setCurrentPage((p) => Math.min(totalPages, p + 1));
+                    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  disabled={validCurrentPage === totalPages}
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  title="Próxima Página"
+                >
+                  <ChevronRight size={14} />
+                </button>
+
+                <button
+                  onClick={() => {
+                    setCurrentPage(totalPages);
+                    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  disabled={validCurrentPage === totalPages}
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  title="Última Página"
+                >
+                  <ChevronsRight size={14} />
+                </button>
               </div>
 
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={validCurrentPage === totalPages}
-                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-                title="Próxima Página"
-              >
-                <ChevronRight size={14} />
-              </button>
-
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={validCurrentPage === totalPages}
-                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
-                title="Última Página"
-              >
-                <ChevronsRight size={14} />
-              </button>
+              {totalPages > 4 && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const targetPage = parseInt(jumpPageInput, 10);
+                    if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= totalPages) {
+                      setCurrentPage(targetPage);
+                      setJumpPageInput("");
+                      tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                  }}
+                  className="flex items-center gap-1 pl-2 border-l border-slate-200"
+                >
+                  <span className="text-slate-500 text-[11px]">Ir para:</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={totalPages}
+                    value={jumpPageInput}
+                    onChange={(e) => setJumpPageInput(e.target.value)}
+                    placeholder={`${validCurrentPage}`}
+                    className="w-12 px-1.5 py-1 text-xs border border-slate-200 rounded text-center font-medium outline-none focus:ring-1 focus:ring-sky-500 bg-white"
+                  />
+                  <button
+                    type="submit"
+                    className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-semibold transition-colors"
+                  >
+                    Ir
+                  </button>
+                </form>
+              )}
             </div>
           )}
         </div>

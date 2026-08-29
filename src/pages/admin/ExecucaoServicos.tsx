@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { collection, getDocs, doc, updateDoc, query, orderBy, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../context/AuthContext";
@@ -29,12 +29,23 @@ import {
   RotateCw,
   FolderCheck,
   Layers,
-  FileText
+  FileText,
+  Wifi,
+  WifiOff,
+  HardDrive,
+  RefreshCw,
+  CloudUpload
 } from "lucide-react";
 import PhotoUploadStep from "../../components/servicos/PhotoUploadStep";
 import SignaturePadModal from "../../components/servicos/SignaturePadModal";
 import { RoutineServiceOrder, ServicePhoto, ServiceSignature } from "../../types/serviceExecution";
 import { computeOrderInternalMetrics, formatDateTimeBR, getExecutionStepInfo } from "../../lib/serviceExecutionUtils";
+import {
+  cacheOrderInIndexedDB,
+  getCachedOrdersFromIndexedDB,
+  syncPendingServicePhotos,
+  getAllPendingPhotosFromIndexedDB
+} from "../../lib/servicePhotoOfflineStorage";
 import { logAction } from "../../lib/audit";
 import { Link } from "react-router-dom";
 
@@ -47,6 +58,14 @@ export default function ExecucaoServicos() {
   const [loading, setLoading] = useState<boolean>(true);
   const [activeOrder, setActiveOrder] = useState<RoutineServiceOrder | null>(null);
 
+  // Offline & Synchronization States
+  const [isOnline, setIsOnline] = useState<boolean>(
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
+  const [pendingPhotosCount, setPendingPhotosCount] = useState<number>(0);
+  const [isSyncingAll, setIsSyncingAll] = useState<boolean>(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
+
   // Modals & UI States
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -58,6 +77,65 @@ export default function ExecucaoServicos() {
   const [localFotosDepois, setLocalFotosDepois] = useState<ServicePhoto[]>([]);
   const [observacoesTecnicas, setObservacoesTecnicas] = useState<string>("");
   const [materiaisUtilizados, setMateriaisUtilizados] = useState<string>("");
+
+  // Check pending photos in IndexedDB
+  const checkPendingCount = useCallback(async () => {
+    try {
+      const list = await getAllPendingPhotosFromIndexedDB();
+      setPendingPhotosCount(list.length);
+    } catch (e) {
+      console.warn("Erro ao ler pendências IndexedDB:", e);
+    }
+  }, []);
+
+  // Trigger sequential sync of all pending photos across all OS
+  const handleSyncAllPending = useCallback(async () => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) return;
+    if (isSyncingAll) return;
+
+    setIsSyncingAll(true);
+    setSyncStatusMsg("Sincronizando fotos pendentes em sequência...");
+    try {
+      const result = await syncPendingServicePhotos((curr, tot, msg) => {
+        setSyncStatusMsg(`[${curr}/${tot}] ${msg}`);
+      });
+      if (result.total > 0) {
+        setSyncStatusMsg(
+          result.failed === 0
+            ? `Sincronização sequencial concluída! ${result.success} foto(s) enviadas.`
+            : `${result.success} enviada(s), ${result.failed} falha(s).`
+        );
+      }
+      await checkPendingCount();
+    } catch (err) {
+      console.error("Erro na sincronização sequencial:", err);
+      setSyncStatusMsg("Erro ao sincronizar. O sistema tentará novamente.");
+    } finally {
+      setIsSyncingAll(false);
+      setTimeout(() => setSyncStatusMsg(null), 4000);
+    }
+  }, [isSyncingAll, checkPendingCount]);
+
+  useEffect(() => {
+    checkPendingCount();
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      handleSyncAllPending();
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [checkPendingCount, handleSyncAllPending]);
 
   // Load colaboradores and routine service orders
   const fetchData = async () => {
@@ -114,6 +192,9 @@ export default function ExecucaoServicos() {
 
       setOrdens(osList);
 
+      // Cache all orders in IndexedDB for offline capability
+      await Promise.all(osList.map((o) => cacheOrderInIndexedDB(o)));
+
       // If active order is currently open, refresh its data
       if (activeOrder) {
         const fresh = osList.find((o) => o.id === activeOrder.id);
@@ -126,9 +207,18 @@ export default function ExecucaoServicos() {
         }
       }
     } catch (err) {
-      console.error("Erro ao carregar dados de execução de serviços:", err);
+      console.warn("Erro ao carregar do Firestore, consultando cache IndexedDB:", err);
+      try {
+        const cached = await getCachedOrdersFromIndexedDB();
+        if (cached.length > 0) {
+          setOrdens(cached);
+        }
+      } catch (cacheErr) {
+        console.error("Erro ao ler ordens do cache local:", cacheErr);
+      }
     } finally {
       setLoading(false);
+      checkPendingCount();
     }
   };
 
@@ -156,7 +246,8 @@ export default function ExecucaoServicos() {
           o.etapaExecucao &&
           !["concluido", "cancelado"].includes(o.etapaExecucao) &&
           o.status !== "Serviço Concluído" &&
-          o.status !== "Cancelada pelo Cliente"
+          o.status !== "Cancelada pelo Cliente" &&
+          o.status !== "Cancelado"
       ) || null
     );
   }, [colaboradorOrders]);
@@ -166,6 +257,7 @@ export default function ExecucaoServicos() {
       (o) =>
         o.status !== "Serviço Concluído" &&
         o.status !== "Cancelada pelo Cliente" &&
+        o.status !== "Cancelado" &&
         o.id !== inProgressOrder?.id &&
         o.etapaExecucao !== "concluido"
     );
@@ -179,7 +271,21 @@ export default function ExecucaoServicos() {
 
   // Open a specific service order in the execution wizard
   const handleSelectOrderToExecute = (order: RoutineServiceOrder) => {
-    setActiveOrder(order);
+    // If another order is already in progress and user tries to open a different one, block it
+    if (inProgressOrder && inProgressOrder.id !== order.id && order.etapaExecucao !== "concluido") {
+      alert("Atenção: Você possui um serviço em andamento. Conclua o atendimento atual antes de iniciar o próximo.");
+      setActiveOrder(inProgressOrder);
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+    // Silently mark received timestamp if not set
+    const preparedOrder: RoutineServiceOrder = {
+      ...order,
+      recebidoEm: order.recebidoEm || order.designadoEm || nowIso,
+    };
+
+    setActiveOrder(preparedOrder);
     setLocalFotosAntes(order.fotosAntes || []);
     setLocalFotosDepois(order.fotosDepois || []);
     setObservacoesTecnicas(order.observacoesTecnicas || "");
@@ -192,43 +298,54 @@ export default function ExecucaoServicos() {
   const updateOrderInDb = async (orderId: string, updates: Partial<RoutineServiceOrder>) => {
     setIsSubmitting(true);
     try {
-      const docRef = doc(db, "ordens_servico", orderId);
-      const existingDoc = await getDoc(docRef);
-      const currentData = existingDoc.exists() ? existingDoc.data() : {};
-
-      const combined: Partial<RoutineServiceOrder> = {
-        ...currentData,
+      const currentOrder = ordens.find((o) => o.id === orderId) || activeOrder || {};
+      const combined: RoutineServiceOrder = {
+        ...(currentOrder as RoutineServiceOrder),
         ...updates,
-      };
-
-      // Compute internal monitoring SLA & duration metrics
-      const metrics = computeOrderInternalMetrics(combined);
-      const finalPayload = {
-        ...updates,
-        metricasInternas: metrics,
+        id: orderId,
         updatedAt: new Date().toISOString(),
       };
 
-      await updateDoc(docRef, finalPayload);
+      // Compute internal monitoring SLA & duration metrics silently
+      const metrics = computeOrderInternalMetrics(combined);
+      combined.metricasInternas = metrics;
 
-      // Audit log
-      await logAction(
-        `Execução de Serviço OS #${orderId.slice(0, 6)}: etapa ${updates.etapaExecucao || updates.status}`,
-        "Comercial",
-        { orderId, updates }
-      );
+      // 1. Update React state immediately (optimistic UI)
+      setActiveOrder(combined);
+      setOrdens((prev) => prev.map((o) => (o.id === orderId ? combined : o)));
 
-      // Refresh state
-      await fetchData();
+      // 2. Always persist into IndexedDB for offline resilience
+      await cacheOrderInIndexedDB(combined);
+
+      // 3. If online, update Firestore
+      if (typeof navigator !== "undefined" && navigator.onLine) {
+        try {
+          const docRef = doc(db, "ordens_servico", orderId);
+          const finalPayload = {
+            ...updates,
+            metricasInternas: metrics,
+            updatedAt: new Date().toISOString(),
+          };
+          await updateDoc(docRef, finalPayload);
+
+          // Audit log
+          await logAction(
+            `Execução de Serviço OS #${orderId.slice(0, 6)}: etapa ${updates.etapaExecucao || updates.status}`,
+            "Comercial",
+            { orderId, updates }
+          );
+        } catch (dbErr) {
+          console.warn("Firestore update offline/failed, kept in IndexedDB:", dbErr);
+        }
+      }
     } catch (err) {
       console.error("Erro ao atualizar ordem de serviço:", err);
-      alert("Erro ao gravar etapa do serviço. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Step 1 -> Step 2: Aceite do Serviço e Início do Deslocamento
+  // 1. Marco: Recebimento -> 2. Marco: Aceite do Serviço e Início do Deslocamento
   const handleAceitarServico = async () => {
     if (!activeOrder) return;
     const nowIso = new Date().toISOString();
@@ -238,6 +355,7 @@ export default function ExecucaoServicos() {
       colaboradorId: selectedColaboradorId,
       colaboradorNome: currentEmp?.nome || activeOrder.colaboradorNome || profile?.displayName || "Técnico",
       colaboradorEmail: currentEmp?.email || activeOrder.colaboradorEmail || profile?.email || "",
+      recebidoEm: activeOrder.recebidoEm || activeOrder.designadoEm || nowIso,
       aceitoEm: activeOrder.aceitoEm || nowIso,
       deslocamentoInicioEm: nowIso,
       etapaExecucao: "deslocamento",
@@ -247,7 +365,7 @@ export default function ExecucaoServicos() {
     await updateOrderInDb(activeOrder.id, updates);
   };
 
-  // Step 2 -> Step 3: Chegada no Condomínio
+  // 2. Marco: Deslocamento -> 3. Marco: Chegada no Condomínio
   const handleChegadaLocal = async () => {
     if (!activeOrder) return;
     const nowIso = new Date().toISOString();
@@ -278,7 +396,7 @@ export default function ExecucaoServicos() {
     await updateOrderInDb(activeOrder.id, updates);
   };
 
-  // Step 3 -> Step 4: Confirmar 3 Fotos Antes e Iniciar Trabalho
+  // 3. Marco: Fotos Antes -> 4. Marco: Início do Trabalho Técnico
   const handleConfirmarFotosAntes = async () => {
     if (!activeOrder) return;
     if (localFotosAntes.length < 3) {
@@ -298,7 +416,7 @@ export default function ExecucaoServicos() {
     await updateOrderInDb(activeOrder.id, updates);
   };
 
-  // Step 4 -> Step 5: Concluir Trabalho Físico e Ir para 3 Fotos Finais
+  // 4. Marco: Concluir Trabalho Físico e Ir para Fotos Finais
   const handleFinalizarTrabalhoFisico = async () => {
     if (!activeOrder) return;
 
@@ -312,7 +430,7 @@ export default function ExecucaoServicos() {
     await updateOrderInDb(activeOrder.id, updates);
   };
 
-  // Step 5 -> Step 6: Confirmar 3 Fotos Finais e Abrir Modal de Assinatura
+  // 4. Marco: Fotos Finais -> Coletar Assinatura Digital
   const handleConfirmarFotosDepois = async () => {
     if (!activeOrder) return;
     if (localFotosDepois.length < 3) {
@@ -332,7 +450,7 @@ export default function ExecucaoServicos() {
     setIsSignatureModalOpen(true);
   };
 
-  // Step 6 -> Step 7: Salvar Assinatura Digital e Finalizar OS
+  // 5. Marco: Assinatura Digital & Conclusão Definitiva da O.S.
   const handleSalvarAssinatura = async (signature: ServiceSignature) => {
     if (!activeOrder) return;
     const nowIso = new Date().toISOString();
@@ -348,9 +466,14 @@ export default function ExecucaoServicos() {
     await updateOrderInDb(activeOrder.id, updates);
     setIsSignatureModalOpen(false);
 
-    // Identify next scheduled service for this collaborator
+    // Identify next scheduled service for this collaborator ONLY AFTER completing this one
     const remaining = colaboradorOrders.filter(
-      (o) => o.id !== activeOrder.id && o.status !== "Serviço Concluído" && o.status !== "Cancelada pelo Cliente"
+      (o) =>
+        o.id !== activeOrder.id &&
+        o.status !== "Serviço Concluído" &&
+        o.status !== "Cancelada pelo Cliente" &&
+        o.status !== "Cancelado" &&
+        o.etapaExecucao !== "concluido"
     );
 
     if (remaining.length > 0) {
@@ -362,7 +485,7 @@ export default function ExecucaoServicos() {
     setShowCompletedSuccessModal(true);
   };
 
-  // Start Next Suggested Service Order
+  // Start Next Suggested Service Order (Unlocks the next one)
   const handleStartNextOrder = (nextOrder: RoutineServiceOrder) => {
     setShowCompletedSuccessModal(false);
     handleSelectOrderToExecute(nextOrder);
@@ -390,30 +513,75 @@ export default function ExecucaoServicos() {
           </div>
         </div>
 
-        {/* Colaborador Selector */}
-        <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-          <User size={18} className="text-slate-500 shrink-0 ml-1" />
-          <div className="text-left">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Colaborador Responsável
-            </label>
-            <select
-              value={selectedColaboradorId}
-              onChange={(e) => {
-                setSelectedColaboradorId(e.target.value);
-                setActiveOrder(null);
-              }}
-              className="text-xs font-bold text-slate-800 bg-transparent border-none outline-none cursor-pointer pr-4"
-            >
-              {colaboradores.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome || c.email} ({c.cargo || "Técnico"})
-                </option>
-              ))}
-            </select>
+        {/* Colaborador Selector & Network Status */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Offline/Online Status Pill */}
+          <div
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold ${
+              !isOnline
+                ? "bg-amber-50 text-amber-900 border-amber-300"
+                : pendingPhotosCount > 0
+                ? "bg-blue-50 text-blue-900 border-blue-300"
+                : "bg-emerald-50 text-emerald-800 border-emerald-300"
+            }`}
+          >
+            {!isOnline ? (
+              <>
+                <WifiOff size={15} className="text-amber-700" />
+                <span>Modo Offline (Cache Ativo)</span>
+              </>
+            ) : (
+              <>
+                <Wifi size={15} className="text-emerald-700" />
+                <span>Online {pendingPhotosCount > 0 ? `(${pendingPhotosCount} foto(s) pendentes)` : ""}</span>
+              </>
+            )}
+
+            {isOnline && pendingPhotosCount > 0 && (
+              <button
+                type="button"
+                onClick={handleSyncAllPending}
+                disabled={isSyncingAll}
+                className="ml-1 px-2 py-0.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] rounded flex items-center gap-1 shadow-xs"
+              >
+                <RefreshCw size={10} className={isSyncingAll ? "animate-spin" : ""} />
+                Sincronizar
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <User size={18} className="text-slate-500 shrink-0 ml-1" />
+            <div className="text-left">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Colaborador Responsável
+              </label>
+              <select
+                value={selectedColaboradorId}
+                onChange={(e) => {
+                  setSelectedColaboradorId(e.target.value);
+                  setActiveOrder(null);
+                }}
+                className="text-xs font-bold text-slate-800 bg-transparent border-none outline-none cursor-pointer pr-4"
+              >
+                {colaboradores.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome || c.email} ({c.cargo || "Técnico"})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Global Sync Status Banner if active */}
+      {syncStatusMsg && (
+        <div className="p-3 bg-blue-50 border border-blue-200 text-blue-900 rounded-xl text-xs font-medium flex items-center gap-2">
+          <RefreshCw size={14} className="animate-spin text-blue-600" />
+          <span>{syncStatusMsg}</span>
+        </div>
+      )}
 
       {/* Main Execution Wizard Area (If an Order is Active) */}
       {activeOrder ? (
@@ -650,6 +818,7 @@ export default function ExecucaoServicos() {
 
                 <PhotoUploadStep
                   fase="antes"
+                  orderId={activeOrder.id}
                   photos={localFotosAntes}
                   onChangePhotos={setLocalFotosAntes}
                 />
@@ -757,6 +926,7 @@ export default function ExecucaoServicos() {
 
                 <PhotoUploadStep
                   fase="depois"
+                  orderId={activeOrder.id}
                   photos={localFotosDepois}
                   onChangePhotos={setLocalFotosDepois}
                 />
@@ -912,53 +1082,78 @@ export default function ExecucaoServicos() {
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
-                {upcomingQueue.map((order, index) => (
-                  <div
-                    key={order.id}
-                    className="p-4 sm:p-5 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                        #{index + 1}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-bold text-blue-600">
-                            {order.numeroOS || `OS #${order.id.slice(0, 8)}`}
-                          </span>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${
-                              getExecutionStepInfo(order.etapaExecucao).badgeColor
-                            }`}
-                          >
-                            {getExecutionStepInfo(order.etapaExecucao).title}
-                          </span>
-                          {order.prioridade === "Urgente" && (
-                            <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
-                              Urgente
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="font-bold text-slate-900 text-sm">
-                          {order.nomeCondominio || order.clienteNome || "Condomínio"}
-                        </h4>
-                        <p className="text-xs text-slate-500">
-                          {order.servicoNome || "Serviço Rotineiro"} • {order.enderecoCondominio || "Endereço cadastrado"}
-                        </p>
-                      </div>
-                    </div>
+                {upcomingQueue.map((order, index) => {
+                  const isLockedByInProgress = !!inProgressOrder && inProgressOrder.id !== order.id;
+                  const isFirstInQueue = index === 0 && !inProgressOrder;
 
-                    <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectOrderToExecute(order)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm flex items-center gap-1.5 transition-all"
-                      >
-                        Abrir e Executar <ChevronRight size={14} />
-                      </button>
+                  return (
+                    <div
+                      key={order.id}
+                      className={`p-4 sm:p-5 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                        isLockedByInProgress ? "bg-slate-50/50 opacity-75" : "hover:bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`w-8 h-8 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 ${
+                            isFirstInQueue
+                              ? "bg-blue-600 text-white shadow-sm"
+                              : "bg-slate-100 text-slate-700"
+                          }`}
+                        >
+                          #{index + 1}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-xs font-bold text-blue-600">
+                              {order.numeroOS || `OS #${order.id.slice(0, 8)}`}
+                            </span>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${
+                                getExecutionStepInfo(order.etapaExecucao).badgeColor
+                              }`}
+                            >
+                              {getExecutionStepInfo(order.etapaExecucao).title}
+                            </span>
+                            {isFirstInQueue && (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                                Próximo da Rota
+                              </span>
+                            )}
+                            {order.prioridade === "Urgente" && (
+                              <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
+                                Urgente
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-bold text-slate-900 text-sm">
+                            {order.nomeCondominio || order.clienteNome || "Condomínio"}
+                          </h4>
+                          <p className="text-xs text-slate-500">
+                            {order.servicoNome || "Serviço Rotineiro"} • {order.enderecoCondominio || "Endereço cadastrado"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                        {isLockedByInProgress ? (
+                          <div className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 text-slate-500 text-xs font-semibold rounded-xl border border-slate-200 cursor-not-allowed">
+                            <Lock size={13} className="text-slate-400" />
+                            Aguardando conclusão atual
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSelectOrderToExecute(order)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm flex items-center gap-1.5 transition-all"
+                          >
+                            {isFirstInQueue ? "Iniciar Atendimento" : "Abrir Detalhes"} <ChevronRight size={14} />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

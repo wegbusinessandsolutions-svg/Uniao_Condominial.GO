@@ -73,33 +73,35 @@ export interface RoutineServiceOrder {
   colaboradorTelefone?: string;
   colaboradorCargo?: string;
   colaboradorFoto?: string;
-  designadoEm?: string; // ISO
-  designadoPor?: string;
 
   // Fluxo de Execução e Status
   status: string;
   etapaExecucao: ServiceExecutionStep;
 
-  // Timestamps de Monitoria Interna
+  // Timestamps de Monitoria Interna (Recebimento, Aceite, Chegada, Início, Conclusão)
   createdAt?: any;
-  aceitoEm?: string; // ISO
+  updatedAt?: string;
+  recebidoEm?: string; // ISO - Momento em que o colaborador recebe/é designado a OS
+  designadoEm?: string; // ISO
+  designadoPor?: string;
+  aceitoEm?: string; // ISO - Momento em que o colaborador aceita a OS e inicia deslocamento
   deslocamentoInicioEm?: string; // ISO
-  chegadaEm?: string; // ISO
+  chegadaEm?: string; // ISO - Momento em que o colaborador chega ao condomínio
   chegadaLocalizacao?: {
     latitude: number;
     longitude: number;
     precisaoMetros?: number;
   };
-  fotosAntesEm?: string; // ISO
-  inicioTrabalhoEm?: string; // ISO
+  fotosAntesEm?: string; // ISO - Momento em que as 3 fotos iniciais são confirmadas
+  inicioTrabalhoEm?: string; // ISO - Momento em que os trabalhos técnicos efetivamente começam
   pausaLogs?: Array<{
     pausadoEm: string;
     retomadoEm?: string;
     motivo: string;
   }>;
-  fotosDepoisEm?: string; // ISO
-  assinaturaEm?: string; // ISO
-  concluidoEm?: string; // ISO
+  fotosDepoisEm?: string; // ISO - Momento em que as 3 fotos finais são confirmadas
+  assinaturaEm?: string; // ISO - Momento em que o responsável assina digitalmente
+  concluidoEm?: string; // ISO - Momento em que a OS é 100% concluída e finalizada
 
   // Evidências Fotográficas (Mínimo de 3 Obrigatório)
   fotosAntes: ServicePhoto[];
@@ -113,16 +115,18 @@ export interface RoutineServiceOrder {
   // Assinatura do Responsável do Condomínio
   assinaturaResponsavel?: ServiceSignature;
 
-  // Auditoria Interna de Tempos (Calculados)
+  // Auditoria Interna de Tempos (Calculados para Gestão)
   metricasInternas?: {
-    tempoReacaoMinutos: number;       // designado -> aceito
-    tempoDeslocamentoMinutos: number; // aceito -> chegada
-    tempoVistoriaAntesMinutos: number;// chegada -> fotosAntes completas
-    tempoExecucaoMinutos: number;     // inicioTrabalho -> fotosDepois completas
-    tempoAssinaturaMinutos: number;   // fotosDepois -> assinatura/conclusão
-    tempoTotalCicloMinutos: number;   // aceito -> concluído
+    tempoRecebimentoParaAceiteMinutos: number; // recebido/designado -> aceito
+    tempoReacaoMinutos: number;                // designado -> aceito
+    tempoDeslocamentoMinutos: number;          // aceito -> chegada
+    tempoVistoriaAntesMinutos: number;         // chegada -> início do trabalho / fotos antes
+    tempoExecucaoMinutos: number;              // início do trabalho -> conclusão física / fotos depois
+    tempoAssinaturaMinutos: number;            // fotos depois -> assinatura & conclusão
+    tempoTotalCicloMinutos: number;            // recebido/aceito -> concluído
     slaStatus: "no_prazo" | "atencao" | "atrasado";
     desvioHorasPrevistas?: number;
+    previstoMinutos?: number;
   };
 
   proximaOSId?: string; // ID da próxima OS sugerida

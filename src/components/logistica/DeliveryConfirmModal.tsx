@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { X, CheckCircle2, MapPin, User, FileCheck, ShieldCheck } from "lucide-react";
+import { X, CheckCircle2, MapPin, User, FileCheck, ShieldCheck, WifiOff } from "lucide-react";
 import { doc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { initFirebase } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
 import { registrarMudancaStatusPedido } from "../../lib/orderLogger";
+import { queueOfflineAction, applyOptimisticDeliveryUpdate } from "../../lib/offlineDeliverySync";
 
 interface DeliveryConfirmModalProps {
   isOpen: boolean;
@@ -35,51 +36,70 @@ export default function DeliveryConfirmModal({
     }
 
     setIsSaving(true);
+    let locationInfo = "";
+    try {
+      if (navigator.geolocation) {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000, enableHighAccuracy: true });
+        });
+        locationInfo = ` | Lat ${pos.coords.latitude.toFixed(6)}, Lng ${pos.coords.longitude.toFixed(6)}`;
+      }
+    } catch (err) {
+      console.warn("Geolocalização não capturada:", err);
+    }
+
+    const updatePayload: any = {
+      status: "Entregue",
+      recebedor: recebedor.trim(),
+      funcaoRecebedor,
+      documentoRecebedor: documentoRecebedor.trim(),
+      assinouCanhoto,
+      horaEntrega: new Date().toISOString().split("T")[1].substring(0, 5),
+      geolocalizacaoComprovante: locationInfo || "Local confirmado via sistema",
+      observacaoConclusao: observacao.trim(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // If device is offline, queue action immediately and apply optimistic update
+    if (!navigator.onLine) {
+      applyOptimisticDeliveryUpdate(deliveryItem.id, updatePayload);
+      queueOfflineAction({
+        type: "COMPLETE_DELIVERY",
+        entregaId: deliveryItem.id,
+        pedidoId: deliveryItem.pedidoId,
+        payload: updatePayload,
+      });
+      setIsSaving(false);
+      onSuccess();
+      onClose();
+      return;
+    }
+
     try {
       const { db } = await initFirebase();
-
-      let locationInfo = "";
-      try {
-        if (navigator.geolocation) {
-          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000, enableHighAccuracy: true });
-          });
-          locationInfo = ` | Lat ${pos.coords.latitude.toFixed(6)}, Lng ${pos.coords.longitude.toFixed(6)}`;
-        }
-      } catch (err) {
-        console.warn("Geolocalização não capturada:", err);
-      }
-
-      const updatePayload: any = {
-        status: "Entregue",
-        recebedor: recebedor.trim(),
-        funcaoRecebedor,
-        documentoRecebedor: documentoRecebedor.trim(),
-        assinouCanhoto,
-        horaEntrega: new Date().toISOString().split("T")[1].substring(0, 5),
-        geolocalizacaoComprovante: locationInfo || "Local confirmado via sistema",
-        observacaoConclusao: observacao.trim(),
-        updatedAt: new Date().toISOString(),
-      };
 
       await updateDoc(doc(db, "entregas", deliveryItem.id), updatePayload);
 
       // Update linked pedidos_venda if exists
       if (deliveryItem.pedidoId) {
-        const pedidosSnap = await getDocs(
-          query(collection(db, "pedidos_venda"), where("id_externo", "==", deliveryItem.pedidoId))
-        );
-        if (!pedidosSnap.empty) {
-          const pedidoDoc = pedidosSnap.docs[0];
-          await registrarMudancaStatusPedido(
-            db,
-            pedidoDoc.id,
-            "Entregue",
-            deliveryItem.entregador || "Entregador",
-            `Mercadoria entregue com sucesso para ${recebedor.trim()} (${funcaoRecebedor}). Canhoto assinado: ${
-              assinouCanhoto ? "Sim" : "Não"
-            }${locationInfo}`
+        try {
+          const pedidosSnap = await getDocs(
+            query(collection(db, "pedidos_venda"), where("id_externo", "==", deliveryItem.pedidoId))
           );
+          if (!pedidosSnap.empty) {
+            const pedidoDoc = pedidosSnap.docs[0];
+            await registrarMudancaStatusPedido(
+              db,
+              pedidoDoc.id,
+              "Entregue",
+              deliveryItem.entregador || "Entregador",
+              `Mercadoria entregue com sucesso para ${recebedor.trim()} (${funcaoRecebedor}). Canhoto assinado: ${
+                assinouCanhoto ? "Sim" : "Não"
+              }${locationInfo}`
+            );
+          }
+        } catch (pErr) {
+          console.warn("Erro ao atualizar pedido de venda:", pErr);
         }
       }
 
@@ -95,11 +115,23 @@ export default function DeliveryConfirmModal({
         }
       );
 
+      // Also update local cache
+      applyOptimisticDeliveryUpdate(deliveryItem.id, updatePayload);
+
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error("Erro ao confirmar entrega:", err);
-      alert("Erro ao confirmar entrega: " + err.message);
+      console.warn("Falha na gravação remota, salvando offline:", err);
+      // Fallback: save to offline queue
+      applyOptimisticDeliveryUpdate(deliveryItem.id, updatePayload);
+      queueOfflineAction({
+        type: "COMPLETE_DELIVERY",
+        entregaId: deliveryItem.id,
+        pedidoId: deliveryItem.pedidoId,
+        payload: updatePayload,
+      });
+      onSuccess();
+      onClose();
     } finally {
       setIsSaving(false);
     }

@@ -649,62 +649,92 @@ export default function MonitoriaServicos() {
                 </div>
               </div>
 
-              {/* Linha do Tempo e Timestamps Exatos */}
+              {/* Linha do Tempo e Timestamps Exatos dos 5 Marcos de Monitoria */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <Clock size={14} className="text-purple-600" /> Linha do Tempo & Carimbos de Auditoria
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Clock size={14} className="text-purple-600" /> Rastreamento dos 5 Marcos Operacionais
+                  </h4>
+                  <span className="text-[10px] bg-purple-50 text-purple-700 px-2.5 py-0.5 rounded-full font-bold border border-purple-200">
+                    Auditoria Automática Invisível ao Técnico
+                  </span>
+                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-                  <div className="p-3 bg-white border border-slate-200 rounded-xl">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Designado ao Colaborador</span>
-                    <p className="font-semibold text-slate-800 mt-0.5">
-                      {formatDateTimeBR(selectedAuditOrder.designadoEm)}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+                  {/* 1. Recebimento */}
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-slate-400" />
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">1. Recebimento</span>
+                      <CheckCircle2 size={12} className="text-slate-400" />
+                    </div>
+                    <p className="font-bold text-slate-800 text-xs mt-0.5">
+                      {formatDateTimeBR(selectedAuditOrder.recebidoEm || selectedAuditOrder.designadoEm)}
                     </p>
-                    <p className="text-[10px] text-slate-500">Técnico: {selectedAuditOrder.colaboradorNome || "—"}</p>
+                    <p className="text-[10px] text-slate-500 mt-1">Designado / Notificado</p>
                   </div>
 
-                  <div className="p-3 bg-white border border-slate-200 rounded-xl">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Aceite & Início Deslocamento</span>
-                    <p className="font-semibold text-slate-800 mt-0.5">
-                      {formatDateTimeBR(selectedAuditOrder.deslocamentoInicioEm || selectedAuditOrder.aceitoEm)}
+                  {/* 2. Aceite */}
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-blue-500" />
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-blue-600 uppercase">2. Aceite</span>
+                      <CheckCircle2 size={12} className={selectedAuditOrder.aceitoEm ? "text-blue-500" : "text-slate-300"} />
+                    </div>
+                    <p className="font-bold text-slate-800 text-xs mt-0.5">
+                      {formatDateTimeBR(selectedAuditOrder.aceitoEm || selectedAuditOrder.deslocamentoInicioEm)}
+                    </p>
+                    <p className="text-[10px] text-blue-600 mt-1">
+                      {selectedAuditOrder.metricasInternas?.tempoRecebimentoParaAceiteMinutos !== undefined && selectedAuditOrder.metricasInternas.tempoRecebimentoParaAceiteMinutos > 0
+                        ? `Reação: ${formatMinutes(selectedAuditOrder.metricasInternas.tempoRecebimentoParaAceiteMinutos)}`
+                        : "Partida iniciada"}
                     </p>
                   </div>
 
-                  <div className="p-3 bg-white border border-slate-200 rounded-xl">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Chegada no Condomínio</span>
-                    <p className="font-semibold text-slate-800 mt-0.5">
+                  {/* 3. Chegada */}
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-amber-600 uppercase">3. Chegada</span>
+                      <CheckCircle2 size={12} className={selectedAuditOrder.chegadaEm ? "text-amber-500" : "text-slate-300"} />
+                    </div>
+                    <p className="font-bold text-slate-800 text-xs mt-0.5">
                       {formatDateTimeBR(selectedAuditOrder.chegadaEm)}
                     </p>
-                    {selectedAuditOrder.chegadaLocalizacao && (
-                      <p className="text-[10px] text-emerald-600 font-medium">GPS Confirmado</p>
-                    )}
-                  </div>
-
-                  <div className="p-3 bg-white border border-slate-200 rounded-xl">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">3 Fotos Antes Registradas</span>
-                    <p className="font-semibold text-slate-800 mt-0.5">
-                      {formatDateTimeBR(selectedAuditOrder.fotosAntesEm)}
-                    </p>
-                    <p className="text-[10px] text-emerald-600 font-bold">
-                      {selectedAuditOrder.fotosAntes?.length || 0}/3 fotos anexadas
+                    <p className="text-[10px] text-amber-600 mt-1">
+                      {selectedAuditOrder.metricasInternas?.tempoDeslocamentoMinutos !== undefined && selectedAuditOrder.metricasInternas.tempoDeslocamentoMinutos > 0
+                        ? `Trânsito: ${formatMinutes(selectedAuditOrder.metricasInternas.tempoDeslocamentoMinutos)}`
+                        : selectedAuditOrder.chegadaLocalizacao ? "GPS Confirmado" : "No condomínio"}
                     </p>
                   </div>
 
-                  <div className="p-3 bg-white border border-slate-200 rounded-xl">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Início do Trabalho Técnico</span>
-                    <p className="font-semibold text-slate-800 mt-0.5">
+                  {/* 4. Início */}
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-indigo-500" />
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-indigo-600 uppercase">4. Início</span>
+                      <CheckCircle2 size={12} className={selectedAuditOrder.inicioTrabalhoEm ? "text-indigo-500" : "text-slate-300"} />
+                    </div>
+                    <p className="font-bold text-slate-800 text-xs mt-0.5">
                       {formatDateTimeBR(selectedAuditOrder.inicioTrabalhoEm)}
                     </p>
+                    <p className="text-[10px] text-indigo-600 mt-1 font-semibold">
+                      {selectedAuditOrder.fotosAntes?.length || 0}/3 fotos preliminares
+                    </p>
                   </div>
 
-                  <div className="p-3 bg-white border border-slate-200 rounded-xl">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">3 Fotos Finais & Assinatura</span>
-                    <p className="font-semibold text-slate-800 mt-0.5">
+                  {/* 5. Conclusão */}
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500" />
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-emerald-600 uppercase">5. Conclusão</span>
+                      <CheckCircle2 size={12} className={selectedAuditOrder.concluidoEm ? "text-emerald-500" : "text-slate-300"} />
+                    </div>
+                    <p className="font-bold text-slate-800 text-xs mt-0.5">
                       {formatDateTimeBR(selectedAuditOrder.concluidoEm || selectedAuditOrder.assinaturaEm)}
                     </p>
-                    <p className="text-[10px] text-emerald-600 font-bold">
-                      {selectedAuditOrder.fotosDepois?.length || 0}/3 fotos anexadas
+                    <p className="text-[10px] text-emerald-600 mt-1 font-semibold">
+                      {selectedAuditOrder.fotosDepois?.length || 0}/3 fotos + Assinatura
                     </p>
                   </div>
                 </div>

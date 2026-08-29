@@ -25,16 +25,39 @@ import {
   LayoutGrid,
   ShieldCheck,
   RefreshCw,
-  ArrowRight
+  ArrowRight,
+  Wifi,
+  WifiOff,
+  CloudOff,
+  UploadCloud,
+  CheckCircle
 } from "lucide-react";
 import { logAction } from "../../lib/audit";
 import DeliveryConfirmModal from "../../components/logistica/DeliveryConfirmModal";
 import DeliveryOccurrenceModal from "../../components/logistica/DeliveryOccurrenceModal";
+import {
+  useOfflineDeliverySync,
+  getCachedDeliveries,
+  cacheDeliveries,
+  applyOptimisticDeliveryUpdate,
+  queueOfflineAction,
+  getPendingSyncActions
+} from "../../lib/offlineDeliverySync";
 
 export default function EntregadorDashboard() {
   const { profile } = useAuth();
-  const [entregas, setEntregas] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isOnline, pendingCount, isSyncing, lastSyncTime, triggerSync, refreshPendingCount } =
+    useOfflineDeliverySync();
+
+  // Initialize with local cache first to ensure immediate offline availability
+  const [entregas, setEntregas] = useState<any[]>(() => {
+    const { items } = getCachedDeliveries();
+    return items;
+  });
+  const [loading, setLoading] = useState(() => {
+    const { items } = getCachedDeliveries();
+    return items.length === 0;
+  });
   const [activeTab, setActiveTab] = useState<"transito" | "concluidas" | "todas">("transito");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDriver, setSelectedDriver] = useState<string>("todos");
@@ -42,13 +65,13 @@ export default function EntregadorDashboard() {
   const [occurrenceModalItem, setOccurrenceModalItem] = useState<any | null>(null);
   const [arrivingDeliveryId, setArrivingDeliveryId] = useState<string | null>(null);
   const [justConfirmedArrivalId, setJustConfirmedArrivalId] = useState<string | null>(null);
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
   // Fetch or subscribe to deliveries in real-time
   useEffect(() => {
     let unsubscribe: () => void = () => {};
 
     const setupListener = async () => {
-      setLoading(true);
       try {
         const { db } = await initFirebase();
         const q = collection(db, "entregas");
@@ -61,23 +84,48 @@ export default function EntregadorDashboard() {
               ...d.data(),
             }));
 
+            // Merge with any pending offline updates if applicable
+            const pendingActions = getPendingSyncActions();
+            const pendingMap = new Map(pendingActions.map((a) => [a.entregaId, a]));
+
+            const merged = items.map((item) => {
+              const pending = pendingMap.get(item.id);
+              if (pending) {
+                return {
+                  ...item,
+                  ...pending.payload,
+                  _isOfflineModified: true,
+                };
+              }
+              return item;
+            });
+
             // Sort logically: first by sequence (if present), then by date/id
-            items.sort((a: any, b: any) => {
+            merged.sort((a: any, b: any) => {
               const seqA = a.sequencia ?? 999;
               const seqB = b.sequencia ?? 999;
               return seqA - seqB;
             });
 
-            setEntregas(items);
+            setEntregas(merged);
+            cacheDeliveries(merged);
             setLoading(false);
           },
           (err) => {
-            console.error("Erro ao escutar entregas:", err);
+            console.warn("Sem conexão com Firestore, usando cache local:", err);
+            const { items } = getCachedDeliveries();
+            if (items.length > 0) {
+              setEntregas(items);
+            }
             setLoading(false);
           }
         );
       } catch (err) {
-        console.error(err);
+        console.warn("Inicialização do Firebase offline, lendo cache local:", err);
+        const { items } = getCachedDeliveries();
+        if (items.length > 0) {
+          setEntregas(items);
+        }
         setLoading(false);
       }
     };
@@ -100,7 +148,34 @@ export default function EntregadorDashboard() {
         setSelectedDriver(matched.entregador);
       }
     }
-  }, [profile, entregas]);
+  }, [profile, entregas, selectedDriver]);
+
+  // Handle manual sync click with visual feedback
+  const handleManualSync = async () => {
+    setSyncFeedback("Sincronizando paradas e comprovantes...");
+    const res = await triggerSync();
+    if (res) {
+      setSyncFeedback(
+        res.failed > 0
+          ? `${res.success} sincronizados, ${res.failed} aguardando sinal.`
+          : `Tudo atualizado! ${res.success} ações sincronizadas com sucesso.`
+      );
+    } else {
+      setSyncFeedback("Dispositivo offline. Conexão necessária para sincronizar.");
+    }
+    setTimeout(() => setSyncFeedback(null), 4000);
+  };
+
+  // Callback when confirm modal or occurrence modal finishes
+  const handleModalSuccess = () => {
+    const { items } = getCachedDeliveries();
+    if (items && items.length > 0) {
+      setEntregas(items);
+    }
+    refreshPendingCount();
+    setConfirmModalItem(null);
+    setOccurrenceModalItem(null);
+  };
 
   // Extract unique driver list
   const availableDrivers = useMemo(() => {
@@ -173,51 +248,71 @@ export default function EntregadorDashboard() {
   // Quick Action: Confirm Arrival at location with GPS capture
   const handleConfirmArrival = async (item: any) => {
     setArrivingDeliveryId(item.id);
+    let locationText = "";
+    let numericLat: number | null = null;
+    let numericLng: number | null = null;
+    try {
+      if (navigator.geolocation) {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 5000,
+            enableHighAccuracy: true,
+          });
+        });
+        numericLat = pos.coords.latitude;
+        numericLng = pos.coords.longitude;
+        locationText = `Lat: ${pos.coords.latitude.toFixed(5)}, Lng: ${pos.coords.longitude.toFixed(5)}`;
+      }
+    } catch (geoErr) {
+      console.warn("GPS não capturado:", geoErr);
+    }
+
+    const now = new Date();
+    const horaChegada = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+    const updateData: any = {
+      statusChegada: "No Local",
+      horaChegada: horaChegada,
+      chegadaRegistradaEm: now.toISOString(),
+      localizacaoChegada: locationText || "Confirmado manualmente pelo entregador",
+      updatedAt: now.toISOString(),
+    };
+
+    if (numericLat !== null && numericLng !== null) {
+      updateData.latChegada = numericLat;
+      updateData.lngChegada = numericLng;
+      updateData.ultimaLocalizacao = {
+        lat: numericLat,
+        lng: numericLng,
+        timestamp: now.toISOString(),
+        texto: locationText,
+        tipo: "Chegada no Local"
+      };
+    }
+
+    // Apply optimistically to local UI state & cache
+    const updatedList = applyOptimisticDeliveryUpdate(item.id, updateData);
+    if (updatedList.length > 0) {
+      setEntregas(updatedList);
+    }
+
+    // If offline, queue for sync
+    if (!navigator.onLine) {
+      queueOfflineAction({
+        type: "CONFIRM_ARRIVAL",
+        entregaId: item.id,
+        pedidoId: item.pedidoId,
+        payload: updateData,
+      });
+      refreshPendingCount();
+      setJustConfirmedArrivalId(item.id);
+      setArrivingDeliveryId(null);
+      setTimeout(() => setJustConfirmedArrivalId(null), 3000);
+      return;
+    }
+
     try {
       const { db } = await initFirebase();
-
-      let locationText = "";
-      let numericLat: number | null = null;
-      let numericLng: number | null = null;
-      try {
-        if (navigator.geolocation) {
-          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              timeout: 6000,
-              enableHighAccuracy: true,
-            });
-          });
-          numericLat = pos.coords.latitude;
-          numericLng = pos.coords.longitude;
-          locationText = `Lat: ${pos.coords.latitude.toFixed(5)}, Lng: ${pos.coords.longitude.toFixed(5)}`;
-        }
-      } catch (geoErr) {
-        console.warn("GPS não capturado:", geoErr);
-      }
-
-      const now = new Date();
-      const horaChegada = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-
-      const updateData: any = {
-        statusChegada: "No Local",
-        horaChegada: horaChegada,
-        chegadaRegistradaEm: now.toISOString(),
-        localizacaoChegada: locationText || "Confirmado manualmente pelo entregador",
-        updatedAt: now.toISOString(),
-      };
-
-      if (numericLat !== null && numericLng !== null) {
-        updateData.latChegada = numericLat;
-        updateData.lngChegada = numericLng;
-        updateData.ultimaLocalizacao = {
-          lat: numericLat,
-          lng: numericLng,
-          timestamp: now.toISOString(),
-          texto: locationText,
-          tipo: "Chegada no Local"
-        };
-      }
-
       await updateDoc(doc(db, "entregas", item.id), updateData);
 
       await logAction("Chegada confirmada no endereço pelo entregador", "Logística", {
@@ -231,8 +326,16 @@ export default function EntregadorDashboard() {
       setJustConfirmedArrivalId(item.id);
       setTimeout(() => setJustConfirmedArrivalId(null), 3000);
     } catch (err: any) {
-      console.error("Erro ao confirmar chegada:", err);
-      alert("Erro ao confirmar chegada: " + (err.message || "Erro de conexão"));
+      console.warn("Gravação de chegada remota falhou, enfileirando offline:", err);
+      queueOfflineAction({
+        type: "CONFIRM_ARRIVAL",
+        entregaId: item.id,
+        pedidoId: item.pedidoId,
+        payload: updateData,
+      });
+      refreshPendingCount();
+      setJustConfirmedArrivalId(item.id);
+      setTimeout(() => setJustConfirmedArrivalId(null), 3000);
     } finally {
       setArrivingDeliveryId(null);
     }
@@ -240,46 +343,70 @@ export default function EntregadorDashboard() {
 
   // Quick Action: Start Route for a pending stop
   const handleStartRoute = async (item: any) => {
+    const now = new Date();
+    let startGps: any = {};
+    try {
+      if (navigator.geolocation) {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 4000,
+            enableHighAccuracy: true,
+          });
+        });
+        startGps = {
+          ultimaLocalizacao: {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            timestamp: now.toISOString(),
+            texto: `Lat: ${pos.coords.latitude.toFixed(5)}, Lng: ${pos.coords.longitude.toFixed(5)}`,
+            tipo: "Início de Rota"
+          }
+        };
+      }
+    } catch (e) {
+      // Continue if GPS unavailable
+    }
+
+    const startPayload = {
+      status: "Em trânsito",
+      horaSaida: now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      updatedAt: now.toISOString(),
+      ...startGps
+    };
+
+    const updatedList = applyOptimisticDeliveryUpdate(item.id, startPayload);
+    if (updatedList.length > 0) {
+      setEntregas(updatedList);
+    }
+
+    if (!navigator.onLine) {
+      queueOfflineAction({
+        type: "START_ROUTE",
+        entregaId: item.id,
+        pedidoId: item.pedidoId,
+        payload: startPayload,
+      });
+      refreshPendingCount();
+      return;
+    }
+
     try {
       const { db } = await initFirebase();
-      const now = new Date();
-      let startGps: any = {};
-      try {
-        if (navigator.geolocation) {
-          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              timeout: 4000,
-              enableHighAccuracy: true,
-            });
-          });
-          startGps = {
-            ultimaLocalizacao: {
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-              timestamp: now.toISOString(),
-              texto: `Lat: ${pos.coords.latitude.toFixed(5)}, Lng: ${pos.coords.longitude.toFixed(5)}`,
-              tipo: "Início de Rota"
-            }
-          };
-        }
-      } catch (e) {
-        // Continue if GPS unavailable
-      }
-
-      await updateDoc(doc(db, "entregas", item.id), {
-        status: "Em trânsito",
-        horaSaida: now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-        updatedAt: now.toISOString(),
-        ...startGps
-      });
+      await updateDoc(doc(db, "entregas", item.id), startPayload);
 
       await logAction("Início de rota para parada", "Logística", {
         id: item.id,
         pedidoId: item.pedidoId,
       });
     } catch (err: any) {
-      console.error("Erro ao iniciar rota:", err);
-      alert("Erro ao iniciar rota.");
+      console.warn("Erro ao iniciar rota no servidor, enfileirando offline:", err);
+      queueOfflineAction({
+        type: "START_ROUTE",
+        entregaId: item.id,
+        pedidoId: item.pedidoId,
+        payload: startPayload,
+      });
+      refreshPendingCount();
     }
   };
 
@@ -418,6 +545,107 @@ export default function EntregadorDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Connection & Offline Sync Status Banner */}
+      {(!isOnline || pendingCount > 0 || syncFeedback) && (
+        <div
+          className={`rounded-2xl p-4 border shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all animate-in fade-in slide-in-from-top-2 duration-300 ${
+            !isOnline
+              ? "bg-amber-500/10 border-amber-500/30 text-amber-900"
+              : pendingCount > 0
+              ? "bg-blue-500/10 border-blue-500/30 text-blue-950"
+              : "bg-emerald-500/10 border-emerald-500/30 text-emerald-950"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                !isOnline
+                  ? "bg-amber-500 text-white"
+                  : pendingCount > 0
+                  ? "bg-blue-600 text-white"
+                  : "bg-emerald-600 text-white"
+              }`}
+            >
+              {!isOnline ? (
+                <WifiOff size={18} />
+              ) : isSyncing ? (
+                <RefreshCw size={18} className="animate-spin" />
+              ) : pendingCount > 0 ? (
+                <UploadCloud size={18} />
+              ) : (
+                <CheckCircle size={18} />
+              )}
+            </div>
+
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-xs font-black uppercase tracking-wider">
+                  {!isOnline
+                    ? "Modo Offline (Sem Sinal de Internet)"
+                    : pendingCount > 0
+                    ? `${pendingCount} Baixa(s) Salva(s) no Dispositivo`
+                    : "Sincronização Concluída"}
+                </h4>
+
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    !isOnline
+                      ? "bg-amber-200 text-amber-900"
+                      : pendingCount > 0
+                      ? "bg-blue-200 text-blue-900"
+                      : "bg-emerald-200 text-emerald-900"
+                  }`}
+                >
+                  {!isOnline ? "Cache Ativo" : `${pendingCount} Pendente(s)`}
+                </span>
+              </div>
+
+              <p className="text-xs opacity-90">
+                {syncFeedback
+                  ? syncFeedback
+                  : !isOnline
+                  ? "Você pode navegar nas paradas e registrar conclusões normalmente. Os comprovantes serão enviados automaticamente quando o sinal voltar."
+                  : "Conexão restabelecida. As ações salvas offline estão prontas para sincronização imediata."}
+              </p>
+
+              {lastSyncTime && (
+                <div className="text-[10px] text-slate-500 font-medium">
+                  Última sincronização com a base: {new Date(lastSyncTime).toLocaleTimeString("pt-BR")}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <button
+              onClick={handleManualSync}
+              disabled={isSyncing || (!isOnline && pendingCount === 0)}
+              className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-black shadow-sm flex items-center justify-center gap-1.5 transition-all ${
+                !isOnline
+                  ? "bg-amber-600 hover:bg-amber-700 text-white"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              } disabled:opacity-50`}
+            >
+              <RefreshCw size={13} className={isSyncing ? "animate-spin" : ""} />
+              {isSyncing ? "Sincronizando..." : "Sincronizar Agora"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Online indicator badge when everything is up to date */}
+      {isOnline && pendingCount === 0 && !syncFeedback && (
+        <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-[11px] text-slate-600 font-medium">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Rede Online & Rotas Atualizadas no Cache</span>
+          </div>
+          {lastSyncTime && (
+            <span>Última checagem: {new Date(lastSyncTime).toLocaleTimeString("pt-BR")}</span>
+          )}
+        </div>
+      )}
 
       {/* Hero Highlight: Current Active Stop ("PRÓXIMA PARADA") */}
       {currentActiveStop && (
@@ -686,7 +914,14 @@ export default function EntregadorDashboard() {
                     </div>
 
                     {/* Status Pill */}
-                    <div className="text-right shrink-0">
+                    <div className="text-right shrink-0 flex flex-col items-end gap-1">
+                      {item._isOfflineModified && (
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                          <CloudOff size={10} />
+                          Salvo Offline
+                        </span>
+                      )}
+
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold ${
                           isCompleted
@@ -875,7 +1110,7 @@ export default function EntregadorDashboard() {
         <DeliveryConfirmModal
           isOpen={!!confirmModalItem}
           onClose={() => setConfirmModalItem(null)}
-          onSuccess={() => setConfirmModalItem(null)}
+          onSuccess={handleModalSuccess}
           deliveryItem={confirmModalItem}
         />
       )}
@@ -885,7 +1120,7 @@ export default function EntregadorDashboard() {
         <DeliveryOccurrenceModal
           isOpen={!!occurrenceModalItem}
           onClose={() => setOccurrenceModalItem(null)}
-          onSuccess={() => setOccurrenceModalItem(null)}
+          onSuccess={handleModalSuccess}
           deliveryItem={occurrenceModalItem}
         />
       )}

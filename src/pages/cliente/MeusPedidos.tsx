@@ -979,54 +979,70 @@ export default function MeusPedidos() {
                   {/* Inline Expandable Panel (Painel Expansível) */}
                   {isExpanded && (
                     <div className="mt-5 pt-5 border-t border-slate-200/80 space-y-6 animate-fadeIn">
-                      {/* Grid with 3 Pillars: Itens Comprados, Frete & Entrega, Método de Pagamento */}
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                      {/* Grid with 3 Pillars: Itens Comprados, Frete & Entrega, Demonstrativo Financeiro */}
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                         
-                        {/* PILLAR 1: Itens Comprados (Spans 2 columns on large screens) */}
-                        <div className="lg:col-span-2 space-y-3">
+                        {/* PILLAR 1: Itens Comprados (Spans 7 columns on large screens) */}
+                        <div className="lg:col-span-7 space-y-3">
                           <div className="flex items-center justify-between">
-                            <h4 className="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
-                              <Package size={15} className="text-[#0071e3]" />
-                              Itens Comprados ({getPedidoItensList(pedido).length})
+                            <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
+                              <Package size={16} className="text-[#0071e3]" />
+                              Itens do Pedido ({itensList.length} {itensList.length === 1 ? "produto" : "produtos"} • {totalQtdItens} un)
                             </h4>
-                            <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
-                              Subtotal: {formatBRL(subtotalProd)}
+                            <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg">
+                              Subtotal: <strong className="text-slate-900 font-mono">{formatBRL(subtotalProd)}</strong>
                             </span>
                           </div>
 
-                          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                            {getPedidoItensList(pedido).map((item: any, idx: number) => {
+                          <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                            {itensList.map((item: any, idx: number) => {
                               const uPrice = getItemUnitPrice(item, pedido, catalogProducts, profile?.level);
                               const q = getItemQuantity(item);
                               const iTot = getItemTotal(item, pedido, catalogProducts, profile?.level);
+                              const unidadeMedida = item.unidade || item.un || "UN";
 
                               return (
                                 <div 
                                   key={idx} 
-                                  className="flex items-center justify-between gap-3 bg-white border border-slate-200/80 p-3 sm:p-3.5 rounded-2xl shadow-3xs hover:border-slate-300 transition-colors"
+                                  className="bg-white border border-slate-200/80 p-3.5 rounded-2xl shadow-3xs hover:border-blue-200 transition-all space-y-2.5"
                                 >
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-[#0071e3] font-black text-xs flex items-center justify-center shrink-0">
-                                      #{idx + 1}
-                                    </div>
-                                    <div className="min-w-0">
-                                      <p className="font-bold text-slate-900 text-xs sm:text-sm truncate" title={item.descricao || item.nome}>
-                                        {item.descricao || item.nome || "Produto"}
-                                      </p>
-                                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500 mt-0.5">
-                                        <span>Código: <strong className="text-slate-700 font-mono">{item.codigo || item.sku || item.id || "N/A"}</strong></span>
-                                        <span>•</span>
-                                        <span>Qtd: <strong className="text-slate-900 font-bold bg-slate-100 px-1.5 py-0.5 rounded">{q} {item.unidade || "UN"}</strong></span>
-                                        <span>•</span>
-                                        <span>Unitário: <strong className="text-slate-900 font-bold">{formatBRL(uPrice)}</strong></span>
+                                  {/* Item Header: Name & SKU */}
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-start gap-2.5 min-w-0">
+                                      <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 text-[#0071e3] font-black text-xs flex items-center justify-center shrink-0 mt-0.5">
+                                        #{idx + 1}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="font-bold text-slate-900 text-xs sm:text-sm leading-snug" title={item.descricao || item.nome}>
+                                          {item.descricao || item.nome || "Produto"}
+                                        </p>
+                                        <span className="inline-block text-[10px] font-mono text-slate-400 mt-0.5">
+                                          SKU/Cód: <strong className="text-slate-600 font-semibold">{item.codigo || item.sku || item.id || "N/A"}</strong>
+                                        </span>
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="text-right shrink-0">
-                                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Total do Item</span>
-                                    <span className="font-black text-slate-900 text-xs sm:text-sm block text-[#0071e3]">
-                                      {formatBRL(iTot)}
-                                    </span>
+
+                                  {/* Item Metrics Row: Structured 3-column breakdown */}
+                                  <div className="grid grid-cols-3 gap-2 bg-slate-50/90 p-2.5 rounded-xl border border-slate-100 text-center">
+                                    <div className="text-left pl-1">
+                                      <span className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider">Quantidade</span>
+                                      <span className="text-xs font-bold text-slate-800">
+                                        {q} <span className="text-[10px] text-slate-500 font-medium">{unidadeMedida}</span>
+                                      </span>
+                                    </div>
+                                    <div className="text-center">
+                                      <span className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider">Valor Unitário</span>
+                                      <span className="text-xs font-bold text-slate-800 font-mono">
+                                        {formatBRL(uPrice)}
+                                      </span>
+                                    </div>
+                                    <div className="text-right pr-1">
+                                      <span className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider">Subtotal Item</span>
+                                      <span className="text-xs font-black text-[#0071e3] font-mono">
+                                        {formatBRL(iTot)}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -1034,26 +1050,109 @@ export default function MeusPedidos() {
                           </div>
                         </div>
 
-                        {/* PILLAR 2 & 3 (Sidebar Column): Frete & Pagamento Breakdown */}
-                        <div className="space-y-4">
-                          {/* Shipping Card */}
-                          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-3xs space-y-3">
-                            <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                              <Truck size={15} className="text-[#0071e3]" />
-                              Valor Total do Frete & Entrega
-                            </h4>
-                            
-                            <div className="flex items-center justify-between bg-sky-50/60 border border-blue-100 p-2.5 rounded-xl">
-                              <span className="text-xs font-bold text-slate-700">Valor do Frete:</span>
-                              <span className={`text-xs font-extrabold ${freteVal === 0 ? "text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md" : "text-[#0071e3]"}`}>
-                                {freteVal === 0 ? "FRETE GRÁTIS" : formatBRL(freteVal)}
+                        {/* PILLAR 2 & 3 (Sidebar Columns: 5 columns on large screens): Frete & Demonstrativo Financeiro */}
+                        <div className="lg:col-span-5 space-y-4">
+                          
+                          {/* Financial Summary Card (Demonstrativo Financeiro Claro) */}
+                          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-blue-100 shadow-3xs space-y-3.5 bg-gradient-to-b from-sky-50/30 to-white">
+                            <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center justify-between">
+                              <span className="flex items-center gap-1.5">
+                                <CreditCard size={16} className="text-[#0071e3]" />
+                                Resumo Financeiro
                               </span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                pedido.pagamento?.status === "Aprovado" 
+                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200" 
+                                  : "bg-amber-100 text-amber-800 border border-amber-200"
+                              }`}>
+                                {pedido.pagamento?.status === "Aprovado" ? "✓ Liquidado" : "⏳ Pendente"}
+                              </span>
+                            </h4>
+
+                            {/* Detailed Math Breakdown */}
+                            <div className="space-y-2 text-xs divide-y divide-slate-100">
+                              {/* 1. Subtotal de Itens */}
+                              <div className="flex items-center justify-between pt-1">
+                                <div className="text-slate-600">
+                                  <span className="font-medium">Subtotal dos Itens:</span>
+                                  <span className="block text-[10px] text-slate-400">({itensList.length} itens • {totalQtdItens} un)</span>
+                                </div>
+                                <span className="font-bold text-slate-900 font-mono text-xs sm:text-sm">
+                                  {formatBRL(subtotalProd)}
+                                </span>
+                              </div>
+
+                              {/* 2. Frete Calculado */}
+                              <div className="flex items-center justify-between pt-2">
+                                <div className="text-slate-600">
+                                  <span className="font-medium">Frete Calculado:</span>
+                                  <span className="block text-[10px] text-slate-400">
+                                    {freteVal === 0 ? "Entrega Bonificada" : "Grande Goiânia"}
+                                  </span>
+                                </div>
+                                <div className="text-right">
+                                  {freteVal === 0 ? (
+                                    <span className="text-xs font-black text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2 py-0.5 rounded-md inline-block">
+                                      FRETE GRÁTIS
+                                    </span>
+                                  ) : (
+                                    <span className="font-bold text-slate-900 font-mono text-xs sm:text-sm">
+                                      {formatBRL(freteVal)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* 3. Descontos se houver */}
+                              {(parseNumber(pedido.desconto) > 0 || parseNumber(pedido.totais?.totalDesconto) > 0) && (
+                                <div className="flex items-center justify-between pt-2 text-emerald-700">
+                                  <span className="font-medium">Descontos Aplicados:</span>
+                                  <span className="font-bold font-mono">
+                                    - {formatBRL(parseNumber(pedido.desconto || pedido.totais?.totalDesconto))}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* 4. Valor Total Final Destacado */}
+                              <div className="flex items-baseline justify-between pt-3 border-t-2 border-slate-200/80">
+                                <div>
+                                  <span className="text-xs font-black uppercase tracking-wider text-slate-900 block">
+                                    Valor Total Final:
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-medium">
+                                    {getPaymentLabel(pedido.pagamento?.forma)}
+                                  </span>
+                                </div>
+                                <span className="text-lg sm:text-xl font-black text-[#0071e3] font-mono">
+                                  {formatBRL(totalGeral)}
+                                </span>
+                              </div>
                             </div>
 
-                            <div className="text-xs text-slate-600 font-medium space-y-1">
-                              <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Endereço de Destino:</p>
-                              <p className="leading-tight text-slate-800 font-semibold">{pedido.cliente?.nome}</p>
-                              <p className="text-slate-600 text-[11px] leading-relaxed">
+                            {/* Pay button if pending */}
+                            {pedido.pagamento?.status !== "Aprovado" && mpConfig && (
+                              <button
+                                onClick={() => {
+                                  setPayingPedido(pedido);
+                                  setPaymentMethod("17");
+                                }}
+                                className="w-full mt-2 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold py-2.5 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-98"
+                              >
+                                <CreditCard size={14} />
+                                Pagar Agora com Mercado Pago
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Shipping Destination Card */}
+                          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-3xs space-y-2 text-xs">
+                            <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                              <Truck size={15} className="text-[#0071e3]" />
+                              Endereço de Entrega
+                            </h4>
+                            <div className="text-slate-600 space-y-0.5 pt-1">
+                              <p className="font-bold text-slate-900">{pedido.cliente?.nome}</p>
+                              <p className="text-[11px] leading-relaxed text-slate-600">
                                 {pedido.cliente?.endereco?.logradouro}, {pedido.cliente?.endereco?.numero}
                                 {pedido.cliente?.endereco?.complemento && ` - ${pedido.cliente?.endereco?.complemento}`} <br />
                                 {pedido.cliente?.endereco?.bairro} • {pedido.cliente?.endereco?.municipio}/{pedido.cliente?.endereco?.uf} <br />
@@ -1062,66 +1161,6 @@ export default function MeusPedidos() {
                             </div>
                           </div>
 
-                          {/* Payment Method & Financial Breakdown */}
-                          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-3xs space-y-3">
-                            <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                              <CreditCard size={15} className="text-[#0071e3]" />
-                              Método de Pagamento Utilizado
-                            </h4>
-
-                            <div className="space-y-2 text-xs">
-                              <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                                <span className="text-slate-600 font-medium flex items-center gap-1.5">
-                                  {getPaymentIcon(pedido.pagamento?.forma)}
-                                  Método:
-                                </span>
-                                <span className="font-bold text-slate-900">{getPaymentLabel(pedido.pagamento?.forma)}</span>
-                              </div>
-
-                              <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                                <span className="text-slate-600 font-medium">Status do Pagamento:</span>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                  pedido.pagamento?.status === "Aprovado" 
-                                    ? "bg-emerald-100 text-emerald-800" 
-                                    : "bg-amber-100 text-amber-800"
-                                }`}>
-                                  {pedido.pagamento?.status === "Aprovado" ? "✓ Liquidado / Aprovado" : "⏳ Aguardando Pagamento"}
-                                </span>
-                              </div>
-
-                              {/* Summary calculation */}
-                              <div className="border-t border-slate-100 pt-2 space-y-1.5 text-xs">
-                                <div className="flex justify-between text-slate-600">
-                                  <span>Subtotal dos Produtos:</span>
-                                  <span className="font-semibold text-slate-800">{formatBRL(subtotalProd)}</span>
-                                </div>
-                                <div className="flex justify-between text-slate-600">
-                                  <span>Valor do Frete:</span>
-                                  <span className="font-semibold text-slate-800">
-                                    {freteVal === 0 ? "Grátis" : formatBRL(freteVal)}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between font-black text-slate-900 text-sm pt-2 border-t border-slate-100">
-                                  <span>Total a Pagar:</span>
-                                  <span className="text-[#0071e3] text-base">{formatBRL(totalGeral)}</span>
-                                </div>
-                              </div>
-
-                              {/* Action to pay if pending */}
-                              {pedido.pagamento?.status !== "Aprovado" && mpConfig && (
-                                <button
-                                  onClick={() => {
-                                    setPayingPedido(pedido);
-                                    setPaymentMethod("17");
-                                  }}
-                                  className="w-full mt-2 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold py-2.5 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
-                                >
-                                  <CreditCard size={13} />
-                                  Pagar com Mercado Pago
-                                </button>
-                              )}
-                            </div>
-                          </div>
                         </div>
                       </div>
 
@@ -1133,7 +1172,7 @@ export default function MeusPedidos() {
                             className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0071e3] hover:text-[#005bb5] hover:underline cursor-pointer bg-blue-50/80 px-3 py-1.5 rounded-lg border border-blue-200"
                           >
                             <Eye size={14} />
-                            Ver em Modal com Histórico e Nota Fiscal
+                            Ver Modal Completo com Itens e Rastreio
                           </button>
                         </div>
 
@@ -1209,240 +1248,328 @@ export default function MeusPedidos() {
             {/* Modal Body */}
             <div className="p-5 sm:p-6 overflow-y-auto space-y-6 text-slate-700">
               
-              {/* Section 1: Itens Comprados */}
+              {/* Section 1: Itens Comprados (Tabela de Produtos com Valores Unitários e Subtotais) */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <h4 className="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
-                    <Package size={15} className="text-[#0071e3]" />
-                    Itens Comprados ({getPedidoItensList(selectedPedidoModal).length})
-                  </h4>
-                  <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
-                    Subtotal: {formatBRL(getSubtotalProdutos(selectedPedidoModal, catalogProducts, profile?.level))}
-                  </span>
-                </div>
+                {(() => {
+                  const modalItens = getPedidoItensList(selectedPedidoModal);
+                  const modalTotalQtd = modalItens.reduce((acc: number, item: any) => acc + getItemQuantity(item), 0);
+                  const modalSubtotal = getSubtotalProdutos(selectedPedidoModal, catalogProducts, profile?.level);
 
-                <div className="border border-slate-200/80 rounded-2xl overflow-hidden bg-white shadow-3xs divide-y divide-slate-100">
-                  {/* Table Header on Desktop */}
-                  <div className="hidden sm:grid grid-cols-12 gap-3 px-4 py-2.5 bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <div className="col-span-6">Produto / Descrição</div>
-                    <div className="col-span-2 text-center">Quantidade</div>
-                    <div className="col-span-2 text-right">Valor Unitário</div>
-                    <div className="col-span-2 text-right">Valor Total</div>
+                  return (
+                    <>
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-blue-50 text-[#0071e3] flex items-center justify-center font-bold">
+                            <Package size={15} />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm uppercase tracking-wider">
+                              Itens do Pedido ({modalItens.length} {modalItens.length === 1 ? "produto" : "produtos"})
+                            </h4>
+                            <p className="text-[11px] text-slate-400 font-medium">
+                              Volume total de {modalTotalQtd} {modalTotalQtd === 1 ? "unidade" : "unidades"}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200/80 px-3 py-1 rounded-xl">
+                          Subtotal dos Itens: <strong className="text-slate-900 font-mono ml-1">{formatBRL(modalSubtotal)}</strong>
+                        </span>
+                      </div>
+
+                      <div className="border border-slate-200/80 rounded-2xl overflow-hidden bg-white shadow-3xs divide-y divide-slate-100">
+                        {/* Table Header on Desktop */}
+                        <div className="hidden sm:grid grid-cols-12 gap-3 px-4 py-2.5 bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          <div className="col-span-6">Produto / Descrição</div>
+                          <div className="col-span-2 text-center">Quantidade</div>
+                          <div className="col-span-2 text-right">Valor Unitário</div>
+                          <div className="col-span-2 text-right">Subtotal Item</div>
+                        </div>
+
+                        {modalItens.map((item: any, idx: number) => {
+                          const uPrice = getItemUnitPrice(item, selectedPedidoModal, catalogProducts, profile?.level);
+                          const q = getItemQuantity(item);
+                          const iTot = getItemTotal(item, selectedPedidoModal, catalogProducts, profile?.level);
+                          const unidadeMedida = item.unidade || item.un || "UN";
+
+                          return (
+                            <div key={idx} className="p-3.5 sm:px-4 sm:py-3.5 hover:bg-slate-50/60 transition-colors">
+                              {/* Desktop Row */}
+                              <div className="hidden sm:grid grid-cols-12 gap-3 items-center">
+                                <div className="col-span-6 flex items-center gap-3 min-w-0">
+                                  <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 text-[#0071e3] font-black text-xs flex items-center justify-center shrink-0">
+                                    #{idx + 1}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-bold text-slate-900 text-xs sm:text-sm truncate" title={item.descricao || item.nome}>
+                                      {item.descricao || item.nome || "Produto"}
+                                    </p>
+                                    <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                                      SKU/Código: <strong className="text-slate-600 font-semibold">{item.codigo || item.sku || item.id || "N/A"}</strong>
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="col-span-2 text-center">
+                                  <span className="inline-block bg-slate-100 text-slate-800 text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200/60">
+                                    {q} {unidadeMedida}
+                                  </span>
+                                </div>
+
+                                <div className="col-span-2 text-right font-bold text-slate-700 font-mono text-xs sm:text-sm">
+                                  {formatBRL(uPrice)}
+                                  <span className="block text-[10px] text-slate-400 font-sans font-normal">por {unidadeMedida}</span>
+                                </div>
+
+                                <div className="col-span-2 text-right font-black text-slate-900 font-mono text-xs sm:text-sm text-[#0071e3]">
+                                  {formatBRL(iTot)}
+                                </div>
+                              </div>
+
+                              {/* Mobile Card Layout */}
+                              <div className="sm:hidden space-y-2.5">
+                                <div className="flex items-start gap-2.5">
+                                  <span className="w-6 h-6 rounded-lg bg-blue-50 text-[#0071e3] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                                    #{idx + 1}
+                                  </span>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-bold text-slate-900 text-xs leading-snug">
+                                      {item.descricao || item.nome || "Produto"}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                      SKU/Código: <span className="text-slate-600 font-semibold">{item.codigo || item.sku || item.id || "N/A"}</span>
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2 bg-slate-50/90 p-2.5 rounded-xl text-center border border-slate-100">
+                                  <div className="text-left pl-1">
+                                    <span className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider">Quantidade</span>
+                                    <span className="text-xs font-bold text-slate-800">{q} {unidadeMedida}</span>
+                                  </div>
+                                  <div className="text-center">
+                                    <span className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider">Unitário</span>
+                                    <span className="text-xs font-bold text-slate-800 font-mono">{formatBRL(uPrice)}</span>
+                                  </div>
+                                  <div className="text-right pr-1">
+                                    <span className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider">Subtotal</span>
+                                    <span className="text-xs font-black text-[#0071e3] font-mono">{formatBRL(iTot)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* Section 2 & 3: Logistics & Financial Summary in 2-Column Responsive Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                
+                {/* Column Left (7 cols): Shipping Address & Timeline */}
+                <div className="lg:col-span-7 space-y-4">
+                  {/* Shipping Destination Card */}
+                  <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3">
+                    <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-200/60 pb-2">
+                      <Truck size={15} className="text-[#0071e3]" />
+                      Local de Entrega e Logística
+                    </h4>
+
+                    <div className="space-y-1 text-xs">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Destinatário:</p>
+                      <p className="text-xs font-bold text-slate-900">{selectedPedidoModal.cliente?.nome}</p>
+                      <p className="text-[11px] text-slate-600 leading-relaxed pt-1">
+                        {selectedPedidoModal.cliente?.endereco?.logradouro}, {selectedPedidoModal.cliente?.endereco?.numero}
+                        {selectedPedidoModal.cliente?.endereco?.complemento && ` - ${selectedPedidoModal.cliente?.endereco?.complemento}`} <br />
+                        {selectedPedidoModal.cliente?.endereco?.bairro} • {selectedPedidoModal.cliente?.endereco?.municipio}/{selectedPedidoModal.cliente?.endereco?.uf} <br />
+                        <span className="font-mono text-slate-500 font-semibold">CEP: {selectedPedidoModal.cliente?.endereco?.cep}</span>
+                      </p>
+                    </div>
                   </div>
 
-                  {getPedidoItensList(selectedPedidoModal).map((item: any, idx: number) => {
-                    const uPrice = getItemUnitPrice(item, selectedPedidoModal, catalogProducts, profile?.level);
-                    const q = getItemQuantity(item);
-                    const iTot = getItemTotal(item, selectedPedidoModal, catalogProducts, profile?.level);
+                  {/* NF-e se emitida */}
+                  {selectedPedidoModal.nfe && (
+                    <div className="p-4 bg-emerald-50/50 border border-emerald-200/80 rounded-2xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1">
+                          <FileText size={13} /> Nota Fiscal Eletrônica Emitida
+                        </span>
+                        <span className="text-xs font-bold text-emerald-900 font-mono">
+                          NFe Nº {selectedPedidoModal.nfe.numero}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-emerald-100">
+                        <span className="text-[10px] font-mono text-slate-600 break-all">
+                          Chave: {selectedPedidoModal.nfe.chaveAccess || selectedPedidoModal.nfe.chaveAcesso}
+                        </span>
+                        <button
+                          onClick={() => copyToClipboard(selectedPedidoModal.nfe.chaveAccess || selectedPedidoModal.nfe.chaveAcesso, "nfe")}
+                          className="text-xs font-bold text-[#0071e3] hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
+                        >
+                          {copiedKey === "nfe" ? <Check size={12} /> : <Clipboard size={12} />}
+                          <span>{copiedKey === "nfe" ? "Copiado!" : "Copiar"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Histórico do Pedido */}
+                  <div className="p-4 bg-white rounded-2xl border border-slate-200/80 space-y-3">
+                    <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                      <Clock size={14} className="text-[#0071e3]" />
+                      Histórico e Rastreamento do Pedido
+                    </h4>
+                    
+                    <div className="relative pl-4 space-y-3 before:absolute before:inset-y-0 before:left-[7px] before:w-[2px] before:bg-slate-200">
+                      {(selectedPedidoModal.historico || []).map((evento: any, idx: number) => (
+                        <div key={idx} className="relative">
+                          <div className="absolute -left-[21px] w-4 h-4 rounded-full bg-blue-100 border-[3px] border-white flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#0071e3]"></div>
+                          </div>
+                          <div className="ml-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-0.5">
+                              <span className="font-bold text-slate-900 text-xs">
+                                {evento.novoStatus || evento.status || evento.evento}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {new Date(evento.dataHora || evento.data).toLocaleString("pt-BR")}
+                              </span>
+                            </div>
+                            {(evento.observacao || evento.descricao) && (
+                              <p className="text-xs text-slate-600 mt-0.5">
+                                {evento.observacao || evento.descricao}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {(!selectedPedidoModal.historico || selectedPedidoModal.historico.length === 0) && (
+                        <p className="text-xs text-slate-400 italic">Pedido cadastrado no sistema. Acompanhe as próximas atualizações.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column Right (5 cols): Demonstrativo Financeiro (Subtotal, Frete, Descontos, Total) */}
+                <div className="lg:col-span-5 space-y-4">
+                  {(() => {
+                    const freteVal = getFreteValor(selectedPedidoModal);
+                    const subtotalProd = getSubtotalProdutos(selectedPedidoModal, catalogProducts, profile?.level);
+                    const totalGeral = getTotalGeral(selectedPedidoModal, catalogProducts, profile?.level);
+                    const modalItens = getPedidoItensList(selectedPedidoModal);
+                    const modalTotalQtd = modalItens.reduce((acc: number, item: any) => acc + getItemQuantity(item), 0);
+                    const descontoVal = parseNumber(selectedPedidoModal.desconto || selectedPedidoModal.totais?.totalDesconto);
 
                     return (
-                      <div key={idx} className="p-3.5 sm:px-4 sm:py-3 hover:bg-slate-50/60 transition-colors">
-                        {/* Desktop Row */}
-                        <div className="hidden sm:grid grid-cols-12 gap-3 items-center">
-                          <div className="col-span-6 flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 text-[#0071e3] font-black text-xs flex items-center justify-center shrink-0">
-                              #{idx + 1}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-bold text-slate-900 text-xs sm:text-sm truncate" title={item.descricao || item.nome}>
-                                {item.descricao || item.nome || "Produto"}
-                              </p>
-                              <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                                SKU/Código: <strong className="text-slate-600">{item.codigo || item.sku || item.id || "N/A"}</strong>
-                              </p>
-                            </div>
-                          </div>
+                      <div className="p-4 sm:p-5 bg-gradient-to-b from-sky-50/40 via-white to-sky-50/20 rounded-2xl border border-blue-100 shadow-3xs space-y-4">
+                        <div className="flex items-center justify-between border-b border-blue-100/80 pb-3">
+                          <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
+                            <CreditCard size={16} className="text-[#0071e3]" />
+                            Demonstrativo Financeiro
+                          </h4>
+                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                            selectedPedidoModal.pagamento?.status === "Aprovado" 
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200" 
+                              : "bg-amber-100 text-amber-800 border border-amber-200"
+                          }`}>
+                            {selectedPedidoModal.pagamento?.status === "Aprovado" ? "✓ Liquidado" : "⏳ Aguardando Pagamento"}
+                          </span>
+                        </div>
 
-                          <div className="col-span-2 text-center">
-                            <span className="inline-block bg-slate-100 text-slate-800 text-xs font-bold px-2.5 py-1 rounded-lg">
-                              {q} {item.unidade || "UN"}
+                        {/* Payment Method Badge */}
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-blue-100 text-xs">
+                          <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                            {getPaymentIcon(selectedPedidoModal.pagamento?.forma)}
+                            Forma de Pagamento:
+                          </span>
+                          <span className="font-bold text-slate-900">
+                            {getPaymentLabel(selectedPedidoModal.pagamento?.forma)}
+                          </span>
+                        </div>
+
+                        {/* Calculation Line Items */}
+                        <div className="space-y-2.5 text-xs divide-y divide-slate-100">
+                          {/* 1. Subtotal dos Produtos */}
+                          <div className="flex items-center justify-between pt-1">
+                            <div className="text-slate-600">
+                              <span className="font-medium">Subtotal dos Itens:</span>
+                              <span className="block text-[10px] text-slate-400">({modalItens.length} produtos • {modalTotalQtd} un)</span>
+                            </div>
+                            <span className="font-bold text-slate-900 font-mono text-xs sm:text-sm">
+                              {formatBRL(subtotalProd)}
                             </span>
                           </div>
 
-                          <div className="col-span-2 text-right font-bold text-slate-700 text-xs sm:text-sm">
-                            {formatBRL(uPrice)}
+                          {/* 2. Frete Calculado */}
+                          <div className="flex items-center justify-between pt-2.5">
+                            <div className="text-slate-600">
+                              <span className="font-medium">Frete Calculado:</span>
+                              <span className="block text-[10px] text-slate-400">
+                                {freteVal === 0 ? "Isenção aplicada p/ condomínio" : "Transporte Grande Goiânia"}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              {freteVal === 0 ? (
+                                <span className="text-xs font-black text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md inline-block">
+                                  FRETE GRÁTIS
+                                </span>
+                              ) : (
+                                <span className="font-bold text-slate-900 font-mono text-xs sm:text-sm">
+                                  {formatBRL(freteVal)}
+                                </span>
+                              )}
+                            </div>
                           </div>
 
-                          <div className="col-span-2 text-right font-black text-slate-900 text-xs sm:text-sm text-[#0071e3]">
-                            {formatBRL(iTot)}
-                          </div>
-                        </div>
+                          {/* 3. Descontos se houver */}
+                          {descontoVal > 0 && (
+                            <div className="flex items-center justify-between pt-2.5 text-emerald-700">
+                              <div>
+                                <span className="font-medium">Descontos Aplicados:</span>
+                                <span className="block text-[10px] text-emerald-600/80">Cupom ou benefício promocional</span>
+                              </div>
+                              <span className="font-bold font-mono text-xs sm:text-sm">
+                                - {formatBRL(descontoVal)}
+                              </span>
+                            </div>
+                          )}
 
-                        {/* Mobile Card Layout */}
-                        <div className="sm:hidden space-y-2">
-                          <div className="flex items-start gap-2.5">
-                            <span className="w-6 h-6 rounded-lg bg-blue-50 text-[#0071e3] font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                              #{idx + 1}
+                          {/* 4. Total Final em Destaque */}
+                          <div className="flex items-baseline justify-between pt-3.5 border-t-2 border-slate-200/80">
+                            <div>
+                              <span className="text-xs font-black uppercase tracking-wider text-slate-900 block">
+                                Valor Total Final:
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-medium">
+                                Total consolidado do pedido
+                              </span>
+                            </div>
+                            <span className="text-xl sm:text-2xl font-black text-[#0071e3] font-mono">
+                              {formatBRL(totalGeral)}
                             </span>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-bold text-slate-900 text-xs leading-snug">
-                                {item.descricao || item.nome || "Produto"}
-                              </p>
-                              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                                Código: {item.codigo || item.sku || item.id || "N/A"}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl text-center border border-slate-100">
-                            <div>
-                              <span className="block text-[9px] uppercase font-bold text-slate-400">Qtd</span>
-                              <span className="text-xs font-bold text-slate-800">{q} {item.unidade || "UN"}</span>
-                            </div>
-                            <div>
-                              <span className="block text-[9px] uppercase font-bold text-slate-400">Unitário</span>
-                              <span className="text-xs font-bold text-slate-800">{formatBRL(uPrice)}</span>
-                            </div>
-                            <div>
-                              <span className="block text-[9px] uppercase font-bold text-slate-400">Total Item</span>
-                              <span className="text-xs font-black text-[#0071e3]">{formatBRL(iTot)}</span>
-                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
 
-              {/* Section 2: Frete & Entrega */}
-              <div className="space-y-3">
-                <h4 className="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                  <Truck size={15} className="text-[#0071e3]" />
-                  Valor Total do Frete & Detalhes da Entrega
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70 space-y-1.5">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Custo do Frete</p>
-                    <p className="text-base font-black text-slate-900">
-                      {getFreteValor(selectedPedidoModal) === 0 ? (
-                        <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">FRETE GRÁTIS</span>
-                      ) : (
-                        formatBRL(getFreteValor(selectedPedidoModal))
-                      )}
-                    </p>
-                    <p className="text-[11px] text-slate-500 font-medium">
-                      Entrega expressa e agendada para Grande Goiânia
-                    </p>
-                  </div>
-
-                  <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/70 space-y-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Endereço de Destino</p>
-                    <p className="text-xs font-bold text-slate-900 leading-tight">{selectedPedidoModal.cliente?.nome}</p>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                      {selectedPedidoModal.cliente?.endereco?.logradouro}, {selectedPedidoModal.cliente?.endereco?.numero}
-                      {selectedPedidoModal.cliente?.endereco?.complemento && ` - ${selectedPedidoModal.cliente?.endereco?.complemento}`} <br />
-                      {selectedPedidoModal.cliente?.endereco?.bairro} • {selectedPedidoModal.cliente?.endereco?.municipio}/{selectedPedidoModal.cliente?.endereco?.uf} <br />
-                      <span className="font-mono text-slate-500">CEP: {selectedPedidoModal.cliente?.endereco?.cep}</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 3: Método de Pagamento & Totais */}
-              <div className="space-y-3">
-                <h4 className="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                  <CreditCard size={15} className="text-[#0071e3]" />
-                  Método de Pagamento & Resumo Financeiro
-                </h4>
-
-                <div className="p-4 bg-sky-50/40 rounded-2xl border border-blue-100 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-blue-100/70">
-                    <div className="flex items-center gap-2">
-                      {getPaymentIcon(selectedPedidoModal.pagamento?.forma)}
-                      <span className="font-bold text-slate-800 text-xs sm:text-sm">
-                        {getPaymentLabel(selectedPedidoModal.pagamento?.forma)}
-                      </span>
-                    </div>
-
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                      selectedPedidoModal.pagamento?.status === "Aprovado" 
-                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200" 
-                        : "bg-amber-100 text-amber-800 border border-amber-200"
-                    }`}>
-                      {selectedPedidoModal.pagamento?.status === "Aprovado" ? "✓ Liquidado e Aprovado" : "⏳ Aguardando Pagamento"}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1.5 text-xs text-slate-600">
-                    <div className="flex justify-between">
-                      <span>Subtotal dos Produtos:</span>
-                      <span className="font-semibold text-slate-800">{formatBRL(getSubtotalProdutos(selectedPedidoModal, catalogProducts, profile?.level))}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Valor do Frete:</span>
-                      <span className="font-semibold text-slate-800">
-                        {getFreteValor(selectedPedidoModal) === 0 ? "Grátis" : formatBRL(getFreteValor(selectedPedidoModal))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-blue-100">
-                      <span>Valor Total a Pagar:</span>
-                      <span className="text-[#0071e3] text-lg">{formatBRL(getTotalGeral(selectedPedidoModal, catalogProducts, profile?.level))}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 4: NF-e se emitida */}
-              {selectedPedidoModal.nfe && (
-                <div className="p-4 bg-emerald-50/50 border border-emerald-200/80 rounded-2xl space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1">
-                      <FileText size={13} /> Nota Fiscal Eletrônica Emitida
-                    </span>
-                    <span className="text-xs font-bold text-emerald-900">
-                      NFe Nº {selectedPedidoModal.nfe.numero}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-emerald-100">
-                    <span className="text-[10px] font-mono text-slate-600 break-all">
-                      Chave: {selectedPedidoModal.nfe.chaveAccess || selectedPedidoModal.nfe.chaveAcesso}
-                    </span>
-                    <button
-                      onClick={() => copyToClipboard(selectedPedidoModal.nfe.chaveAccess || selectedPedidoModal.nfe.chaveAcesso, "nfe")}
-                      className="text-xs font-bold text-[#0071e3] hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
-                    >
-                      {copiedKey === "nfe" ? <Check size={12} /> : <Clipboard size={12} />}
-                      <span>{copiedKey === "nfe" ? "Copiado!" : "Copiar"}</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Section 5: Histórico do Pedido */}
-              <div className="space-y-3">
-                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                  <Clock size={14} className="text-[#0071e3]" />
-                  Histórico e Rastreamento
-                </h4>
-                
-                <div className="relative pl-4 space-y-3 before:absolute before:inset-y-0 before:left-[7px] before:w-[2px] before:bg-slate-200">
-                  {(selectedPedidoModal.historico || []).map((evento: any, idx: number) => (
-                    <div key={idx} className="relative">
-                      <div className="absolute -left-[21px] w-4 h-4 rounded-full bg-blue-100 border-[3px] border-white flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#0071e3]"></div>
-                      </div>
-                      <div className="ml-2">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-0.5">
-                          <span className="font-bold text-slate-900 text-xs">
-                            {evento.novoStatus || evento.status || evento.evento}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            {new Date(evento.dataHora || evento.data).toLocaleString("pt-BR")}
-                          </span>
-                        </div>
-                        {(evento.observacao || evento.descricao) && (
-                          <p className="text-xs text-slate-600 mt-0.5">
-                            {evento.observacao || evento.descricao}
-                          </p>
+                        {/* Pay button if pending */}
+                        {selectedPedidoModal.pagamento?.status !== "Aprovado" && mpConfig && (
+                          <button
+                            onClick={() => {
+                              const ped = selectedPedidoModal;
+                              setSelectedPedidoModal(null);
+                              setPayingPedido(ped);
+                              setPaymentMethod("17");
+                            }}
+                            className="w-full mt-2 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold py-2.5 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-98"
+                          >
+                            <CreditCard size={14} />
+                            Pagar Agora com Mercado Pago
+                          </button>
                         )}
                       </div>
-                    </div>
-                  ))}
-                  {(!selectedPedidoModal.historico || selectedPedidoModal.historico.length === 0) && (
-                    <p className="text-xs text-slate-400 italic">Nenhum evento registrado ainda.</p>
-                  )}
+                    );
+                  })()}
                 </div>
               </div>
             </div>

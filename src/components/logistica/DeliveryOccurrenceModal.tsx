@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { X, AlertTriangle, RefreshCw, MessageSquare, PhoneCall, RotateCcw } from "lucide-react";
+import { X, AlertTriangle, RefreshCw, MessageSquare, PhoneCall, RotateCcw, WifiOff } from "lucide-react";
 import { doc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { initFirebase } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
 import { registrarMudancaStatusPedido } from "../../lib/orderLogger";
+import { queueOfflineAction, applyOptimisticDeliveryUpdate } from "../../lib/offlineDeliverySync";
 
 interface DeliveryOccurrenceModalProps {
   isOpen: boolean;
@@ -28,35 +29,55 @@ export default function DeliveryOccurrenceModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+
+    const updatePayload: any = {
+      status: "Falha",
+      situacao: `${motivo} - ${acaoRecomendada}`,
+      motivoFalha: motivo,
+      acaoRecomendada,
+      detalhesFalha: detalhes.trim(),
+      horaFalha: new Date().toISOString().split("T")[1].substring(0, 5),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // If offline, store locally and queue for background sync
+    if (!navigator.onLine) {
+      applyOptimisticDeliveryUpdate(deliveryItem.id, updatePayload);
+      queueOfflineAction({
+        type: "OCCURRENCE_DELIVERY",
+        entregaId: deliveryItem.id,
+        pedidoId: deliveryItem.pedidoId,
+        payload: updatePayload,
+      });
+      setIsSaving(false);
+      onSuccess();
+      onClose();
+      return;
+    }
+
     try {
       const { db } = await initFirebase();
-
-      const updatePayload: any = {
-        status: "Falha",
-        situacao: `${motivo} - ${acaoRecomendada}`,
-        motivoFalha: motivo,
-        acaoRecomendada,
-        detalhesFalha: detalhes.trim(),
-        horaFalha: new Date().toISOString().split("T")[1].substring(0, 5),
-        updatedAt: new Date().toISOString(),
-      };
 
       await updateDoc(doc(db, "entregas", deliveryItem.id), updatePayload);
 
       // Update linked pedidos_venda if exists
       if (deliveryItem.pedidoId) {
-        const pedidosSnap = await getDocs(
-          query(collection(db, "pedidos_venda"), where("id_externo", "==", deliveryItem.pedidoId))
-        );
-        if (!pedidosSnap.empty) {
-          const pedidoDoc = pedidosSnap.docs[0];
-          await registrarMudancaStatusPedido(
-            db,
-            pedidoDoc.id,
-            "Tentativa de Entrega Sem Sucesso",
-            deliveryItem.entregador || "Entregador",
-            `Insucesso na entrega: ${motivo}. Conduta: ${acaoRecomendada}. Obs: ${detalhes.trim()}`
+        try {
+          const pedidosSnap = await getDocs(
+            query(collection(db, "pedidos_venda"), where("id_externo", "==", deliveryItem.pedidoId))
           );
+          if (!pedidosSnap.empty) {
+            const pedidoDoc = pedidosSnap.docs[0];
+            await registrarMudancaStatusPedido(
+              db,
+              pedidoDoc.id,
+              "Tentativa de Entrega Sem Sucesso",
+              deliveryItem.entregador || "Entregador",
+              `Insucesso na entrega: ${motivo}. Conduta: ${acaoRecomendada}. Obs: ${detalhes.trim()}`
+            );
+          }
+        } catch (pErr) {
+          console.warn("Erro ao atualizar status do pedido:", pErr);
         }
       }
 
@@ -72,11 +93,22 @@ export default function DeliveryOccurrenceModal({
         }
       );
 
+      // Also update local cache
+      applyOptimisticDeliveryUpdate(deliveryItem.id, updatePayload);
+
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error("Erro ao registrar ocorrência:", err);
-      alert("Erro ao registrar ocorrência: " + err.message);
+      console.warn("Falha na gravação remota da ocorrência, salvando offline:", err);
+      applyOptimisticDeliveryUpdate(deliveryItem.id, updatePayload);
+      queueOfflineAction({
+        type: "OCCURRENCE_DELIVERY",
+        entregaId: deliveryItem.id,
+        pedidoId: deliveryItem.pedidoId,
+        payload: updatePayload,
+      });
+      onSuccess();
+      onClose();
     } finally {
       setIsSaving(false);
     }

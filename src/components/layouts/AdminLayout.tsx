@@ -51,6 +51,9 @@ import {
 } from "../../lib/permissions";
 
 import FranqueadaSwitcher from "../admin/FranqueadaSwitcher";
+import { Breadcrumbs } from "../common/Breadcrumbs";
+import { CommandPalette } from "../common/CommandPalette";
+import { Search } from "lucide-react";
 
 // Lazy-load secondary layout components to prevent blocking initial render
 const GuidedTour = React.lazy(() => import("../common/GuidedTour"));
@@ -174,6 +177,14 @@ export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tourTrigger, setTourTrigger] = useState(0);
   const [isGlobalCsvModalOpen, setIsGlobalCsvModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  // Listen for custom open-command-palette events
+  React.useEffect(() => {
+    const handleOpen = () => setIsCommandPaletteOpen(true);
+    window.addEventListener("open-command-palette", handleOpen);
+    return () => window.removeEventListener("open-command-palette", handleOpen);
+  }, []);
   const [expandedSubmenus, setExpandedSubmenus] = useState<{ [key: string]: boolean }>({
     "Franqueada - Empresa": true,
     "Comercial": true,
@@ -625,23 +636,57 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden print:overflow-visible print:block">
-        <header className="bg-white border-b border-slate-200 h-14 flex items-center justify-between px-6 shrink-0 print:hidden">
-          <h1 className="text-xl font-semibold text-slate-800 capitalize">
-            {location.pathname === "/admin" || (location.pathname.startsWith("/admin/") && location.pathname.split("/").length === 3 && ["financeiro", "comercial", "expedicao", "comercial-externo", "entrega-mercadorias"].includes(location.pathname.split("/")[2]))
-              ? `Olá, ${profile?.displayName?.split(" ")[0] || "Colaborador"}`
-              : location.pathname.split("/").pop()?.replace(/-/g, " ") ||
-                "Dashboard"}
-          </h1>
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 h-14 flex items-center justify-between px-4 sm:px-6 shrink-0 print:hidden transition-colors">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden p-2 -ml-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 rounded-lg"
+              title="Abrir Menu"
+            >
+              <Menu size={20} />
+            </button>
+            <h1 className="text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-100 capitalize truncate">
+              {location.pathname === "/admin" || (location.pathname.startsWith("/admin/") && location.pathname.split("/").length === 3 && ["financeiro", "comercial", "expedicao", "comercial-externo", "entrega-mercadorias"].includes(location.pathname.split("/")[2]))
+                ? `Olá, ${profile?.displayName?.split(" ")[0] || "Colaborador"}`
+                : location.pathname.split("/").pop()?.replace(/-/g, " ") ||
+                  "Dashboard"}
+            </h1>
+          </div>
+
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Command Palette Quick Search Button */}
+            <button
+              type="button"
+              onClick={() => setIsCommandPaletteOpen(true)}
+              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-xs font-medium transition-all cursor-pointer shadow-2xs group"
+              title="Buscar telas, O.S., relatórios ou ações (Ctrl+K)"
+            >
+              <Search size={14} className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200" />
+              <span className="hidden lg:inline">Buscar no sistema...</span>
+              <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded border border-slate-300 dark:border-slate-700 shadow-2xs">
+                Ctrl K
+              </kbd>
+            </button>
+
+            {/* Mobile search icon */}
+            <button
+              type="button"
+              onClick={() => setIsCommandPaletteOpen(true)}
+              className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xs cursor-pointer"
+              title="Buscar no sistema"
+            >
+              <Search size={18} />
+            </button>
+
             {isAdmin && <FranqueadaSwitcher />}
             {isAdmin && (
               <button
                 type="button"
                 onClick={() => setIsGlobalCsvModalOpen(true)}
-                className="px-3.5 py-2 rounded-xl text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/90 transition-all flex items-center gap-1.5 shadow-2xs font-bold text-xs cursor-pointer active:scale-95"
+                className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/90 dark:border-emerald-800 transition-all flex items-center gap-1.5 shadow-2xs font-bold text-xs cursor-pointer active:scale-95"
                 title="Exportar dados cadastrais do Firestore em CSV (Backup e Auditoria)"
               >
-                <FileSpreadsheet size={16} className="text-emerald-600 shrink-0" />
+                <FileSpreadsheet size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span className="hidden sm:inline">Exportar CSV</span>
               </button>
             )}
@@ -650,7 +695,7 @@ export default function AdminLayout() {
                 localStorage.removeItem("union_admin_tour_completed");
                 setTourTrigger(prev => prev + 1);
               }}
-              className="p-2 rounded-xl text-[#0071e3] hover:bg-[#0071e3]/10 transition-all flex items-center gap-2 border border-[#0071e3]/20 bg-white shadow-xs cursor-pointer animate-pulse"
+              className="p-2 rounded-xl text-[#0071e3] hover:bg-[#0071e3]/10 transition-all flex items-center gap-2 border border-[#0071e3]/20 bg-white dark:bg-slate-900 shadow-xs cursor-pointer"
               title="Iniciar Tour de Boas-vindas"
             >
               <HelpCircle size={18} />
@@ -669,7 +714,8 @@ export default function AdminLayout() {
           </div>
         </header>
         <div className="flex-1 overflow-auto print:overflow-visible print:block py-4 px-2 sm:px-4 md:px-6 print:p-0 bg-slate-50 dark:bg-slate-900 print:bg-white text-black">
-          <div className="w-[98%] max-w-[98%] mx-auto flex flex-col gap-6">
+          <div className="w-[98%] max-w-[98%] mx-auto flex flex-col gap-4">
+            <Breadcrumbs />
             <Suspense fallback={null}>
               <AfiliacaoOverdueAlert />
             </Suspense>
@@ -680,6 +726,11 @@ export default function AdminLayout() {
             <Suspense fallback={null}>
               <GuidedTour key={tourTrigger} forceStart={tourTrigger > 0} />
               <AdminNotifications />
+              <CommandPalette
+                isOpen={isCommandPaletteOpen}
+                onClose={() => setIsCommandPaletteOpen(false)}
+                onOpenCsvModal={() => setIsGlobalCsvModalOpen(true)}
+              />
               {isGlobalCsvModalOpen && (
                 <BackupCsvModal
                   isOpen={isGlobalCsvModalOpen}
