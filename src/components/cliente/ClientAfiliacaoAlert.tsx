@@ -87,29 +87,29 @@ export const ClientAfiliacaoAlert: React.FC = () => {
     <div className="mb-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
       {/* Alerta de Atraso */}
       {overdueDocs.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 shadow-sm relative">
+        <div className="bg-red-50 rounded-2xl p-5 shadow-md relative">
           <div className="flex items-start gap-4">
-            <div className="bg-red-100 p-2 rounded-full shrink-0">
+            <div className="bg-red-100 p-2.5 rounded-full shrink-0">
               <AlertTriangle className="text-red-600" size={24} />
             </div>
             <div className="flex-1 pr-6">
-              <h3 className="text-red-800 font-bold text-[15px] mb-1">
+              <h3 className="text-red-900 text-lg font-normal mb-1">
                 Atenção: Você possui boleto de afiliação em atraso
               </h3>
-              <p className="text-red-700 text-sm mb-2">
+              <p className="text-red-700 text-sm mb-2 leading-relaxed">
                 Identificamos que há mensalidade(s) pendente(s) junto à União Condominial.
                 <br />
-                <strong>Aviso:</strong> O boleto bancário leva até dois dias úteis para ser compensado. Caso já tenha realizado o pagamento neste período, por favor, desconsidere esta mensagem.
+                <span className="font-medium">Aviso:</span> O boleto bancário leva até dois dias úteis para ser compensado. Caso já tenha realizado o pagamento neste período, por favor, desconsidere esta mensagem.
               </p>
               <div className="mt-3">
-                <Link to="/cliente/suporte" className="text-sm font-bold text-red-700 hover:text-red-800 hover:underline">
+                <Link to="/cliente/suporte" className="text-base text-red-800 hover:text-red-950 font-normal hover:underline">
                   Falar com o Suporte →
                 </Link>
               </div>
             </div>
             <button 
               onClick={() => setVisible(false)}
-              className="absolute top-4 right-4 text-red-400 hover:text-red-600 hover:bg-red-100 p-1 rounded-full transition-colors"
+              className="absolute top-4 right-4 text-red-400 hover:text-red-600 hover:bg-red-100 p-1.5 rounded-full transition-colors"
               title="Fechar alerta"
             >
               <X size={18} />
@@ -120,13 +120,13 @@ export const ClientAfiliacaoAlert: React.FC = () => {
 
       {/* Alerta de Vencimento Próximo */}
       {upcomingDocs.length > 0 && overdueDocs.length === 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-sm relative">
+        <div className="bg-amber-50 rounded-2xl p-5 shadow-md relative">
           <div className="flex items-start gap-4">
-            <div className="bg-amber-100 p-2 rounded-full shrink-0">
+            <div className="bg-amber-100 p-2.5 rounded-full shrink-0">
               <Clock className="text-amber-600" size={24} />
             </div>
             <div className="flex-1 pr-6">
-              <h3 className="text-amber-800 font-bold text-[15px] mb-1">
+              <h3 className="text-amber-900 text-lg font-normal mb-1">
                 Aviso de Vencimento Próximo
               </h3>
               
@@ -134,15 +134,15 @@ export const ClientAfiliacaoAlert: React.FC = () => {
                 const dia = String(doc.vencDate.getDate()).padStart(2, '0');
                 const mes = String(doc.vencDate.getMonth() + 1).padStart(2, '0');
                 return (
-                  <p key={doc.id} className="text-amber-800 font-medium text-sm">
-                    Esteja atento a data de vencimento de sua Anuidade, e informe o seu vence dia: <strong>{dia}/{mes}</strong>
+                  <p key={doc.id} className="text-amber-800 text-base font-normal">
+                    Esteja atento a data de vencimento de sua Anuidade, e informe o seu vence dia: <span className="font-medium text-amber-950">{dia}/{mes}</span>
                   </p>
                 );
               })}
             </div>
             <button 
               onClick={() => setVisible(false)}
-              className="absolute top-4 right-4 text-amber-400 hover:text-amber-600 hover:bg-amber-100 p-1 rounded-full transition-colors"
+              className="absolute top-4 right-4 text-amber-400 hover:text-amber-600 hover:bg-amber-100 p-1.5 rounded-full transition-colors"
               title="Fechar alerta"
             >
               <X size={18} />

@@ -125,19 +125,19 @@ export default function LocalEntrega() {
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#0071e3] text-white flex items-center justify-center">
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div className="bg-white rounded-3xl shadow-md overflow-hidden">
+        <div className="p-6 md:p-8 flex items-center gap-4 bg-gradient-to-r from-slate-50 to-white">
+          <div className="w-12 h-12 rounded-2xl bg-[#0071e3] text-white flex items-center justify-center shadow-md">
              <MapPin className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Localização do Condomínio</h1>
-            <p className="text-sm text-slate-500">Defina a localização do condomínio no mapa e compartilhe se necessário.</p>
+            <h1 className="text-2xl font-normal text-slate-900 tracking-tight">Localização do Condomínio</h1>
+            <p className="text-sm text-slate-500 font-normal">Defina a localização do condomínio no mapa e compartilhe se necessário.</p>
           </div>
         </div>
 
-        <div className="p-0 border-b border-slate-100 h-[400px] relative overflow-hidden bg-slate-50">
+        <div className="p-0 h-[400px] relative overflow-hidden bg-slate-50">
           <iframe
             width="100%"
             height="100%"
@@ -151,15 +151,15 @@ export default function LocalEntrega() {
           ></iframe>
         </div>
 
-        <div className="p-6 flex flex-col sm:flex-row justify-between items-center bg-white gap-4">
+        <div className="p-6 md:p-8 flex flex-col sm:flex-row justify-between items-center bg-white gap-4">
            <div>
-              <p className="text-sm font-semibold text-slate-900">Posição atual: <span className="font-mono text-slate-600 ml-1">{lat.toFixed(6)}, {lng.toFixed(6)}</span></p>
-              <p className="text-xs text-emerald-600 mt-1 font-medium">{successMsg}</p>
+              <p className="text-sm font-medium text-slate-900">Posição atual: <span className="font-mono text-slate-600 ml-1">{lat.toFixed(6)}, {lng.toFixed(6)}</span></p>
+              <p className="text-xs text-emerald-600 mt-1 font-normal">{successMsg}</p>
            </div>
            <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleUseMyLocation}
-                className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 rounded-2xl text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors shadow-xs"
               >
                  <Target className="w-4 h-4 text-slate-500" />
                  Usar minha localização
@@ -168,14 +168,14 @@ export default function LocalEntrega() {
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition"
+                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 rounded-2xl text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors shadow-xs"
               >
                  <Share2 className="w-4 h-4 text-emerald-600" />
                  Enviar por WhatsApp
               </a>
               <button
                 onClick={handleSaveLocation}
-                className="flex items-center gap-2 px-6 py-2 bg-[#0071e3] rounded-lg text-sm font-bold text-white hover:bg-[#0071e3]/95 transition"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#0071e3] rounded-2xl text-sm font-medium text-white hover:bg-[#0071e3]/90 transition-colors shadow-md"
               >
                  Salvar local
               </button>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { initFirebase } from "../../lib/firebase";
@@ -12,6 +13,7 @@ interface SignupFormProps {
 }
 
 export default function SignupForm({ onGoToLogin }: SignupFormProps) {
+  const navigate = useNavigate();
   const [tipoPessoa, setTipoPessoa] = useState<"Fisica" | "Juridica">("Juridica");
   const [formData, setFormData] = useState<any>({});
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -236,33 +238,35 @@ export default function SignupForm({ onGoToLogin }: SignupFormProps) {
     <div className="max-w-2xl mx-auto w-full">
       <div className="text-center mb-8">
         <div className="flex justify-center mb-6">
-           <CompanyLogo className="w-auto h-[169px] object-contain" />
+           <CompanyLogo className="w-[45%] max-w-[45%] h-auto object-contain mx-auto" />
         </div>
         {!(message && message.type === 'success') && (
           <>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Criar Conta</h1>
-            <p className="text-[16.1px] text-slate-500">Cadastre-se e comece a acumular cashback.</p>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2 text-center w-full">Criar Conta</h1>
+            <p className="text-[16.1px] text-slate-500 text-center w-full mx-auto">Cadastre-se e comece a acumular cashback.</p>
           </>
         )}
       </div>
 
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
         {!(message && message.type === 'success') && (
-          <div className="flex bg-slate-100 p-1 rounded-xl w-fit mb-8">
-            <button
-              type="button"
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${tipoPessoa === "Fisica" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-              onClick={() => setTipoPessoa("Fisica")}
-            >
-              Pessoa Física
-            </button>
-            <button
-              type="button"
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${tipoPessoa === "Juridica" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-              onClick={() => setTipoPessoa("Juridica")}
-            >
-              Pessoa Jurídica
-            </button>
+          <div className="flex justify-center mb-8">
+            <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+              <button
+                type="button"
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${tipoPessoa === "Fisica" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                onClick={() => setTipoPessoa("Fisica")}
+              >
+                Pessoa Física
+              </button>
+              <button
+                type="button"
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${tipoPessoa === "Juridica" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                onClick={() => setTipoPessoa("Juridica")}
+              >
+                Pessoa Jurídica
+              </button>
+            </div>
           </div>
         )}
 
@@ -579,8 +583,12 @@ export default function SignupForm({ onGoToLogin }: SignupFormProps) {
         <div className="mt-6 text-center text-[16.1px]">
             <span className="text-slate-500 mr-2">Já tem conta?</span>
             <button
-              onClick={onGoToLogin}
-               className="font-semibold text-brand-dark hover:underline"
+              type="button"
+              onClick={() => {
+                onGoToLogin();
+                navigate("/minha-conta");
+              }}
+              className="font-semibold text-brand-dark hover:underline"
             >
                Entrar
             </button>

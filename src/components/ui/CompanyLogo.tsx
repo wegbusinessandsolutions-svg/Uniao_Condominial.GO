@@ -36,7 +36,7 @@ export function CompanyLogo({ className }: { className?: string }) {
     <img 
       src={logoUrl} 
       alt="Logomarca da Empresa" 
-      className={className || "w-auto h-32 object-contain"} 
+      className={className || "w-[45%] max-w-[45%] h-auto object-contain mx-auto"} 
     />
   );
 }

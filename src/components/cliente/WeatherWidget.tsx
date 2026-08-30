@@ -4,9 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 
 interface WeatherWidgetProps {
   cidade?: string;
+  className?: string;
 }
 
-const WeatherWidget: React.FC<WeatherWidgetProps> = ({ cidade: propCidade }) => {
+const WeatherWidget: React.FC<WeatherWidgetProps> = ({ cidade: propCidade, className = "" }) => {
   const { profile } = useAuth();
   const cidade = (propCidade || profile?.cidade || (profile as any)?.city || "Goiânia").trim();
   const [weather, setWeather] = useState<{ temp: number; code: number } | null>(null);
@@ -87,7 +88,7 @@ const WeatherWidget: React.FC<WeatherWidgetProps> = ({ cidade: propCidade }) => 
 
   if (loading && !weather) {
     return (
-      <div className="bg-white border border-slate-200/80 shadow-xs px-4 py-2 rounded-2xl flex items-center gap-2 text-slate-600 font-medium text-xs sm:text-sm">
+      <div className={`bg-white shadow-xs px-4 py-2.5 rounded-2xl flex items-center gap-2 text-slate-600 text-xs sm:text-sm font-normal min-h-[56px] ${className}`}>
         <Loader2 className="w-4 h-4 text-slate-400 animate-spin" />
         <span className="text-slate-500 text-xs sm:text-sm">Em {cidade || "Goiânia"}, carregando...</span>
       </div>
@@ -95,10 +96,10 @@ const WeatherWidget: React.FC<WeatherWidgetProps> = ({ cidade: propCidade }) => 
   }
 
   return (
-    <div className="bg-white border border-slate-200/80 shadow-xs px-4 py-2 rounded-2xl flex items-center gap-2 text-slate-700 font-medium text-xs sm:text-sm hover:shadow-sm transition-shadow">
+    <div className={`bg-white shadow-xs hover:shadow-md px-4 py-2.5 rounded-2xl flex items-center gap-2 text-slate-700 text-xs sm:text-sm font-normal transition-shadow min-h-[56px] ${className}`}>
       <span>
-        Em <span className="font-bold text-slate-900">{cidade || "Goiânia"}</span>,{" "}
-        <span className="font-bold text-slate-900">{tempNumber} Graus</span>
+        Em <span className="text-slate-900 font-medium">{cidade || "Goiânia"}</span>,{" "}
+        <span className="text-slate-900 font-medium">{tempNumber} Graus</span>
       </span>
       {currentInfo.icon}
     </div>

@@ -432,16 +432,16 @@ export default function MuralCondominial() {
   };
 
   return (
-    <div id="mural" className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border-[6px] border-slate-100 relative">
+    <div id="mural" className="bg-white rounded-3xl p-6 sm:p-8 shadow-md relative">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-6">
         <div className="max-w-2xl">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Megaphone className="text-brand-dark w-5 h-5 shrink-0" />
+          <h2 className="text-2xl font-normal text-slate-900 flex items-center gap-2">
+            <Megaphone className="text-brand-dark w-6 h-6 shrink-0" />
             <span>Informativo Condomínios - Goiânia</span>
           </h2>
-          <p className="text-slate-600 text-sm mt-2 leading-relaxed">
-            Espaço colaborativo exclusivo para Afiliados da União Condominial.<span className="text-emerald-600 font-semibold">GO</span>. Compartilhe comunicados, recomendações ou publique suas <strong>dúvidas</strong> para que outros síndicos e gestores possam responder e contribuir.
+          <p className="text-slate-600 text-sm mt-2 leading-relaxed font-normal">
+            Espaço colaborativo exclusivo para Afiliados da União Condominial.<span className="text-emerald-600 font-medium">GO</span>. Compartilhe comunicados, recomendações ou publique suas <span className="text-slate-800 font-medium">dúvidas</span> para que outros síndicos e gestores possam responder e contribuir.
           </p>
         </div>
 
@@ -449,14 +449,14 @@ export default function MuralCondominial() {
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
           <button
             onClick={() => handleOpenModal("duvida")}
-            className="flex-1 sm:flex-none bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-semibold py-2.5 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md cursor-pointer"
+            className="flex-1 sm:flex-none bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-medium py-2.5 px-4 rounded-2xl text-sm flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg cursor-pointer"
           >
             <HelpCircle size={17} />
             <span>Tirar Dúvida / Perguntar</span>
           </button>
           <button
             onClick={() => handleOpenModal("comunicado")}
-            className="flex-1 sm:flex-none bg-brand-dark hover:bg-brand-dark/90 active:scale-95 text-white font-semibold py-2.5 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg cursor-pointer"
+            className="flex-1 sm:flex-none bg-brand-dark hover:bg-brand-dark/90 active:scale-95 text-white font-medium py-2.5 px-4 rounded-2xl text-sm flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg cursor-pointer"
           >
             <MessageSquarePlus size={17} />
             <span>Incluir Comunicado</span>
@@ -468,31 +468,31 @@ export default function MuralCondominial() {
       <div className="space-y-3 mb-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Filter Pills */}
-          <div className="inline-flex p-1 bg-slate-100 rounded-xl gap-1 text-xs font-semibold">
+          <div className="inline-flex p-1.5 bg-slate-100/90 rounded-2xl gap-1 text-xs font-medium shadow-2xs">
             <button
               onClick={() => setFilterType("todos")}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                 filterType === "todos"
-                  ? "bg-white text-slate-900 shadow-2xs"
+                  ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <span>Todos</span>
-              <span className="px-1.5 py-0.2 bg-slate-200/80 rounded-full text-[10px]">
+              <span className="px-2 py-0.5 bg-slate-200/80 rounded-full text-[11px]">
                 {countsByType.total}
               </span>
             </button>
             <button
               onClick={() => setFilterType("duvida")}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                 filterType === "duvida"
-                  ? "bg-amber-500 text-white shadow-2xs font-bold"
+                  ? "bg-amber-500 text-white shadow-sm font-medium"
                   : "text-slate-600 hover:text-amber-700"
               }`}
             >
-              <HelpCircle size={13} />
+              <HelpCircle size={14} />
               <span>Dúvidas & Perguntas</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+              <span className={`px-2 py-0.5 rounded-full text-[11px] ${
                 filterType === "duvida" ? "bg-amber-600 text-white" : "bg-amber-100 text-amber-800"
               }`}>
                 {countsByType.duvidas}
@@ -500,15 +500,15 @@ export default function MuralCondominial() {
             </button>
             <button
               onClick={() => setFilterType("comunicado")}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                 filterType === "comunicado"
-                  ? "bg-brand-dark text-white shadow-2xs font-bold"
+                  ? "bg-brand-dark text-white shadow-sm font-medium"
                   : "text-slate-600 hover:text-brand-dark"
               }`}
             >
-              <Megaphone size={13} />
+              <Megaphone size={14} />
               <span>Comunicados</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+              <span className={`px-2 py-0.5 rounded-full text-[11px] ${
                 filterType === "comunicado" ? "bg-brand-dark/80 text-white" : "bg-slate-200/80 text-slate-700"
               }`}>
                 {countsByType.comunicados}
@@ -517,15 +517,15 @@ export default function MuralCondominial() {
             {profile?.uid && (
               <button
                 onClick={() => setFilterType("meus")}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                   filterType === "meus"
-                    ? "bg-emerald-600 text-white shadow-2xs font-bold"
+                    ? "bg-emerald-600 text-white shadow-sm font-medium"
                     : "text-slate-600 hover:text-emerald-700"
                 }`}
               >
-                <User size={13} />
+                <User size={14} />
                 <span>Minhas Publicações</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                <span className={`px-2 py-0.5 rounded-full text-[11px] ${
                   filterType === "meus" ? "bg-emerald-700 text-white" : "bg-emerald-100 text-emerald-800"
                 }`}>
                   {countsByType.meus}
@@ -537,7 +537,7 @@ export default function MuralCondominial() {
 
         {/* Search Input */}
         <div className="relative flex items-center">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
             <Search size={18} />
           </div>
           <input
@@ -545,7 +545,7 @@ export default function MuralCondominial() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por título, conteúdo, condomínio, setor ou tipo..."
-            className="w-full pl-10 pr-10 py-2.5 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 transition-all focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark shadow-2xs"
+            className="w-full pl-11 pr-10 py-3 bg-slate-50 hover:bg-slate-100/70 focus:bg-white rounded-2xl text-sm text-slate-800 placeholder-slate-400 transition-all focus:outline-none focus:ring-2 focus:ring-brand-dark/20 shadow-sm"
           />
           {searchTerm && (
             <button
@@ -558,7 +558,7 @@ export default function MuralCondominial() {
           )}
         </div>
         {searchTerm && (
-          <div className="flex items-center justify-between px-1 text-xs text-slate-500">
+          <div className="flex items-center justify-between px-1 text-xs text-slate-500 font-normal">
             <span>
               {filteredNotices.length === 1
                 ? "1 item encontrado"
@@ -575,12 +575,12 @@ export default function MuralCondominial() {
       </div>
 
       {/* Main Board Grid */}
-      <div className="bg-slate-50/80 rounded-xl p-6 sm:p-8 shadow-[inset_0_4px_12px_rgba(0,0,0,0.05)] border border-slate-200/60 min-h-[300px]">
+      <div className="bg-slate-50/70 rounded-3xl p-6 sm:p-8 shadow-inner min-h-[300px]">
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="h-56 bg-white/60 rounded-xl animate-pulse"></div>
-            <div className="h-56 bg-white/60 rounded-xl animate-pulse"></div>
-            <div className="h-56 bg-white/60 rounded-xl animate-pulse"></div>
+            <div className="h-56 bg-white/80 rounded-2xl animate-pulse shadow-sm"></div>
+            <div className="h-56 bg-white/80 rounded-2xl animate-pulse shadow-sm"></div>
+            <div className="h-56 bg-white/80 rounded-2xl animate-pulse shadow-sm"></div>
           </div>
         ) : filteredNotices.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
@@ -592,15 +592,15 @@ export default function MuralCondominial() {
               return (
                 <div 
                   key={notice.id} 
-                  className={`bg-white p-5 sm:p-6 shadow-[2px_4px_12px_rgba(0,0,0,0.06)] border border-slate-200/80 relative flex flex-col justify-between transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:z-10 ${
+                  className={`bg-white p-6 rounded-2xl shadow-md relative flex flex-col justify-between transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:z-10 ${
                     index % 3 === 0 ? '-rotate-1' : index % 3 === 1 ? 'rotate-1' : 'rotate-0'
                   }`}
                 >
                   {/* Percevejo (Pin) */}
-                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full shadow-sm z-10 flex items-center justify-center border ${
+                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full shadow-md z-10 flex items-center justify-center ${
                     isDuvida 
-                      ? "bg-gradient-to-br from-amber-400 to-amber-600 border-amber-600" 
-                      : "bg-gradient-to-br from-[#0071e3] to-brand-dark border-brand-dark/80"
+                      ? "bg-gradient-to-br from-amber-400 to-amber-600" 
+                      : "bg-gradient-to-br from-[#0071e3] to-brand-dark"
                   }`}>
                     <div className="absolute top-[3px] left-[3px] w-1.5 h-1.5 rounded-full bg-white/70"></div>
                   </div>
@@ -609,17 +609,17 @@ export default function MuralCondominial() {
                     {/* Top Badges */}
                     <div className="flex flex-wrap items-center justify-between gap-1.5 mb-3 mt-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider line-clamp-1" title={notice.condominio}>
+                        <span className="bg-slate-100 text-slate-700 text-[11px] font-medium px-2.5 py-1 rounded-lg uppercase tracking-wider line-clamp-1 shadow-2xs" title={notice.condominio}>
                           {notice.condominio}
                         </span>
                         {notice.status === "em_revisao" && (
-                          <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1">
-                            <Clock size={10} />
+                          <span className="bg-amber-100 text-amber-800 text-[11px] font-medium px-2 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs">
+                            <Clock size={11} />
                             <span>Em Revisão</span>
                           </span>
                         )}
                         {notice.status === "rejeitado" && (
-                          <span className="bg-red-100 text-red-800 border border-red-300 text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                          <span className="bg-red-100 text-red-800 text-[11px] font-medium px-2 py-0.5 rounded-lg shadow-2xs">
                             Rejeitado
                           </span>
                         )}
@@ -627,13 +627,13 @@ export default function MuralCondominial() {
                       
                       <div className="flex items-center gap-1.5">
                         {isDuvida ? (
-                          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            <HelpCircle size={12} className="text-amber-600" />
+                          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 text-[11px] font-medium px-2.5 py-1 rounded-full shadow-2xs">
+                            <HelpCircle size={13} className="text-amber-600" />
                             <span>Dúvida</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            <Megaphone size={12} className="text-blue-600" />
+                          <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 text-[11px] font-medium px-2.5 py-1 rounded-full shadow-2xs">
+                            <Megaphone size={13} className="text-blue-600" />
                             <span>Comunicado</span>
                           </span>
                         )}
@@ -647,25 +647,25 @@ export default function MuralCondominial() {
                               handleOpenEditModal(notice);
                             }}
                             title="Alterar este comunicado"
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 transition-all cursor-pointer shadow-2xs active:scale-95"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium text-amber-800 bg-amber-50 hover:bg-amber-100 transition-all cursor-pointer shadow-xs active:scale-95"
                           >
-                            <Edit3 size={11} className="text-amber-700" />
+                            <Edit3 size={12} className="text-amber-700" />
                             <span>Alterar</span>
                           </button>
                         )}
                       </div>
                     </div>
 
-                    <h3 className="font-bold text-slate-900 text-base sm:text-lg mb-2 leading-tight">
+                    <h3 className="font-medium text-slate-900 text-lg sm:text-xl mb-2 leading-snug">
                       {notice.titulo}
                     </h3>
-                    <p className="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed line-clamp-6">
+                    <p className="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed line-clamp-6 font-normal">
                       {notice.texto}
                     </p>
                   </div>
                   
                   {/* Bottom Footer & Interaction */}
-                  <div className="mt-4 pt-3 border-t border-slate-100 space-y-3">
+                  <div className="mt-5 pt-3 space-y-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-500 text-[11px] font-medium font-mono">
                         {formatNoticeDate(notice.createdAt)}
@@ -682,10 +682,10 @@ export default function MuralCondominial() {
                     <button
                       type="button"
                       onClick={() => setSelectedNotice(notice)}
-                      className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer ${
+                      className={`w-full py-2.5 px-3.5 rounded-2xl text-xs font-medium transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md ${
                         isDuvida
-                          ? "bg-amber-50/80 hover:bg-amber-100 text-amber-900 border-amber-200/80"
-                          : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                          ? "bg-amber-50/90 hover:bg-amber-100 text-amber-900"
+                          : "bg-slate-100 hover:bg-slate-200/80 text-slate-700"
                       }`}
                     >
                       <MessageCircle size={15} className={isDuvida ? "text-amber-600" : "text-slate-500"} />
@@ -702,17 +702,17 @@ export default function MuralCondominial() {
           </div>
         ) : searchTerm || filterType !== "todos" ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-white text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200 shadow-sm">
+            <div className="w-16 h-16 bg-white text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
               <Search size={28} />
             </div>
-            <h3 className="text-slate-800 font-bold text-lg mb-1">Nenhum resultado encontrado</h3>
-            <p className="text-slate-500 text-sm max-w-sm mx-auto mb-4">
+            <h3 className="text-slate-800 font-medium text-lg mb-1">Nenhum resultado encontrado</h3>
+            <p className="text-slate-500 text-sm max-w-sm mx-auto mb-4 font-normal">
               Não encontramos nenhuma publicação correspondente aos filtros aplicados.
             </p>
             <div className="flex items-center justify-center gap-2">
               <button
                 onClick={() => { setSearchTerm(""); setFilterType("todos"); }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-dark text-white rounded-xl text-xs font-semibold hover:bg-brand-dark/90 transition-all shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-dark text-white rounded-xl text-xs font-medium hover:bg-brand-dark/90 transition-all shadow-sm cursor-pointer"
               >
                 <X size={14} />
                 Limpar filtros
@@ -721,24 +721,24 @@ export default function MuralCondominial() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="w-20 h-20 bg-white text-brand-dark/60 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm border border-slate-200 shadow-sm">
+            <div className="w-20 h-20 bg-white text-brand-dark/60 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm shadow-md">
               <Megaphone size={32} />
             </div>
-            <h3 className="text-slate-800 font-bold text-lg mb-2">Nenhuma publicação no momento</h3>
-            <p className="text-slate-500 text-sm max-w-sm mx-auto font-medium mb-5">
+            <h3 className="text-slate-800 font-medium text-lg mb-2">Nenhuma publicação no momento</h3>
+            <p className="text-slate-500 text-sm max-w-sm mx-auto font-normal mb-5">
               Seja o primeiro a publicar um comunicado ou tirar uma dúvida com a comunidade de síndicos.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => handleOpenModal("duvida")}
-                className="bg-amber-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-amber-600 transition-all shadow-xs flex items-center gap-1.5"
+                className="bg-amber-500 text-white text-xs font-medium px-4 py-2.5 rounded-xl hover:bg-amber-600 transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
               >
                 <HelpCircle size={15} />
                 <span>Fazer uma Pergunta</span>
               </button>
               <button
                 onClick={() => handleOpenModal("comunicado")}
-                className="bg-brand-dark text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-brand-dark/90 transition-all shadow-xs flex items-center gap-1.5"
+                className="bg-brand-dark text-white text-xs font-medium px-4 py-2.5 rounded-xl hover:bg-brand-dark/90 transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
               >
                 <MessageSquarePlus size={15} />
                 <span>Incluir Comunicado</span>
@@ -751,54 +751,54 @@ export default function MuralCondominial() {
       {/* MODAL 1: NEW NOTICE / DOUBT CREATION */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+          <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/70">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <div className="p-6 flex justify-between items-center bg-slate-50/80">
+              <h3 className="text-xl font-normal text-slate-800 flex items-center gap-2">
                 {formData.tipo === "duvida" ? (
                   <>
-                    <HelpCircle className="text-amber-600 w-5 h-5" />
+                    <HelpCircle className="text-amber-600 w-6 h-6" />
                     <span>Publicar Dúvida / Pergunta para Síndicos</span>
                   </>
                 ) : (
                   <>
-                    <MessageSquarePlus className="text-brand-dark w-5 h-5" />
+                    <MessageSquarePlus className="text-brand-dark w-6 h-6" />
                     <span>Incluir Comunicado no Mural</span>
                   </>
                 )}
               </h3>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1 text-base font-bold cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 text-lg font-medium cursor-pointer"
               >
                 ✕
               </button>
             </div>
             
-            <div className="p-5 overflow-y-auto space-y-4">
+            <div className="p-6 overflow-y-auto space-y-5">
               {/* Type Selector (Comunicado vs Dúvida) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">
+                <label className="block text-xs font-medium text-slate-700 uppercase tracking-wide mb-2">
                   Tipo da Publicação
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, tipo: "duvida" })}
-                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                    className={`p-4 rounded-2xl text-left transition-all cursor-pointer flex items-start gap-3 shadow-xs ${
                       formData.tipo === "duvida"
-                        ? "border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20"
-                        : "border-slate-200 hover:bg-slate-50 text-slate-600"
+                        ? "bg-amber-50 shadow-md ring-2 ring-amber-500/30"
+                        : "bg-slate-50 hover:bg-slate-100 text-slate-600"
                     }`}
                   >
-                    <div className={`p-2 rounded-lg shrink-0 ${
-                      formData.tipo === "duvida" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-500"
+                    <div className={`p-2.5 rounded-xl shrink-0 ${
+                      formData.tipo === "duvida" ? "bg-amber-500 text-white" : "bg-white text-slate-500 shadow-2xs"
                     }`}>
                       <HelpCircle size={18} />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-slate-900">Dúvida / Pergunta</div>
-                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
+                      <div className="text-sm font-medium text-slate-900">Dúvida / Pergunta</div>
+                      <div className="text-xs text-slate-500 leading-tight mt-0.5 font-normal">
                         Para outros síndicos responderem e trocarem experiências.
                       </div>
                     </div>
@@ -807,20 +807,20 @@ export default function MuralCondominial() {
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, tipo: "comunicado" })}
-                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                    className={`p-4 rounded-2xl text-left transition-all cursor-pointer flex items-start gap-3 shadow-xs ${
                       formData.tipo === "comunicado"
-                        ? "border-brand-dark bg-brand-light/10 ring-2 ring-brand-dark/20"
-                        : "border-slate-200 hover:bg-slate-50 text-slate-600"
+                        ? "bg-brand-light/10 shadow-md ring-2 ring-brand-dark/30"
+                        : "bg-slate-50 hover:bg-slate-100 text-slate-600"
                     }`}
                   >
-                    <div className={`p-2 rounded-lg shrink-0 ${
-                      formData.tipo === "comunicado" ? "bg-brand-dark text-white" : "bg-slate-100 text-slate-500"
+                    <div className={`p-2.5 rounded-xl shrink-0 ${
+                      formData.tipo === "comunicado" ? "bg-brand-dark text-white" : "bg-white text-slate-500 shadow-2xs"
                     }`}>
                       <Megaphone size={18} />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-slate-900">Comunicado</div>
-                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
+                      <div className="text-sm font-medium text-slate-900">Comunicado</div>
+                      <div className="text-xs text-slate-500 leading-tight mt-0.5 font-normal">
                         Informação geral, aviso ou recomendação de serviço.
                       </div>
                     </div>
@@ -829,9 +829,9 @@ export default function MuralCondominial() {
               </div>
 
               {/* Informative Alert */}
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5">
-                <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-800 leading-relaxed">
+              <div className="bg-amber-50 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
+                <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 leading-relaxed font-normal">
                   As publicações passam por uma breve revisão gramatical e ortográfica da equipe administrativa. Assim que aprovadas, ficarão visíveis para todos os síndicos afiliados.
                 </p>
               </div>
@@ -839,33 +839,33 @@ export default function MuralCondominial() {
               <form id="noticeForm" onSubmit={handleSubmitNotice} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                    <label className="block text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide">
                       Nome do Condomínio
                     </label>
                     <input
                       type="text"
                       disabled
                       value={profile?.displayName || ""}
-                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 text-slate-500 rounded-lg cursor-not-allowed text-xs font-medium"
+                      className="w-full px-3.5 py-2.5 bg-slate-100 text-slate-500 rounded-xl cursor-not-allowed text-xs font-normal shadow-2xs"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                    <label className="block text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide">
                       Setor / Bairro
                     </label>
                     <input
                       type="text"
                       disabled
                       value={profile?.bairro || ""}
-                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 text-slate-500 rounded-lg cursor-not-allowed text-xs font-medium"
+                      className="w-full px-3.5 py-2.5 bg-slate-100 text-slate-500 rounded-xl cursor-not-allowed text-xs font-normal shadow-2xs"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="flex justify-between text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                  <label className="flex justify-between text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide">
                     <span>{formData.tipo === "duvida" ? "Título da Dúvida" : "Título do Comunicado"}</span>
-                    <span className={formData.titulo.length > 200 ? "text-red-500" : "text-slate-400"}>
+                    <span className={formData.titulo.length > 200 ? "text-red-500 font-normal" : "text-slate-400 font-normal"}>
                       {formData.titulo.length}/200
                     </span>
                   </label>
@@ -875,7 +875,7 @@ export default function MuralCondominial() {
                     maxLength={200}
                     value={formData.titulo}
                     onChange={(e) => setFormData({...formData, titulo: e.target.value})}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark text-sm"
+                    className="w-full px-4 py-3 bg-slate-50 focus:bg-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-dark/20 text-sm shadow-xs font-normal"
                     placeholder={
                       formData.tipo === "duvida" 
                         ? "Ex: Recomendação de fornecedor para recarga de extintores" 
@@ -885,9 +885,9 @@ export default function MuralCondominial() {
                 </div>
 
                 <div>
-                  <label className="flex justify-between text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                  <label className="flex justify-between text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide">
                     <span>{formData.tipo === "duvida" ? "Detalhes da Dúvida / Pergunta" : "Texto do Informativo"}</span>
-                    <span className={formData.texto.length > 800 ? "text-red-500" : "text-slate-400"}>
+                    <span className={formData.texto.length > 800 ? "text-red-500 font-normal" : "text-slate-400 font-normal"}>
                       {formData.texto.length}/800
                     </span>
                   </label>
@@ -897,7 +897,7 @@ export default function MuralCondominial() {
                     rows={5}
                     value={formData.texto}
                     onChange={(e) => setFormData({...formData, texto: e.target.value})}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark text-sm resize-none"
+                    className="w-full px-4 py-3 bg-slate-50 focus:bg-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-dark/20 text-sm resize-none shadow-xs font-normal"
                     placeholder={
                       formData.tipo === "duvida"
                         ? "Descreva sua dúvida detalhadamente para que outros síndicos com experiência no assunto possam orientar e responder..."
@@ -909,11 +909,11 @@ export default function MuralCondominial() {
             </div>
             
             {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
+            <div className="p-5 flex justify-end gap-3 bg-slate-50/70">
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                className="px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-200/70 rounded-2xl transition-colors cursor-pointer"
                 disabled={submitting}
               >
                 Cancelar
@@ -922,7 +922,7 @@ export default function MuralCondominial() {
                 type="submit"
                 form="noticeForm"
                 disabled={submitting}
-                className={`px-6 py-2.5 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2 disabled:opacity-70 shadow-md cursor-pointer ${
+                className={`px-6 py-2.5 text-white text-sm font-medium rounded-2xl transition-all flex items-center gap-2 disabled:opacity-70 shadow-md cursor-pointer ${
                   formData.tipo === "duvida" 
                     ? "bg-amber-500 hover:bg-amber-600" 
                     : "bg-brand-dark hover:bg-brand-dark/90"
@@ -948,22 +948,22 @@ export default function MuralCondominial() {
       {/* MODAL 2: VIEW DETAILS & RESPOND TO QUESTION / NOTICE */}
       {selectedNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] border border-slate-100">
+          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* Header */}
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <div className="flex items-center gap-2 flex-wrap">
+            <div className="p-6 flex justify-between items-center bg-slate-50/80">
+              <div className="flex items-center gap-2.5 flex-wrap">
                 {selectedNotice.tipo === "duvida" ? (
-                  <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full border border-amber-200">
+                  <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 text-xs font-medium px-3.5 py-1.5 rounded-full shadow-2xs">
                     <HelpCircle size={15} className="text-amber-600" />
                     <span>Dúvida de Síndico</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">
+                  <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-xs font-medium px-3.5 py-1.5 rounded-full shadow-2xs">
                     <Megaphone size={15} className="text-blue-600" />
                     <span>Comunicado</span>
                   </span>
                 )}
-                <span className="text-xs font-semibold text-slate-500">
+                <span className="text-xs font-normal text-slate-500">
                   {answers.length} {answers.length === 1 ? "resposta" : "respostas"}
                 </span>
 
@@ -971,7 +971,7 @@ export default function MuralCondominial() {
                   <button
                     type="button"
                     onClick={() => handleOpenEditModal(selectedNotice)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition-all shadow-2xs cursor-pointer ml-1"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl text-xs font-medium transition-all shadow-xs cursor-pointer ml-1"
                     title="Alterar este comunicado"
                   >
                     <Edit3 size={13} className="text-amber-700" />
@@ -982,7 +982,7 @@ export default function MuralCondominial() {
 
               <button
                 onClick={() => setSelectedNotice(null)}
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200/60 font-bold text-base cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-xl hover:bg-slate-200/60 font-medium text-lg cursor-pointer"
               >
                 ✕
               </button>
@@ -991,62 +991,62 @@ export default function MuralCondominial() {
             {/* Content Scrollable */}
             <div className="p-6 overflow-y-auto space-y-6 flex-1">
               {/* Original Question/Notice Box */}
-              <div className="bg-slate-50/90 rounded-2xl p-5 border border-slate-200/80 space-y-3">
+              <div className="bg-slate-50/90 rounded-3xl p-6 shadow-sm space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                    <span className="font-medium text-slate-900 bg-white px-3 py-1 rounded-xl shadow-xs">
                       {selectedNotice.condominio}
                     </span>
-                    <span className="text-slate-500">{selectedNotice.bairro}</span>
+                    <span className="text-slate-500 font-normal">{selectedNotice.bairro}</span>
                   </div>
                   <span className="text-slate-400 font-mono text-[11px]">
                     {formatNoticeDate(selectedNotice.createdAt)}
                   </span>
                 </div>
 
-                <h3 className="text-lg font-bold text-slate-900 leading-snug">
+                <h3 className="text-xl font-medium text-slate-900 leading-snug">
                   {selectedNotice.titulo}
                 </h3>
-                <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-normal">
                   {selectedNotice.texto}
                 </p>
               </div>
 
               {/* Answers Section */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <MessageCircle size={17} className="text-brand-dark" />
+                <div className="flex items-center justify-between pb-2">
+                  <h4 className="text-base font-medium text-slate-800 flex items-center gap-2">
+                    <MessageCircle size={18} className="text-brand-dark" />
                     <span>Respostas e Orientações dos Síndicos</span>
                   </h4>
-                  <span className="text-xs text-slate-500 font-medium">
+                  <span className="text-xs text-slate-500 font-normal">
                     {answers.length} {answers.length === 1 ? "contribuição" : "contribuições"}
                   </span>
                 </div>
 
                 {loadingAnswers ? (
                   <div className="space-y-3 py-4">
-                    <div className="h-20 bg-slate-100 rounded-xl animate-pulse"></div>
-                    <div className="h-20 bg-slate-100 rounded-xl animate-pulse"></div>
+                    <div className="h-20 bg-slate-100 rounded-2xl animate-pulse shadow-sm"></div>
+                    <div className="h-20 bg-slate-100 rounded-2xl animate-pulse shadow-sm"></div>
                   </div>
                 ) : answers.length > 0 ? (
                   <div className="space-y-3">
                     {answers.map((answer) => (
                       <div
                         key={answer.id}
-                        className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs space-y-2 hover:border-slate-300 transition-colors"
+                        className="bg-white rounded-3xl p-5 shadow-sm space-y-2 hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-brand-light/20 text-brand-dark font-bold flex items-center justify-center text-xs">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-brand-light/20 text-brand-dark font-medium flex items-center justify-center text-xs shadow-2xs">
                               {answer.condominio ? answer.condominio.charAt(0).toUpperCase() : "S"}
                             </div>
                             <div>
-                              <span className="font-bold text-slate-900 block leading-tight">
+                              <span className="font-medium text-slate-900 block leading-tight text-sm">
                                 {answer.condominio || "Síndico Afiliado"}
                               </span>
                               {answer.bairro && (
-                                <span className="text-[11px] text-slate-500">{answer.bairro}</span>
+                                <span className="text-[11px] text-slate-500 font-normal">{answer.bairro}</span>
                               )}
                             </div>
                           </div>
@@ -1055,19 +1055,19 @@ export default function MuralCondominial() {
                           </span>
                         </div>
 
-                        <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed pl-9">
+                        <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed pl-10 font-normal">
                           {answer.texto}
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-6">
-                    <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <div className="text-center py-8 bg-slate-50/50 rounded-3xl p-6 shadow-2xs">
+                    <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-2xs">
                       <HelpCircle size={24} />
                     </div>
-                    <h5 className="font-bold text-slate-800 text-sm">Nenhuma resposta ainda</h5>
-                    <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+                    <h5 className="font-medium text-slate-800 text-sm">Nenhuma resposta ainda</h5>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 font-normal">
                       Seja o primeiro síndico a responder e compartilhar sua experiência com o colega!
                     </p>
                   </div>
@@ -1075,13 +1075,13 @@ export default function MuralCondominial() {
               </div>
 
               {/* Reply Form */}
-              <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200 space-y-3">
+              <div className="bg-slate-50/80 rounded-3xl p-5 shadow-sm space-y-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                    <Send size={13} className="text-brand-dark" />
-                    Responder como: <strong>{profile?.displayName || "Síndico Afiliado"}</strong>
+                  <span className="font-normal text-slate-700 flex items-center gap-1.5">
+                    <Send size={14} className="text-brand-dark" />
+                    <span>Responder como:</span> <span className="font-medium text-slate-900">{profile?.displayName || "Síndico Afiliado"}</span>
                   </span>
-                  <span className={newAnswerText.length > 800 ? "text-red-500" : "text-slate-400"}>
+                  <span className={newAnswerText.length > 800 ? "text-red-500 font-normal" : "text-slate-400 font-normal"}>
                     {newAnswerText.length}/800
                   </span>
                 </div>
@@ -1094,14 +1094,14 @@ export default function MuralCondominial() {
                     value={newAnswerText}
                     onChange={(e) => setNewAnswerText(e.target.value)}
                     placeholder="Escreva sua resposta, conselho, indicação de fornecedor ou esclarecimento..."
-                    className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark resize-none shadow-2xs"
+                    className="w-full p-3.5 bg-white rounded-2xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 resize-none shadow-xs font-normal"
                   />
 
                   <div className="flex justify-end">
                     <button
                       type="submit"
                       disabled={submittingAnswer || !newAnswerText.trim()}
-                      className="bg-brand-dark hover:bg-brand-dark/90 active:scale-95 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-xs disabled:opacity-50 cursor-pointer"
+                      className="bg-brand-dark hover:bg-brand-dark/90 active:scale-95 text-white text-xs font-medium px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
                     >
                       {submittingAnswer ? (
                         <>
@@ -1121,11 +1121,11 @@ export default function MuralCondominial() {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+            <div className="p-5 bg-slate-50/70 flex justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedNotice(null)}
-                className="px-5 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                className="px-5 py-2.5 text-xs font-medium text-slate-600 bg-white hover:bg-slate-100 rounded-2xl transition-colors cursor-pointer shadow-xs"
               >
                 Fechar
               </button>
@@ -1137,45 +1137,45 @@ export default function MuralCondominial() {
       {/* MODAL 3: EDIT NOTICE (Only available to creator and admin) */}
       {isEditModalOpen && editingNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+          <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/70">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <Edit3 className="text-amber-600 w-5 h-5" />
+            <div className="p-6 flex justify-between items-center bg-slate-50/80">
+              <h3 className="text-xl font-normal text-slate-800 flex items-center gap-2">
+                <Edit3 className="text-amber-600 w-6 h-6" />
                 <span>Alterar Publicação no Mural</span>
               </h3>
               <button 
                 onClick={() => { setIsEditModalOpen(false); setEditingNotice(null); }}
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1 text-base font-bold cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 text-lg font-medium cursor-pointer"
               >
                 ✕
               </button>
             </div>
             
-            <div className="p-5 overflow-y-auto space-y-4">
+            <div className="p-6 overflow-y-auto space-y-5">
               {/* Type Selector (Comunicado vs Dúvida) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">
+                <label className="block text-xs font-medium text-slate-700 uppercase tracking-wide mb-2">
                   Tipo da Publicação
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setEditFormData({ ...editFormData, tipo: "duvida" })}
-                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                    className={`p-4 rounded-2xl text-left transition-all cursor-pointer flex items-start gap-3 shadow-xs ${
                       editFormData.tipo === "duvida"
-                        ? "border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20"
-                        : "border-slate-200 hover:bg-slate-50 text-slate-600"
+                        ? "bg-amber-50 shadow-md ring-2 ring-amber-500/30"
+                        : "bg-slate-50 hover:bg-slate-100 text-slate-600"
                     }`}
                   >
-                    <div className={`p-2 rounded-lg shrink-0 ${
-                      editFormData.tipo === "duvida" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-500"
+                    <div className={`p-2.5 rounded-xl shrink-0 ${
+                      editFormData.tipo === "duvida" ? "bg-amber-500 text-white" : "bg-white text-slate-500 shadow-2xs"
                     }`}>
                       <HelpCircle size={18} />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-slate-900">Dúvida / Pergunta</div>
-                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
+                      <div className="text-sm font-medium text-slate-900">Dúvida / Pergunta</div>
+                      <div className="text-xs text-slate-500 leading-tight mt-0.5 font-normal">
                         Para outros síndicos responderem e trocarem experiências.
                       </div>
                     </div>
@@ -1184,20 +1184,20 @@ export default function MuralCondominial() {
                   <button
                     type="button"
                     onClick={() => setEditFormData({ ...editFormData, tipo: "comunicado" })}
-                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                    className={`p-4 rounded-2xl text-left transition-all cursor-pointer flex items-start gap-3 shadow-xs ${
                       editFormData.tipo === "comunicado"
-                        ? "border-brand-dark bg-brand-light/10 ring-2 ring-brand-dark/20"
-                        : "border-slate-200 hover:bg-slate-50 text-slate-600"
+                        ? "bg-brand-light/10 shadow-md ring-2 ring-brand-dark/30"
+                        : "bg-slate-50 hover:bg-slate-100 text-slate-600"
                     }`}
                   >
-                    <div className={`p-2 rounded-lg shrink-0 ${
-                      editFormData.tipo === "comunicado" ? "bg-brand-dark text-white" : "bg-slate-100 text-slate-500"
+                    <div className={`p-2.5 rounded-xl shrink-0 ${
+                      editFormData.tipo === "comunicado" ? "bg-brand-dark text-white" : "bg-white text-slate-500 shadow-2xs"
                     }`}>
                       <Megaphone size={18} />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-slate-900">Comunicado</div>
-                      <div className="text-[11px] text-slate-500 leading-tight mt-0.5">
+                      <div className="text-sm font-medium text-slate-900">Comunicado</div>
+                      <div className="text-xs text-slate-500 leading-tight mt-0.5 font-normal">
                         Informação geral, aviso ou recomendação de serviço.
                       </div>
                     </div>
@@ -1208,33 +1208,33 @@ export default function MuralCondominial() {
               <form id="editNoticeForm" onSubmit={handleUpdateNotice} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                    <label className="block text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide">
                       Condomínio
                     </label>
                     <input
                       type="text"
                       disabled
                       value={editingNotice.condominio || ""}
-                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 text-slate-500 rounded-lg cursor-not-allowed text-xs font-medium"
+                      className="w-full px-3.5 py-2.5 bg-slate-100 text-slate-500 rounded-xl cursor-not-allowed text-xs font-normal shadow-2xs"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                    <label className="block text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide">
                       Setor / Bairro
                     </label>
                     <input
                       type="text"
                       disabled
                       value={editingNotice.bairro || ""}
-                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 text-slate-500 rounded-lg cursor-not-allowed text-xs font-medium"
+                      className="w-full px-3.5 py-2.5 bg-slate-100 text-slate-500 rounded-xl cursor-not-allowed text-xs font-normal shadow-2xs"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="flex justify-between text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                  <label className="flex justify-between text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide">
                     <span>{editFormData.tipo === "duvida" ? "Título da Dúvida" : "Título do Comunicado"}</span>
-                    <span className={editFormData.titulo.length > 200 ? "text-red-500" : "text-slate-400"}>
+                    <span className={editFormData.titulo.length > 200 ? "text-red-500 font-normal" : "text-slate-400 font-normal"}>
                       {editFormData.titulo.length}/200
                     </span>
                   </label>
@@ -1244,15 +1244,15 @@ export default function MuralCondominial() {
                     maxLength={200}
                     value={editFormData.titulo}
                     onChange={(e) => setEditFormData({...editFormData, titulo: e.target.value})}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-sm"
+                    className="w-full px-4 py-3 bg-slate-50 focus:bg-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-sm shadow-xs font-normal"
                     placeholder="Título da publicação"
                   />
                 </div>
 
                 <div>
-                  <label className="flex justify-between text-xs font-semibold text-slate-700 mb-1 uppercase tracking-wide">
+                  <label className="flex justify-between text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide">
                     <span>{editFormData.tipo === "duvida" ? "Detalhes da Dúvida / Pergunta" : "Texto do Informativo"}</span>
-                    <span className={editFormData.texto.length > 800 ? "text-red-500" : "text-slate-400"}>
+                    <span className={editFormData.texto.length > 800 ? "text-red-500 font-normal" : "text-slate-400 font-normal"}>
                       {editFormData.texto.length}/800
                     </span>
                   </label>
@@ -1262,7 +1262,7 @@ export default function MuralCondominial() {
                     rows={5}
                     value={editFormData.texto}
                     onChange={(e) => setEditFormData({...editFormData, texto: e.target.value})}
-                    className="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-sm resize-none"
+                    className="w-full px-4 py-3 bg-slate-50 focus:bg-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-sm resize-none shadow-xs font-normal"
                     placeholder="Descreva as alterações no conteúdo..."
                   />
                 </div>
@@ -1270,11 +1270,11 @@ export default function MuralCondominial() {
             </div>
             
             {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
+            <div className="p-5 flex justify-end gap-3 bg-slate-50/70">
               <button
                 type="button"
                 onClick={() => { setIsEditModalOpen(false); setEditingNotice(null); }}
-                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                className="px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-200/70 rounded-2xl transition-colors cursor-pointer"
                 disabled={submittingEdit}
               >
                 Cancelar
@@ -1283,7 +1283,7 @@ export default function MuralCondominial() {
                 type="submit"
                 form="editNoticeForm"
                 disabled={submittingEdit}
-                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2 disabled:opacity-70 shadow-md cursor-pointer"
+                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-2xl transition-all flex items-center gap-2 disabled:opacity-70 shadow-md cursor-pointer"
               >
                 {submittingEdit ? (
                   <>

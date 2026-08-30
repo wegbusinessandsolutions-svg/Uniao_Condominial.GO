@@ -30,6 +30,11 @@ export default function ShopLayout() {
     }
   };
 
+  const isMinhaConta = location.pathname === "/minha-conta";
+  const queryParams = new URLSearchParams(location.search);
+  const isSignupActive = isMinhaConta && (queryParams.get("signup") === "true" || location.state?.signup === true);
+  const isLoginActive = isMinhaConta && !isSignupActive;
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 text-[15px] sm:text-[16px] w-full overflow-x-hidden">
       {/* Top Banner */}
@@ -91,18 +96,28 @@ export default function ShopLayout() {
                 </Link>
               </>
             ) : (
-              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <div className="flex items-center bg-slate-100/90 p-0.5 sm:p-1 rounded-full border border-slate-200/80 shadow-xs shrink-0">
                 <Link
                   to="/minha-conta"
-                  className="text-xs sm:text-sm font-bold text-slate-700 hover:text-[#0071e3] px-2 sm:px-3 py-1.5 sm:py-2 transition-colors whitespace-nowrap"
+                  className={`text-xs sm:text-sm font-bold px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full transition-all duration-200 whitespace-nowrap ${
+                    isLoginActive
+                      ? "bg-[#0071e3] text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                  }`}
                 >
                   Entrar
                 </Link>
                 <Link
                   to="/minha-conta?signup=true"
-                  className="bg-[#0071e3] hover:bg-[#005bb5] text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all shadow-xs hover:shadow whitespace-nowrap"
+                  className={`text-xs sm:text-sm font-bold px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full transition-all duration-200 whitespace-nowrap ${
+                    isSignupActive
+                      ? "bg-[#0071e3] text-white shadow-xs"
+                      : !isMinhaConta
+                      ? "bg-[#0071e3] text-white shadow-xs hover:bg-[#005bb5]"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                  }`}
                 >
-                  Cadastro
+                  Cadastrar
                 </Link>
               </div>
             )}

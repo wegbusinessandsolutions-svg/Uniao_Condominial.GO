@@ -142,7 +142,7 @@ export default function Suporte() {
           const dataEntrega = selectedPedidoObj.dataEntregaEstimada 
             ? `\n📅 Previsão de entrega: ${selectedPedidoObj.dataEntregaEstimada}` 
             : "";
-          replyText = `📦 O status atual do pedido #${selectedPedidoObj.numeroPedido || selectedPedidoObj.codigoPedido || selectedPedidoObj.firebaseId} é: **${status}**.${dataEntrega}\n\nNossa equipe de logística está acompanhando cada etapa para garantir a entrega rápida e segura no seu condomínio.`;
+          replyText = `📦 O status atual do pedido #${selectedPedidoObj.numeroPedido || selectedPedidoObj.codigoPedido || selectedPedidoObj.firebaseId} é: ${status}.${dataEntrega}\n\nNossa equipe de logística está acompanhando cada etapa para garantir a entrega rápida e segura no seu condomínio.`;
         } else {
           replyText = `📦 Selecione o pedido desejado no menu acima para consultar o status em tempo real, ou informe o número do pedido aqui no chat.`;
         }
@@ -173,17 +173,17 @@ export default function Suporte() {
     switch (status) {
       case "A Caminho":
       case "Em Trânsito":
-        return { label: "A Caminho", bg: "bg-amber-100 text-amber-800 border-amber-200" };
+        return { label: "A Caminho", bg: "bg-amber-100 text-amber-800" };
       case "Entregue":
       case "Concluído":
-        return { label: "Entregue", bg: "bg-emerald-100 text-emerald-800 border-emerald-200" };
+        return { label: "Entregue", bg: "bg-emerald-100 text-emerald-800" };
       case "Em Separação":
       case "Aprovado":
-        return { label: "Em Separação", bg: "bg-blue-100 text-blue-800 border-blue-200" };
+        return { label: "Em Separação", bg: "bg-blue-100 text-blue-800" };
       case "Cancelado":
-        return { label: "Cancelado", bg: "bg-rose-100 text-rose-800 border-rose-200" };
+        return { label: "Cancelado", bg: "bg-rose-100 text-rose-800" };
       default:
-        return { label: status || "Pendente", bg: "bg-slate-100 text-slate-800 border-slate-200" };
+        return { label: status || "Pendente", bg: "bg-slate-100 text-slate-800" };
     }
   };
 
@@ -209,22 +209,22 @@ export default function Suporte() {
   return (
     <div id="suporte-page" className="max-w-6xl mx-auto space-y-6">
       {/* Header da Página */}
-      <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 text-[#0071e3] text-xs font-bold uppercase tracking-wider mb-2 border border-sky-100">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 text-[#0071e3] text-xs font-medium uppercase tracking-wider mb-2">
             <Headphones size={14} />
             <span>Central de Relacionamento</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-medium text-slate-900 tracking-tight">
             Fale Conosco - Suporte
           </h1>
-          <p className="text-slate-600 text-sm mt-1">
-            Atendimento exclusivo para condomínios afiliados à <strong>União Condominial.<span className="text-emerald-600 font-bold">GO</span></strong>
+          <p className="text-slate-600 text-sm mt-1 font-normal">
+            Atendimento exclusivo para condomínios afiliados à <span className="text-slate-800">União Condominial.<span className="text-emerald-600 font-medium">GO</span></span>
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 text-xs font-bold">
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-2xl text-xs font-medium shadow-xs">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping shrink-0" />
             <span>Atendimento Online</span>
           </div>
@@ -234,17 +234,17 @@ export default function Suporte() {
       {/* Grid Principal */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Coluna Esquerda: Chat Interativo de Suporte */}
-        <div className="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden min-h-[580px]">
+        <div className="lg:col-span-8 bg-white rounded-3xl shadow-md flex flex-col overflow-hidden min-h-[580px]">
           {/* Header do Chat */}
-          <div className="bg-gradient-to-r from-[#0071e3] to-[#005bb5] text-white p-4 flex items-center justify-between shadow-xs">
+          <div className="bg-gradient-to-r from-[#0071e3] to-[#005bb5] text-white p-5 flex items-center justify-between shadow-xs">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center border border-white/25 shadow-inner">
+              <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center shadow-inner">
                 <Headphones size={20} className="text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-sm flex items-center gap-1">
+                <h3 className="font-medium text-base flex items-center gap-1">
                   <span className="text-sky-200">Suporte União Condominial.</span>
-                  <span className="text-emerald-300 font-extrabold">GO</span>
+                  <span className="text-emerald-300 font-medium">GO</span>
                 </h3>
                 <p className="text-xs text-blue-100 font-normal">
                   Respostas instantâneas e suporte aos seus pedidos
@@ -254,9 +254,9 @@ export default function Suporte() {
           </div>
 
           {/* Seletor de Contexto do Pedido */}
-          <div className="bg-slate-50 p-3.5 border-b border-slate-200">
+          <div className="bg-slate-50/80 p-4 shadow-xs">
             <div className="flex items-center justify-between gap-2 mb-1.5">
-              <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-[11px] font-medium text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
                 <ShoppingBag size={13} className="text-[#0071e3]" />
                 Atendimento referente a qual pedido?
               </label>
@@ -266,7 +266,7 @@ export default function Suporte() {
               <select
                 value={selectedPedidoId}
                 onChange={(e) => setSelectedPedidoId(e.target.value)}
-                className="w-full bg-white text-slate-800 text-xs font-semibold rounded-xl border border-slate-300 py-2.5 pl-3 pr-8 shadow-xs focus:outline-none focus:ring-2 focus:ring-[#0071e3] transition-all appearance-none cursor-pointer"
+                className="w-full bg-white text-slate-800 text-xs font-normal rounded-2xl py-3 pl-3.5 pr-8 shadow-xs focus:outline-none focus:ring-2 focus:ring-[#0071e3] transition-all appearance-none cursor-pointer"
               >
                 <option value="geral">Dúvida / Atendimento Geral</option>
                 {pedidos.map((p) => {
@@ -279,21 +279,21 @@ export default function Suporte() {
                   );
                 })}
               </select>
-              <ChevronDown size={14} className="absolute right-3 top-3 text-slate-400 pointer-events-none" />
+              <ChevronDown size={14} className="absolute right-3.5 top-3.5 text-slate-400 pointer-events-none" />
             </div>
 
             {selectedPedidoObj && (
-              <div className="mt-2.5 bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between text-xs">
+              <div className="mt-3 bg-white p-3.5 rounded-2xl shadow-xs flex items-center justify-between text-xs">
                 <div className="min-w-0">
-                  <span className="font-bold text-slate-900">
+                  <span className="font-medium text-slate-900">
                     Pedido #{selectedPedidoObj.numeroPedido || selectedPedidoObj.codigoPedido || selectedPedidoObj.firebaseId}
                   </span>
-                  <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                  <div className="text-[11px] text-slate-500 truncate mt-0.5 font-normal">
                     {selectedPedidoObj.itens?.length || 0} item(ns) • Total: R$ {Number(selectedPedidoObj.total || 0).toFixed(2).replace(".", ",")}
                   </div>
                 </div>
                 <div className="text-right shrink-0 ml-2">
-                  <span className={`inline-block px-2.5 py-1 text-[11px] font-bold rounded-full border ${getStatusBadge(selectedPedidoObj.status).bg}`}>
+                  <span className={`inline-block px-3 py-1 text-[11px] font-medium rounded-full ${getStatusBadge(selectedPedidoObj.status).bg}`}>
                     {getStatusBadge(selectedPedidoObj.status).label}
                   </span>
                 </div>
@@ -302,31 +302,31 @@ export default function Suporte() {
           </div>
 
           {/* Chips com Perguntas Rápidas */}
-          <div className="px-4 py-2.5 bg-slate-100/70 border-b border-slate-200 flex gap-2 overflow-x-auto text-xs scrollbar-none">
+          <div className="px-4 py-3 bg-slate-100/70 flex gap-2 overflow-x-auto text-xs scrollbar-none shadow-xs">
             <button
               onClick={() => handleSendMessage("Qual o status do meu pedido?")}
-              className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-semibold px-3 py-1.5 rounded-full border border-slate-200 shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
+              className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-medium px-3.5 py-1.5 rounded-full shadow-xs transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
             >
               <Truck size={13} className="text-[#0071e3]" />
               Status do Pedido
             </button>
             <button
               onClick={() => handleSendMessage("Quero alterar o endereço de entrega")}
-              className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-semibold px-3 py-1.5 rounded-full border border-slate-200 shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
+              className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-medium px-3.5 py-1.5 rounded-full shadow-xs transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
             >
               <AlertCircle size={13} className="text-amber-500" />
               Alterar Endereço
             </button>
             <button
               onClick={() => handleSendMessage("Dúvida sobre Pagamento / Cashback")}
-              className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-semibold px-3 py-1.5 rounded-full border border-slate-200 shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
+              className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-medium px-3.5 py-1.5 rounded-full shadow-xs transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
             >
               <Sparkles size={13} className="text-emerald-500" />
               Pagamento & Cashback
             </button>
             <button
               onClick={() => handleSendMessage("Quero falar com um atendente humano")}
-              className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-semibold px-3 py-1.5 rounded-full border border-slate-200 shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
+              className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-medium px-3.5 py-1.5 rounded-full shadow-xs transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
             >
               <User size={13} className="text-indigo-500" />
               Falar com Atendente
@@ -345,7 +345,7 @@ export default function Suporte() {
                   className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}
                 >
                   <div className="flex items-center gap-1.5 mb-1 px-1">
-                    <span className="text-[11px] font-bold text-slate-400">
+                    <span className="text-[11px] font-medium text-slate-400">
                       {isUser ? "Você" : isBot ? "Atendente Virtual" : msg.senderName || "Suporte"}
                     </span>
                     <span className="text-[10px] text-slate-400">
@@ -355,13 +355,13 @@ export default function Suporte() {
 
                   <div
                     className={`
-                      max-w-[85%] sm:max-w-[75%] rounded-2xl p-3.5 text-xs sm:text-sm leading-relaxed shadow-xs whitespace-pre-line
+                      max-w-[85%] sm:max-w-[75%] rounded-3xl p-4 text-xs sm:text-sm leading-relaxed shadow-xs whitespace-pre-line font-normal
                       ${
                         isUser
-                          ? "bg-[#0071e3] text-white rounded-br-none"
+                          ? "bg-[#0071e3] text-white rounded-br-xs"
                           : isBot
-                          ? "bg-white text-slate-800 border border-slate-200 rounded-bl-none font-sans"
-                          : "bg-emerald-700 text-white rounded-bl-none"
+                          ? "bg-white text-slate-800 rounded-bl-xs font-sans"
+                          : "bg-emerald-700 text-white rounded-bl-xs"
                       }
                     `}
                   >
@@ -372,7 +372,7 @@ export default function Suporte() {
             })}
 
             {botTyping && (
-              <div className="flex items-center gap-2 text-xs text-slate-500 italic bg-white p-3 rounded-xl border border-slate-200 w-fit">
+              <div className="flex items-center gap-2 text-xs text-slate-500 italic bg-white p-3 rounded-2xl shadow-xs w-fit">
                 <Bot size={15} className="text-[#0071e3] animate-spin" />
                 <span>Atendente digitando...</span>
               </div>
@@ -387,19 +387,19 @@ export default function Suporte() {
               e.preventDefault();
               handleSendMessage();
             }}
-            className="p-3.5 sm:p-4 bg-white border-t border-slate-200 flex items-center gap-2.5"
+            className="p-3.5 sm:p-4 bg-white flex items-center gap-2.5 shadow-xs"
           >
             <input
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Digite sua dúvida ou mensagem para nossa equipe..."
-              className="flex-1 bg-slate-100 text-slate-800 text-xs sm:text-sm rounded-xl px-4 py-3 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:bg-white transition-all"
+              className="flex-1 bg-slate-100 text-slate-800 text-xs sm:text-sm rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:bg-white transition-all shadow-xs"
             />
             <button
               type="submit"
               disabled={!inputText.trim() || sending}
-              className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm active:scale-95 flex items-center gap-2 shrink-0"
+              className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white px-5 py-3 rounded-2xl font-medium text-xs sm:text-sm transition-all shadow-md active:scale-95 flex items-center gap-2 shrink-0 cursor-pointer"
             >
               <Send size={16} />
               <span className="hidden sm:inline">Enviar</span>
@@ -410,8 +410,8 @@ export default function Suporte() {
         {/* Coluna Direita: Informações de Contato e FAQ */}
         <div className="lg:col-span-4 space-y-6">
           {/* Card Canais de Atendimento */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-md space-y-4">
+            <h3 className="text-base font-medium text-slate-900 flex items-center gap-2">
               <Phone className="text-[#0071e3] w-5 h-5" />
               <span>Canais Diretos de Contato</span>
             </h3>
@@ -421,66 +421,66 @@ export default function Suporte() {
                 href="https://wa.me/5562999250523"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-3.5 rounded-xl bg-slate-50 hover:bg-emerald-50/60 border border-slate-200 hover:border-emerald-200 flex items-start gap-3 transition-colors group cursor-pointer"
+                className="p-4 rounded-2xl bg-slate-50 hover:bg-emerald-50/60 shadow-xs flex items-start gap-3 transition-colors group cursor-pointer"
               >
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 group-hover:bg-emerald-200 text-emerald-700 flex items-center justify-center shrink-0 transition-colors">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 group-hover:bg-emerald-200 text-emerald-700 flex items-center justify-center shrink-0 transition-colors">
                   <MessageSquare size={18} />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">WhatsApp Suporte</span>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">Conversar</span>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">WhatsApp Suporte</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-medium px-2 py-0.5 rounded-full">Conversar</span>
                   </div>
-                  <p className="text-sm font-bold text-slate-900 mt-0.5 group-hover:text-emerald-700 transition-colors">(62) 99925-0523</p>
-                  <p className="text-[11px] text-slate-500">Atendimento rápido para síndicos e gestores</p>
+                  <p className="text-sm font-medium text-slate-900 mt-0.5 group-hover:text-emerald-700 transition-colors">(62) 99925-0523</p>
+                  <p className="text-[11px] text-slate-500 font-normal">Atendimento rápido para síndicos e gestores</p>
                 </div>
               </a>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 text-[#0071e3] flex items-center justify-center shrink-0">
+              <div className="p-4 rounded-2xl bg-slate-50 shadow-xs flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-100 text-[#0071e3] flex items-center justify-center shrink-0">
                   <Mail size={18} />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">E-mail Oficial</span>
-                  <p className="text-sm font-bold text-slate-900 mt-0.5">suporte@uniaocondominial.com.br</p>
-                  <p className="text-[11px] text-slate-500">Envio de notas fiscais e relatórios</p>
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">E-mail Oficial</span>
+                  <p className="text-sm font-medium text-slate-900 mt-0.5">suporte@uniaocondominial.com.br</p>
+                  <p className="text-[11px] text-slate-500 font-normal">Envio de notas fiscais e relatórios</p>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+              <div className="p-4 rounded-2xl bg-slate-50 shadow-xs flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
                   <Clock size={18} />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Horário de Operação</span>
-                  <p className="text-xs font-bold text-slate-800 mt-0.5">Segunda a Sexta: 08h às 18h</p>
-                  <p className="text-xs text-slate-600">Sábado: 08h às 12h</p>
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">Horário de Operação</span>
+                  <p className="text-xs font-medium text-slate-800 mt-0.5">Segunda a Sexta: 08h às 18h</p>
+                  <p className="text-xs text-slate-600 font-normal">Sábado: 08h às 12h</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Card Perguntas Frequentes */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2 mb-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-md">
+            <h3 className="text-base font-medium text-slate-900 flex items-center gap-2 mb-4">
               <HelpCircle className="text-[#0071e3] w-5 h-5" />
               <span>Dúvidas Frequentes</span>
             </h3>
 
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {faqs.map((faq, idx) => {
                 const isOpen = faqOpen === idx;
                 return (
-                  <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden">
+                  <div key={idx} className="rounded-2xl overflow-hidden shadow-xs">
                     <button
                       onClick={() => setFaqOpen(isOpen ? null : idx)}
-                      className="w-full text-left p-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between gap-2 transition-colors text-xs font-bold text-slate-800"
+                      className="w-full text-left p-3.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between gap-2 transition-colors text-xs font-medium text-slate-800 cursor-pointer"
                     >
                       <span>{faq.q}</span>
                       <ChevronRight size={14} className={`text-slate-400 shrink-0 transform transition-transform ${isOpen ? "rotate-90" : ""}`} />
                     </button>
                     {isOpen && (
-                      <div className="p-3 bg-white text-xs text-slate-600 leading-relaxed border-t border-slate-200">
+                      <div className="p-3.5 bg-white text-xs text-slate-600 leading-relaxed font-normal shadow-inner">
                         {faq.a}
                       </div>
                     )}

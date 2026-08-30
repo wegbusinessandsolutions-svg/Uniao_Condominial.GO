@@ -329,17 +329,17 @@ export default function ServicosEssenciais() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 relative pb-12">
       {/* Header with Title and Top-Right Services Cart Icon */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl shadow-md">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="bg-sky-100 text-sky-800 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="bg-sky-100 text-sky-800 text-xs font-medium px-3 py-1 rounded-full uppercase tracking-wider">
               Tabela de Serviços
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-medium text-slate-900 tracking-tight">
             Serviços Condominiais Rotineiros
           </h1>
-          <p className="text-slate-500 text-sm mt-1 max-w-2xl">
+          <p className="text-slate-500 text-sm mt-1 max-w-2xl font-normal">
             Catálogo com valores simbólicos para condomínios parceiros. Selecione os serviços desejados, ajuste as quantidades e envie sua Ordem de Serviço.
           </p>
         </div>
@@ -347,16 +347,16 @@ export default function ServicosEssenciais() {
         {/* Top-Right Services Cart Icon Button */}
         <button
           onClick={() => setIsDrawerOpen(true)}
-          className="relative self-start sm:self-center bg-[#0071e3] hover:bg-[#0071e3]/90 text-white px-5 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2.5 shadow-md active:scale-95 shrink-0"
+          className="relative self-start sm:self-center bg-[#0071e3] hover:bg-[#0071e3]/90 text-white px-6 py-3.5 rounded-2xl font-medium text-sm transition-all flex items-center gap-2.5 shadow-md active:scale-95 shrink-0 cursor-pointer"
         >
           <ClipboardList size={20} />
           <span>Solicitações de Serviços</span>
           {totalCartCount > 0 ? (
-            <span className="bg-amber-400 text-slate-900 font-black text-xs h-6 min-w-6 px-1.5 rounded-full flex items-center justify-center animate-bounce shadow-sm">
+            <span className="bg-amber-400 text-slate-900 font-medium text-xs h-6 min-w-6 px-1.5 rounded-full flex items-center justify-center animate-bounce shadow-xs">
               {totalCartCount}
             </span>
           ) : (
-            <span className="bg-white/20 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+            <span className="bg-white/20 text-white text-xs font-medium px-2 py-0.5 rounded-full">
               0
             </span>
           )}
@@ -376,7 +376,7 @@ export default function ServicosEssenciais() {
             return (
               <div
                 key={s.id}
-                className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col h-full group"
+                className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-lg transition-all flex flex-col h-full group"
               >
                 {/* Image / Fallback */}
                 <div className="aspect-video w-full bg-slate-100 relative overflow-hidden">
@@ -402,60 +402,60 @@ export default function ServicosEssenciais() {
                   >
                     <Wrench size={40} />
                   </div>
-                  <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-700 shadow-2xs">
+                  <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-xl text-[10px] font-medium text-slate-700 shadow-xs">
                     50% de Desconto sobre o Valor de Mercado
                   </div>
                 </div>
 
                 {/* Content */}
                 <div className="p-5 flex flex-col flex-1">
-                  <h3 className="font-bold text-slate-900 text-base mb-1.5 line-clamp-2">
+                  <h3 className="font-medium text-slate-900 text-base mb-1.5 line-clamp-2">
                     {s.nome}
                   </h3>
-                  <p className="text-slate-500 text-xs mb-3 flex-1 line-clamp-3 leading-relaxed text-justify">
+                  <p className="text-slate-500 text-xs mb-3 flex-1 line-clamp-3 leading-relaxed text-justify font-normal">
                     {s.descricao}
                   </p>
 
                   {(s.prazoExecucaoHoras || s.prazoPrevisto || s.prazoHoras || s.prazo_execucao) && (
-                    <div className="flex items-center gap-1.5 text-slate-600 text-[11px] font-medium mb-2 bg-blue-50/60 text-blue-800 px-2.5 py-1 rounded-lg border border-blue-100/80 w-fit">
+                    <div className="flex items-center gap-1.5 text-[11px] font-medium mb-2 bg-blue-50/80 text-blue-800 px-3 py-1.5 rounded-xl shadow-xs w-fit">
                       <Clock size={13} className="text-[#0071e3]" />
-                      <span>Prazo previsto: <strong>{s.prazoExecucaoHoras || s.prazoPrevisto || s.prazoHoras || s.prazo_execucao}h</strong></span>
+                      <span>Prazo previsto: <span className="font-medium">{s.prazoExecucaoHoras || s.prazoPrevisto || s.prazoHoras || s.prazo_execucao}h</span></span>
                     </div>
                   )}
 
                   {(s.preRequisitos || s.pre_requisitos || s.prerequisitos) && (
-                    <div className="flex items-start gap-1.5 text-slate-600 text-[11px] font-medium mb-3 bg-amber-50/70 text-amber-900 px-2.5 py-1.5 rounded-lg border border-amber-200/80">
+                    <div className="flex items-start gap-1.5 text-[11px] font-medium mb-3 bg-amber-50/80 text-amber-900 px-3 py-2 rounded-xl shadow-xs">
                       <ClipboardList size={14} className="text-amber-600 mt-0.5 shrink-0" />
-                      <span className="line-clamp-2"><strong>Pré-requisitos:</strong> {s.preRequisitos || s.pre_requisitos || s.prerequisitos}</span>
+                      <span className="line-clamp-2">Pré-requisitos: {s.preRequisitos || s.pre_requisitos || s.prerequisitos}</span>
                     </div>
                   )}
 
                   {/* Price display - Prominently visible for all users */}
-                  <div className="mb-4 bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Valor Fixo</span>
-                    <span className={`text-xl font-black ${valorUnitario === 0 ? 'text-slate-600' : 'text-[#0071e3]'}`}>
+                  <div className="mb-4 bg-slate-50 p-3.5 rounded-2xl flex items-center justify-between shadow-xs">
+                    <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Valor Fixo</span>
+                    <span className={`text-xl font-medium ${valorUnitario === 0 ? 'text-slate-600' : 'text-[#0071e3]'}`}>
                       {valorUnitario === 0 ? "Sob consulta" : `R$ ${formatCurrency(valorUnitario)}`}
                     </span>
                   </div>
 
                   {/* Quantity selector */}
-                  <div className="flex items-center justify-between bg-slate-100/80 rounded-xl p-1 mb-3">
-                    <span className="text-xs font-semibold text-slate-600 pl-2">Qtd:</span>
-                    <div className="flex items-center gap-1 bg-white rounded-lg p-1 border border-slate-200 shadow-2xs">
+                  <div className="flex items-center justify-between bg-slate-100/80 rounded-2xl p-1 mb-3">
+                    <span className="text-xs font-medium text-slate-600 pl-2">Qtd:</span>
+                    <div className="flex items-center gap-1 bg-white rounded-xl p-1 shadow-xs">
                       <button
                         type="button"
                         onClick={() => handleQuantityChange(s.id, -1)}
-                        className="w-7 h-7 rounded-md flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold transition-colors"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 font-medium transition-colors cursor-pointer"
                       >
                         <Minus size={14} />
                       </button>
-                      <span className="w-8 text-center text-xs font-extrabold text-slate-900">
+                      <span className="w-8 text-center text-xs font-medium text-slate-900">
                         {currentQty}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleQuantityChange(s.id, 1)}
-                        className="w-7 h-7 rounded-md flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold transition-colors"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 font-medium transition-colors cursor-pointer"
                       >
                         <Plus size={14} />
                       </button>
@@ -466,7 +466,7 @@ export default function ServicosEssenciais() {
                   <button
                     type="button"
                     onClick={() => handleAddToCart(s)}
-                    className="w-full bg-[#0071e3] hover:bg-[#0071e3]/90 text-white font-bold py-3 rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md active:scale-95 cursor-pointer"
+                    className="w-full bg-[#0071e3] hover:bg-[#0071e3]/90 text-white font-medium py-3 rounded-2xl text-xs transition-all flex items-center justify-center gap-2 shadow-md active:scale-95 cursor-pointer"
                   >
                     <CheckCircle size={15} />
                     <span>Solicitar serviço</span>
@@ -483,19 +483,19 @@ export default function ServicosEssenciais() {
         <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/50 backdrop-blur-xs flex justify-end transition-opacity animate-fadeIn">
           <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between overflow-y-auto">
             {/* Drawer Header */}
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+            <div className="p-5 flex items-center justify-between bg-slate-50/90 shadow-xs">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-sky-100 text-[#0071e3] flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-2xl bg-sky-100 text-[#0071e3] flex items-center justify-center font-medium shadow-xs">
                   <ClipboardList size={20} />
                 </div>
                 <div>
-                  <h2 className="font-bold text-slate-900 text-base">Ordem de Serviço</h2>
-                  <p className="text-xs text-slate-500">{totalCartCount} item(ns) selecionado(s)</p>
+                  <h2 className="font-medium text-slate-900 text-base">Ordem de Serviço</h2>
+                  <p className="text-xs text-slate-500 font-normal">{totalCartCount} item(ns) selecionado(s)</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsDrawerOpen(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+                className="p-2.5 rounded-2xl text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -513,51 +513,51 @@ export default function ServicosEssenciais() {
                       return (
                         <div
                           key={item.servico.id || idx}
-                          className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex items-start gap-3 relative"
+                          className="bg-slate-50 rounded-3xl p-4 flex items-start gap-3 relative shadow-xs"
                         >
                           {item.servico.imagem ? (
                             <img
                               src={item.servico.imagem}
                               alt={item.servico.nome}
-                              className="w-14 h-14 object-cover rounded-xl border border-slate-200 shrink-0"
+                              className="w-14 h-14 object-cover rounded-2xl shrink-0 shadow-xs"
                             />
                           ) : (
-                            <div className="w-14 h-14 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400 shrink-0">
+                            <div className="w-14 h-14 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-400 shrink-0">
                               <Wrench size={20} />
                             </div>
                           )}
 
                           <div className="flex-1 min-w-0 pr-6">
-                            <h4 className="font-bold text-xs text-slate-900 line-clamp-2 mb-1">
+                            <h4 className="font-medium text-xs text-slate-900 line-clamp-2 mb-1">
                               {item.servico.nome}
                             </h4>
-                            <p className="text-xs text-slate-500 font-medium">
+                            <p className="text-xs text-slate-500 font-normal">
                               {itemVal === 0 ? "Sob consulta" : `R$ ${formatCurrency(itemVal)} / un`}
                             </p>
 
-                            <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center justify-between mt-2.5">
                               {/* Quantity Controls */}
-                              <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5 shadow-2xs">
+                              <div className="flex items-center gap-1 bg-white rounded-xl p-1 shadow-xs">
                                 <button
                                   type="button"
                                   onClick={() => handleUpdateCartItemQty(item.servico.id, -1)}
-                                  className="w-6 h-6 rounded flex items-center justify-center text-slate-600 hover:bg-slate-100"
+                                  className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 cursor-pointer"
                                 >
                                   <Minus size={12} />
                                 </button>
-                                <span className="w-6 text-center text-xs font-bold text-slate-900">
+                                <span className="w-6 text-center text-xs font-medium text-slate-900">
                                   {item.quantidade}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => handleUpdateCartItemQty(item.servico.id, 1)}
-                                  className="w-6 h-6 rounded flex items-center justify-center text-slate-600 hover:bg-slate-100"
+                                  className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-600 hover:bg-slate-100 cursor-pointer"
                                 >
                                   <Plus size={12} />
                                 </button>
                               </div>
 
-                              <span className={`font-extrabold text-xs ${subtotal === 0 ? 'text-slate-600' : 'text-[#0071e3]'}`}>
+                              <span className={`font-medium text-xs ${subtotal === 0 ? 'text-slate-600' : 'text-[#0071e3]'}`}>
                                 {subtotal === 0 ? "Sob consulta" : `R$ ${formatCurrency(subtotal)}`}
                               </span>
                             </div>
@@ -566,7 +566,7 @@ export default function ServicosEssenciais() {
                           <button
                             type="button"
                             onClick={() => handleRemoveCartItem(item.servico.id)}
-                            className="absolute top-3 right-3 text-slate-400 hover:text-red-500 p-1"
+                            className="absolute top-3 right-3 text-slate-400 hover:text-red-500 p-1.5 rounded-xl hover:bg-red-50 transition-colors cursor-pointer"
                           >
                             <Trash2 size={15} />
                           </button>
@@ -576,13 +576,13 @@ export default function ServicosEssenciais() {
                   </div>
 
                   {/* Date & Details Inputs */}
-                  <div className="bg-sky-50/60 border border-sky-100 rounded-2xl p-4 space-y-3 mt-4">
-                    <h3 className="font-bold text-xs text-sky-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <div className="bg-sky-50/70 rounded-3xl p-5 space-y-3.5 mt-4 shadow-xs">
+                    <h3 className="font-medium text-xs text-sky-900 uppercase tracking-wider flex items-center gap-1.5">
                       <Calendar size={14} /> Preferência de Agendamento
                     </h3>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                      <label className="block text-xs font-medium text-slate-700 mb-1.5">
                         Data Preferencial para Visita *
                       </label>
                       <input
@@ -590,20 +590,20 @@ export default function ServicosEssenciais() {
                         min={getMinDateString()}
                         value={dataPreferencial}
                         onChange={handleDateChange}
-                        className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+                        className="w-full bg-white rounded-2xl p-3 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-[#0071e3]/30 shadow-xs"
                       />
-                      <p className="text-[11px] text-slate-500 mt-1 leading-normal">
-                        * Atendimento disponível de <strong>segunda a sexta-feira</strong>, com antecedência mínima de <strong>7 dias</strong>.
+                      <p className="text-[11px] text-slate-500 mt-1.5 leading-normal font-normal">
+                        * Atendimento disponível de <span className="font-medium">segunda a sexta-feira</span>, com antecedência mínima de <span className="font-medium">7 dias</span>.
                       </p>
                       {dateError && (
-                        <p className="text-xs text-red-600 font-bold mt-1 bg-red-50 p-2 rounded-lg border border-red-200">
+                        <p className="text-xs text-red-600 font-medium mt-1.5 bg-red-50 p-2.5 rounded-2xl shadow-xs">
                           {dateError}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                      <label className="block text-xs font-medium text-slate-600 mb-1.5">
                         Observações do Condomínio
                       </label>
                       <textarea
@@ -611,21 +611,21 @@ export default function ServicosEssenciais() {
                         rows={2}
                         value={observacoes}
                         onChange={(e) => setObservacoes(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-[#0071e3]/20 resize-none"
+                        className="w-full bg-white rounded-2xl p-3 text-xs text-slate-800 outline-none focus:ring-2 focus:ring-[#0071e3]/30 resize-none shadow-xs font-normal"
                       />
                     </div>
                   </div>
 
                   {/* Cashback Abatement Option Section */}
-                  <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-2xl p-4 space-y-3 mt-4">
+                  <div className="bg-emerald-50/80 rounded-3xl p-5 space-y-3.5 mt-4 shadow-xs">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-extrabold shadow-xs">
+                        <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-medium shadow-xs">
                           <Coins size={20} />
                         </div>
                         <div>
-                          <span className="text-xs font-black text-emerald-950 block">Uso de Cashback</span>
-                          <span className="text-xs text-emerald-700 font-bold">
+                          <span className="text-xs font-medium text-emerald-950 block">Uso de Cashback</span>
+                          <span className="text-xs text-emerald-700 font-normal">
                             Saldo disponível: R$ {formatCurrency(userCashback)}
                           </span>
                         </div>
@@ -647,18 +647,18 @@ export default function ServicosEssenciais() {
                           <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                         </label>
                       ) : (
-                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">
+                        <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-2.5 py-1 rounded-xl">
                           Sem saldo
                         </span>
                       )}
                     </div>
 
                     {useCashback && userCashback > 0 && (
-                      <div className="pt-2.5 border-t border-emerald-200/60 space-y-2.5 text-xs">
-                        <p className="font-bold text-emerald-900">Como deseja abater seu cashback?</p>
+                      <div className="pt-2.5 space-y-2.5 text-xs">
+                        <p className="font-medium text-emerald-900">Como deseja abater seu cashback?</p>
                         
                         <div className="space-y-2">
-                          <label className="flex items-start gap-2.5 cursor-pointer font-medium text-slate-800">
+                          <label className="flex items-start gap-2.5 cursor-pointer font-normal text-slate-800">
                             <input
                               type="radio"
                               name="cashbackOpt"
@@ -667,14 +667,14 @@ export default function ServicosEssenciais() {
                               className="mt-0.5 text-emerald-600 focus:ring-emerald-500"
                             />
                             <div>
-                              <span className="font-bold text-slate-900 block">Abater valor máximo/total disponível</span>
-                              <span className="text-[11px] text-emerald-700">
+                              <span className="font-medium text-slate-900 block">Abater valor máximo/total disponível</span>
+                              <span className="text-[11px] text-emerald-700 font-normal">
                                 Abate até R$ {formatCurrency(maxCashbackDeductible)} do total a faturar
                               </span>
                             </div>
                           </label>
 
-                          <label className="flex items-start gap-2.5 cursor-pointer font-medium text-slate-800">
+                          <label className="flex items-start gap-2.5 cursor-pointer font-normal text-slate-800">
                             <input
                               type="radio"
                               name="cashbackOpt"
@@ -683,8 +683,8 @@ export default function ServicosEssenciais() {
                               className="mt-0.5 text-emerald-600 focus:ring-emerald-500"
                             />
                             <div>
-                              <span className="font-bold text-slate-900 block">Abater valor parcial</span>
-                              <span className="text-[11px] text-slate-500">
+                              <span className="font-medium text-slate-900 block">Abater valor parcial</span>
+                              <span className="text-[11px] text-slate-500 font-normal">
                                 Digite a quantia exata de cashback a utilizar
                               </span>
                             </div>
@@ -694,23 +694,23 @@ export default function ServicosEssenciais() {
                         {cashbackOption === "parcial" && (
                           <div className="pl-6 pt-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-slate-600">R$</span>
+                              <span className="font-medium text-slate-600">R$</span>
                               <input
                                 type="text"
                                 placeholder={`Até ${formatCurrency(maxCashbackDeductible)}`}
                                 value={customCashbackAmount}
                                 onChange={(e) => setCustomCashbackAmount(e.target.value)}
-                                className="bg-white border border-emerald-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 w-36 focus:ring-2 focus:ring-emerald-500 outline-none font-bold"
+                                className="bg-white rounded-2xl px-3.5 py-2 text-xs text-slate-900 w-36 focus:ring-2 focus:ring-emerald-500 outline-none font-medium shadow-xs"
                               />
                             </div>
                           </div>
                         )}
 
                         {appliedCashback > 0 && (
-                          <div className="bg-white/90 p-3 rounded-xl border border-emerald-200/80 space-y-1 font-medium shadow-2xs">
+                          <div className="bg-white/95 p-3.5 rounded-2xl space-y-1 font-normal shadow-xs">
                             <div className="flex justify-between text-emerald-800 text-xs">
-                              <span className="font-bold">Desconto por Cashback:</span>
-                              <span className="font-black text-emerald-700">- R$ {formatCurrency(appliedCashback)}</span>
+                              <span className="font-medium">Desconto por Cashback:</span>
+                              <span className="font-medium text-emerald-700">- R$ {formatCurrency(appliedCashback)}</span>
                             </div>
                             <div className="flex justify-between text-slate-500 text-[11px]">
                               <span>Novo saldo de cashback:</span>
@@ -724,17 +724,17 @@ export default function ServicosEssenciais() {
                 </>
               ) : (
                 <div className="text-center py-16 space-y-3">
-                  <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center mx-auto shadow-xs">
                     <ClipboardList size={32} />
                   </div>
-                  <h3 className="font-bold text-slate-700">Sua lista está vazia</h3>
-                  <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                  <h3 className="font-medium text-slate-700 text-base">Sua lista está vazia</h3>
+                  <p className="text-xs text-slate-400 max-w-xs mx-auto font-normal">
                     Selecione a quantidade dos serviços no catálogo e clique em "Solicitar serviço" para compor sua ordem de serviço.
                   </p>
                   <button
                     type="button"
                     onClick={() => setIsDrawerOpen(false)}
-                    className="mt-2 inline-flex items-center gap-2 bg-[#0071e3] text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-[#0071e3]/90 transition-all shadow-xs cursor-pointer"
+                    className="mt-2 inline-flex items-center gap-2 bg-[#0071e3] text-white px-5 py-3 rounded-2xl text-xs font-medium hover:bg-[#0071e3]/90 transition-all shadow-md cursor-pointer"
                   >
                     <Plus size={16} />
                     <span>Adicionar mais serviços à Ordem de Serviço</span>
@@ -745,17 +745,17 @@ export default function ServicosEssenciais() {
 
             {/* Drawer Footer */}
             {cartItems.length > 0 && (
-              <div className="p-5 border-t border-slate-200 bg-white space-y-3 shadow-lg">
+              <div className="p-5 bg-white space-y-3 shadow-lg">
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center text-xs text-slate-500">
                     <span>Valor dos Serviços:</span>
-                    <span className="font-bold text-slate-800">
+                    <span className="font-medium text-slate-800">
                       {totalCartValue === 0 ? "Sob consulta" : `R$ ${formatCurrency(totalCartValue)}`}
                     </span>
                   </div>
 
                   {appliedCashback > 0 && (
-                    <div className="flex justify-between items-center text-xs text-emerald-700 font-bold">
+                    <div className="flex justify-between items-center text-xs text-emerald-700 font-medium">
                       <span className="flex items-center gap-1">
                         <Coins size={13} /> Abatimento Cashback:
                       </span>
@@ -763,9 +763,9 @@ export default function ServicosEssenciais() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between text-slate-900 pt-1.5 border-t border-slate-100">
-                    <span className="text-xs font-black uppercase text-slate-600">Valor Final a Faturar</span>
-                    <span className={`text-2xl font-black ${finalPayableValue === 0 ? 'text-slate-600' : 'text-[#0071e3]'}`}>
+                  <div className="flex items-center justify-between text-slate-900 pt-2">
+                    <span className="text-xs font-medium uppercase text-slate-600">Valor Final a Faturar</span>
+                    <span className={`text-2xl font-medium ${finalPayableValue === 0 ? 'text-slate-600' : 'text-[#0071e3]'}`}>
                       {finalPayableValue === 0 ? "Sob consulta" : `R$ ${formatCurrency(finalPayableValue)}`}
                     </span>
                   </div>
@@ -775,7 +775,7 @@ export default function ServicosEssenciais() {
                 <button
                   type="button"
                   onClick={() => setIsDrawerOpen(false)}
-                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-xs transition-all flex items-center justify-center gap-2 border border-slate-200 cursor-pointer"
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium py-3 rounded-2xl text-xs transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                 >
                   <Plus size={16} />
                   <span>Adicionar mais serviços à Ordem de Serviço</span>
@@ -786,7 +786,7 @@ export default function ServicosEssenciais() {
                   type="button"
                   onClick={handleSubmitOrder}
                   disabled={submitting}
-                  className="w-full bg-[#0071e3] hover:bg-[#0071e3]/90 text-white font-bold py-3.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50 active:scale-95 cursor-pointer"
+                  className="w-full bg-[#0071e3] hover:bg-[#0071e3]/90 text-white font-medium py-3.5 rounded-2xl text-sm transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50 active:scale-95 cursor-pointer"
                 >
                   {submitting ? (
                     "Enviando solicitação..."
@@ -806,17 +806,17 @@ export default function ServicosEssenciais() {
       {/* SUCCESS MODAL */}
       {successModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl border border-slate-100">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-4 shadow-2xl">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto shadow-xs">
               <CheckCircle size={36} />
             </div>
 
-            <h3 className="text-xl font-extrabold text-slate-900">
+            <h3 className="text-xl font-medium text-slate-900">
               Ordem de Serviço Enviada!
             </h3>
 
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Sua solicitação de serviços com a data de preferência foi encaminhada com sucesso. O status atual é <strong>Aguardando confirmação - Data</strong>.
+            <p className="text-xs text-slate-600 leading-relaxed font-normal">
+              Sua solicitação de serviços com a data de preferência foi encaminhada com sucesso. O status atual é <span className="font-medium">Aguardando confirmação - Data</span>.
             </p>
 
             <div className="pt-2 space-y-2">
@@ -826,7 +826,7 @@ export default function ServicosEssenciais() {
                   setSuccessModal(false);
                   navigate("/cliente/ordens-servico");
                 }}
-                className="w-full bg-[#0071e3] text-white font-bold py-3 rounded-xl text-xs hover:bg-[#0071e3]/90 transition-all shadow-md"
+                className="w-full bg-[#0071e3] text-white font-medium py-3 rounded-2xl text-xs hover:bg-[#0071e3]/90 transition-all shadow-md cursor-pointer"
               >
                 Ver Minhas Ordens de Serviço
               </button>
@@ -834,7 +834,7 @@ export default function ServicosEssenciais() {
               <button
                 type="button"
                 onClick={() => setSuccessModal(false)}
-                className="w-full bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl text-xs hover:bg-slate-200 transition-all"
+                className="w-full bg-slate-100 text-slate-600 font-medium py-2.5 rounded-2xl text-xs hover:bg-slate-200 transition-all shadow-xs cursor-pointer"
               >
                 Continuar Navegando
               </button>

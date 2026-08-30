@@ -402,10 +402,10 @@ export default function MeusDados() {
       {/* Feedback Toast */}
       {cancelFeedback && (
         <div
-          className={`p-4 rounded-2xl border flex items-center justify-between gap-3 shadow-xs ${
+          className={`p-4 rounded-3xl flex items-center justify-between gap-3 shadow-md ${
             cancelFeedback.type === "success"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-              : "bg-rose-50 border-rose-200 text-rose-800"
+              ? "bg-emerald-50 text-emerald-800"
+              : "bg-rose-50 text-rose-800"
           }`}
         >
           <div className="flex items-center gap-2.5">
@@ -414,47 +414,47 @@ export default function MeusDados() {
             ) : (
               <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
             )}
-            <p className="text-sm font-semibold">{cancelFeedback.message}</p>
+            <p className="text-sm font-medium">{cancelFeedback.message}</p>
           </div>
           <button
             onClick={() => setCancelFeedback(null)}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+            className="text-slate-400 hover:text-slate-600 p-1 rounded-xl"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#0071e3] text-white flex items-center justify-center">
+      <div className="bg-white rounded-3xl shadow-md overflow-hidden">
+        <div className="p-6 md:p-8 flex items-center gap-4 bg-gradient-to-r from-slate-50 to-white">
+          <div className="w-12 h-12 rounded-2xl bg-[#0071e3] text-white flex items-center justify-center shadow-md">
              <User className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Meus Dados</h1>
-            <p className="text-sm text-slate-500">Confira e mantenha seus dados de cadastro atualizados.</p>
+            <h1 className="text-2xl font-normal text-slate-900 tracking-tight">Meus Dados</h1>
+            <p className="text-sm text-slate-500 font-normal">Confira e mantenha seus dados de cadastro atualizados.</p>
           </div>
         </div>
-        <div className="p-4 sm:p-6">
-          <dl className="divide-y divide-slate-100">
-            <div className="py-3.5 sm:py-4 flex justify-between items-center gap-3 sm:gap-4">
-              <dt className="text-sm font-medium text-slate-500 text-left shrink-0">Tipo de cadastro</dt>
+        <div className="p-6 md:p-8">
+          <dl className="space-y-4">
+            <div className="py-2.5 flex justify-between items-center gap-3 sm:gap-4">
+              <dt className="text-sm font-normal text-slate-500 text-left shrink-0">Tipo de cadastro</dt>
               <dd className="text-sm text-slate-900 font-medium text-right flex-1 break-words">
                 {(profile as any)?.tipoCadastro || (profile?.cnpj ? "Pessoa Jurídica" : "Pessoa Física")}
               </dd>
             </div>
 
-            <div className="py-3.5 sm:py-4 flex justify-between items-center gap-3 sm:gap-4">
-              <dt className="text-sm font-medium text-slate-500 text-left shrink-0">
+            <div className="py-2.5 flex justify-between items-center gap-3 sm:gap-4">
+              <dt className="text-sm font-normal text-slate-500 text-left shrink-0">
                 {(profile as any)?.tipoCadastro === "Fisica" || !profile?.cnpj ? "Nome Completo" : "Empresa / Condomínio"}
               </dt>
-              <dd className="text-sm text-slate-900 font-bold text-right flex-1 break-words">
+              <dd className="text-sm text-slate-900 font-medium text-right flex-1 break-words">
                 {profile?.displayName || "Não informado"}
               </dd>
             </div>
 
-            <div className="py-3.5 sm:py-4 flex justify-between items-center gap-3 sm:gap-4">
-              <dt className="text-sm font-medium text-slate-500 text-left shrink-0">
+            <div className="py-2.5 flex justify-between items-center gap-3 sm:gap-4">
+              <dt className="text-sm font-normal text-slate-500 text-left shrink-0">
                 {(profile as any)?.tipoCadastro === "Fisica" || !profile?.cnpj ? "C.P.F." : "C.N.P.J."}
               </dt>
               <dd className="text-sm text-slate-900 font-medium font-mono text-right flex-1 break-words">
@@ -463,9 +463,9 @@ export default function MeusDados() {
             </div>
 
             {((profile as any)?.tipoCondominio || (profile as any)?.tipoCadastro === "Juridica" || profile?.cnpj) && (
-              <div className="py-3.5 sm:py-4 flex justify-between items-center gap-3 sm:gap-4">
-                <dt className="text-sm font-medium text-slate-500 text-left shrink-0">Tipo de Condomínio</dt>
-                <dd className="text-sm text-brand-dark font-semibold text-right flex-1 break-words">
+              <div className="py-2.5 flex justify-between items-center gap-3 sm:gap-4">
+                <dt className="text-sm font-normal text-slate-500 text-left shrink-0">Tipo de Condomínio</dt>
+                <dd className="text-sm text-slate-800 font-medium text-right flex-1 break-words">
                   {(profile as any)?.tipoCondominio || "Não informado"}
                 </dd>
               </div>
@@ -473,14 +473,14 @@ export default function MeusDados() {
 
             {((profile as any)?.tipoCadastro === "Juridica" || profile?.cnpj) && (
               <>
-                <div className="py-3.5 sm:py-4 flex justify-between items-center gap-3 sm:gap-4">
-                  <dt className="text-sm font-medium text-slate-500 text-left shrink-0">Responsável / Contato</dt>
+                <div className="py-2.5 flex justify-between items-center gap-3 sm:gap-4">
+                  <dt className="text-sm font-normal text-slate-500 text-left shrink-0">Responsável / Contato</dt>
                   <dd className="text-sm text-slate-900 font-medium text-right flex-1 break-words">
                     {(profile as any)?.nomeResponsavel || "Não informado"}
                   </dd>
                 </div>
-                <div className="py-3.5 sm:py-4 flex justify-between items-center gap-3 sm:gap-4">
-                  <dt className="text-sm font-medium text-slate-500 text-left shrink-0">Função</dt>
+                <div className="py-2.5 flex justify-between items-center gap-3 sm:gap-4">
+                  <dt className="text-sm font-normal text-slate-500 text-left shrink-0">Função</dt>
                   <dd className="text-sm text-slate-900 font-medium text-right flex-1 break-words">
                     {(profile as any)?.funcao || "Não informado"}
                   </dd>
@@ -488,24 +488,24 @@ export default function MeusDados() {
               </>
             )}
 
-            <div className="py-3.5 sm:py-4 flex justify-between items-center gap-3 sm:gap-4">
-              <dt className="text-sm font-medium text-slate-500 text-left shrink-0">Telefone / Celular</dt>
+            <div className="py-2.5 flex justify-between items-center gap-3 sm:gap-4">
+              <dt className="text-sm font-normal text-slate-500 text-left shrink-0">Telefone / Celular</dt>
               <dd className="text-sm text-slate-900 font-medium font-mono text-right flex-1 break-words">
                 {profile?.telefone || profile?.phone || "Não informado"}
               </dd>
             </div>
 
             {((profile as any)?.quantidadeUnidades || (profile as any)?.quantidadeUnidadesCondominio) && (
-              <div className="py-3.5 sm:py-4 flex justify-between items-center gap-3 sm:gap-4">
-                <dt className="text-sm font-medium text-slate-500 text-left shrink-0">Quantidade de Unidades no Condomínio</dt>
+              <div className="py-2.5 flex justify-between items-center gap-3 sm:gap-4">
+                <dt className="text-sm font-normal text-slate-500 text-left shrink-0">Quantidade de Unidades no Condomínio</dt>
                 <dd className="text-sm text-slate-900 font-medium font-mono text-right flex-1">
                   {(profile as any)?.quantidadeUnidades || (profile as any)?.quantidadeUnidadesCondominio}
                 </dd>
               </div>
             )}
 
-            <div className="py-3.5 sm:py-4 flex justify-between items-start gap-3 sm:gap-4">
-              <dt className="text-sm font-medium text-slate-500 text-left shrink-0 pt-0.5">Endereço</dt>
+            <div className="py-2.5 flex justify-between items-start gap-3 sm:gap-4">
+              <dt className="text-sm font-normal text-slate-500 text-left shrink-0 pt-0.5">Endereço</dt>
               <dd className="text-sm text-slate-900 font-medium text-right flex-1 max-w-sm sm:max-w-md">
                 {(() => {
                   const { linhaSuperior, linhaInferior } = getEnderecoEmDuasLinhas();
@@ -518,7 +518,7 @@ export default function MeusDados() {
                         {linhaSuperior}
                       </span>
                       {linhaInferior && (
-                        <span className="block text-slate-600 font-normal sm:font-medium text-xs sm:text-sm leading-snug">
+                        <span className="block text-slate-600 font-normal text-xs sm:text-sm leading-snug">
                           {linhaInferior}
                         </span>
                       )}
@@ -528,31 +528,31 @@ export default function MeusDados() {
               </dd>
             </div>
 
-            <div className="py-3.5 sm:py-4 flex justify-between items-center gap-3 sm:gap-4">
-              <dt className="text-sm font-medium text-slate-500 text-left shrink-0">E-mail</dt>
+            <div className="py-2.5 flex justify-between items-center gap-3 sm:gap-4">
+              <dt className="text-sm font-normal text-slate-500 text-left shrink-0">E-mail</dt>
               <dd className="text-sm text-slate-900 font-medium text-right flex-1 break-all">
                 {profile?.email || "Não informado"}
               </dd>
             </div>
 
-            <div className="py-3.5 sm:py-4 flex justify-between items-center gap-3 sm:gap-4">
-              <dt className="text-sm font-medium text-slate-500 text-left shrink-0">Data de cadastro</dt>
+            <div className="py-2.5 flex justify-between items-center gap-3 sm:gap-4">
+              <dt className="text-sm font-normal text-slate-500 text-left shrink-0">Data de cadastro</dt>
               <dd className="text-sm text-slate-900 font-medium text-right flex-1">
                 {(profile as any)?.dataCadastro || "Não informado"}
               </dd>
             </div>
 
-            <div className="py-3.5 sm:py-4 flex justify-between items-center gap-3 sm:gap-4">
-              <dt className="text-sm font-medium text-slate-500 text-left shrink-0">Código de Indicação</dt>
-              <dd className="text-sm text-[#0071e3] font-bold font-mono text-right flex-1">
+            <div className="py-2.5 flex justify-between items-center gap-3 sm:gap-4">
+              <dt className="text-sm font-normal text-slate-500 text-left shrink-0">Código de Indicação</dt>
+              <dd className="text-sm text-[#0071e3] font-medium font-mono text-right flex-1">
                 {(profile as any)?.codigoIndicacao || "Sem Indicação"}
               </dd>
             </div>
           </dl>
         </div>
       </div>
-      <div className="mt-6 bg-slate-50 p-4 rounded-xl text-center text-sm text-slate-500 border border-slate-200">
-        Para alterar seus dados, fale com nosso atendimento em <a href="mailto:sac@uniaocondominial.com.br" className="font-semibold text-brand-dark">sac@uniaocondominial.com.br</a>.
+      <div className="mt-6 bg-slate-50 p-6 rounded-3xl text-center text-sm text-slate-500 font-normal shadow-xs">
+        Para alterar seus dados, fale com nosso atendimento em <a href="mailto:sac@uniaocondominial.com.br" className="font-medium text-[#0071e3] hover:underline">sac@uniaocondominial.com.br</a>.
       </div>
     </div>
   );

@@ -161,45 +161,45 @@ export default function Cashback() {
     switch (lvl) {
       case "bronze":
         return {
-          badge: "bg-amber-100/90 text-amber-800 border-amber-300",
-          pill: "bg-amber-50 text-amber-900 border-amber-200",
-          activePill: "bg-amber-600 text-white font-bold border-amber-700 shadow-xs",
+          badge: "bg-amber-100/90 text-amber-800",
+          pill: "bg-amber-50 text-amber-900",
+          activePill: "bg-amber-600 text-white font-medium shadow-xs",
           activeBadge: "bg-amber-500 text-white",
           dot: "bg-amber-500",
           emoji: "🥉"
         };
       case "prata":
         return {
-          badge: "bg-slate-200/90 text-slate-800 border-slate-300",
-          pill: "bg-slate-100 text-slate-800 border-slate-300",
-          activePill: "bg-slate-700 text-white font-bold border-slate-800 shadow-xs",
+          badge: "bg-slate-200/90 text-slate-800",
+          pill: "bg-slate-100 text-slate-800",
+          activePill: "bg-slate-700 text-white font-medium shadow-xs",
           activeBadge: "bg-slate-600 text-white",
           dot: "bg-slate-400",
           emoji: "🥈"
         };
       case "ouro":
         return {
-          badge: "bg-yellow-100/90 text-yellow-900 border-yellow-300",
-          pill: "bg-yellow-50 text-yellow-900 border-yellow-200",
-          activePill: "bg-yellow-500 text-slate-950 font-bold border-yellow-600 shadow-xs",
+          badge: "bg-yellow-100/90 text-yellow-900",
+          pill: "bg-yellow-50 text-yellow-900",
+          activePill: "bg-yellow-500 text-slate-950 font-medium shadow-xs",
           activeBadge: "bg-yellow-500 text-slate-950",
           dot: "bg-yellow-500",
           emoji: "🥇"
         };
       case "diamante":
         return {
-          badge: "bg-sky-100/90 text-sky-900 border-sky-300",
-          pill: "bg-sky-50 text-sky-900 border-sky-200",
-          activePill: "bg-[#0071e3] text-white font-bold border-blue-700 shadow-xs",
+          badge: "bg-sky-100/90 text-sky-900",
+          pill: "bg-sky-50 text-sky-900",
+          activePill: "bg-[#0071e3] text-white font-medium shadow-xs",
           activeBadge: "bg-[#0071e3] text-white",
           dot: "bg-sky-400",
           emoji: "💎"
         };
       default:
         return {
-          badge: "bg-slate-100 text-slate-700 border-slate-200",
-          pill: "bg-slate-50 text-slate-700 border-slate-200",
-          activePill: "bg-slate-800 text-white font-bold border-slate-900 shadow-xs",
+          badge: "bg-slate-100 text-slate-700",
+          pill: "bg-slate-50 text-slate-700",
+          activePill: "bg-slate-800 text-white font-medium shadow-xs",
           activeBadge: "bg-slate-800 text-white",
           dot: "bg-slate-400",
           emoji: "⭐"
@@ -417,17 +417,17 @@ export default function Cashback() {
       
       {/* Title Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-950 flex items-center gap-2">
+        <h1 className="text-2xl font-normal text-slate-950 flex items-center gap-2">
           <Coins className="text-brand-light w-7 h-7" />
           Minha Carteira de Cashback
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-500 mt-1 font-normal">
           Acompanhe seus créditos acumulados, faça saques imediatos para sua conta Pix ou gere cupons para descontos adicionais em nosso catálogo.
         </p>
       </div>
 
       {successMessage && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl flex items-center gap-3 shadow-2xs">
+        <div className="bg-emerald-50 text-emerald-800 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
           <CheckCircle2 className="text-emerald-500 shrink-0" size={20} />
           <p className="text-xs sm:text-sm font-medium">{successMessage}</p>
         </div>
@@ -435,7 +435,7 @@ export default function Cashback() {
 
       {/* Coupon Success Result Modal */}
       {generatedCoupon && (
-        <div className="bg-[#e0f2fe] border border-sky-200 text-sky-950 p-6 rounded-3xl flex flex-col items-center text-center gap-4 shadow-sm relative overflow-hidden">
+        <div className="bg-[#e0f2fe] text-sky-950 p-6 rounded-3xl flex flex-col items-center text-center gap-4 shadow-md relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4">
             <button 
               onClick={() => setGeneratedCoupon(null)}
@@ -444,18 +444,18 @@ export default function Cashback() {
               <X size={18} />
             </button>
           </div>
-          <div className="w-12 h-12 rounded-full bg-sky-500 text-white flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center shadow-sm">
             <Sparkles size={24} />
           </div>
           <div>
-            <h3 className="text-lg font-bold">Cupom Gerado com Sucesso!</h3>
-            <p className="text-xs text-slate-600 mt-1">Utilize o código abaixo no campo de cupons no fechamento do seu carrinho para abater o valor do seu saldo.</p>
+            <h3 className="text-lg font-medium">Cupom Gerado com Sucesso!</h3>
+            <p className="text-xs text-slate-600 mt-1 font-normal">Utilize o código abaixo no campo de cupons no fechamento do seu carrinho para abater o valor do seu saldo.</p>
           </div>
-          <div className="flex items-center gap-2 bg-white border border-sky-100 rounded-2xl p-3.5 pr-4 pl-5 shadow-xs w-full max-w-sm justify-between">
-            <span className="font-mono font-bold text-lg text-slate-800 tracking-wider">{generatedCoupon.code}</span>
+          <div className="flex items-center gap-2 bg-white rounded-2xl p-3.5 pr-4 pl-5 shadow-sm w-full max-w-sm justify-between">
+            <span className="font-mono font-medium text-lg text-slate-800 tracking-wider">{generatedCoupon.code}</span>
             <button
               onClick={() => handleCopyCoupon(generatedCoupon.code)}
-              className="flex items-center gap-1.5 text-xs font-bold text-sky-600 hover:text-sky-800 transition-colors border border-sky-100 rounded-lg px-2.5 py-1.5 cursor-pointer bg-sky-50/50"
+              className="flex items-center gap-1.5 text-xs font-medium text-sky-600 hover:text-sky-800 transition-colors rounded-xl px-2.5 py-1.5 cursor-pointer bg-sky-50"
             >
               {copied ? (
                 <>
@@ -470,49 +470,49 @@ export default function Cashback() {
               )}
             </button>
           </div>
-          <p className="text-xs font-bold text-sky-700">Desconto de R$ {generatedCoupon.val.toFixed(2)} reservado para sua próxima compra.</p>
+          <p className="text-xs font-medium text-sky-700">Desconto de R$ {generatedCoupon.val.toFixed(2)} reservado para sua próxima compra.</p>
         </div>
       )}
 
       {/* Main Grid Card: Balance + Action Panels */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        {/* Balance Card - Primeira Opção com percentual dinâmico por nível e tabela de contas */}
-        <div className="md:col-span-1 bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 flex flex-col justify-between shadow-xs relative overflow-hidden">
+        {/* Balance Card */}
+        <div className="md:col-span-1 bg-white rounded-3xl p-5 sm:p-6 flex flex-col justify-between shadow-md relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-[0.03] pointer-events-none">
             <Coins size={130} className="text-slate-900" />
           </div>
           
           <div className="space-y-3 relative z-10">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Saldo Acumulado</span>
-              <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full border shadow-3xs ${currentTierStyle.badge}`}>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Saldo Acumulado</span>
+              <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full shadow-xs ${currentTierStyle.badge}`}>
                 <span>{currentTierStyle.emoji}</span>
                 <span>{userLevel}</span>
               </span>
             </div>
 
-            <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            <div className="text-3xl sm:text-4xl font-normal text-slate-900 tracking-tight">
               R$ {currentBalance.toFixed(2).replace(".", ",")}
             </div>
 
             {/* Texto informativo do percentual do nível atual */}
-            <div className="bg-slate-50/80 rounded-2xl p-3 border border-slate-100 space-y-1">
+            <div className="bg-slate-50/80 rounded-2xl p-3 space-y-1">
               <p className="text-xs text-slate-700 leading-snug">
-                Conforme seu tipo de conta, você recebe <strong className="text-[#0071e3] font-extrabold text-sm">{currentPercentage}% de retorno</strong> em suas compras no nível <strong className="text-slate-900 font-bold">{userLevel}</strong>.
+                Conforme seu tipo de conta, você recebe <strong className="text-[#0071e3] font-medium text-sm">{currentPercentage}% de retorno</strong> em suas compras no nível <strong className="text-slate-900 font-medium">{userLevel}</strong>.
               </p>
-              <p className="text-[10px] text-slate-400 leading-tight">
+              <p className="text-[10px] text-slate-400 leading-tight font-normal">
                 Percentual configurado na tabela de regras de cashback.
               </p>
             </div>
 
             {/* Tabela dos 4 tipos de conta e seus respectivos percentuais */}
-            <div className="pt-2 border-t border-slate-100">
+            <div className="pt-2">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
                   Percentuais por Nível de Conta:
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium">
+                <span className="text-[10px] text-slate-400 font-normal">
                   {rules.length} categorias
                 </span>
               </div>
@@ -524,17 +524,17 @@ export default function Cashback() {
                   return (
                     <div
                       key={rule.id || rule.nivel}
-                      className={`px-2.5 py-2 rounded-xl border text-[11px] flex items-center justify-between transition-all ${
+                      className={`px-2.5 py-2 rounded-2xl text-[11px] flex items-center justify-between transition-all ${
                         isCurrent
-                          ? `${style.activePill} ring-2 ring-sky-300/40 font-bold`
-                          : "bg-slate-50/70 text-slate-700 border-slate-200/80 hover:bg-slate-100"
+                          ? `${style.activePill} shadow-xs font-medium`
+                          : "bg-slate-50 text-slate-700 hover:bg-slate-100"
                       }`}
                     >
-                      <span className="flex items-center gap-1 font-semibold truncate">
+                      <span className="flex items-center gap-1 font-medium truncate">
                         <span>{style.emoji}</span>
                         <span className="truncate">{rule.nivel}</span>
                       </span>
-                      <span className={`font-extrabold shrink-0 ml-1 ${isCurrent ? "text-white" : "text-slate-900"}`}>
+                      <span className={`font-medium shrink-0 ml-1 ${isCurrent ? "text-white" : "text-slate-900"}`}>
                         {perc}%
                       </span>
                     </div>
@@ -549,13 +549,13 @@ export default function Cashback() {
         <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
           
           {/* Saque Pix Option */}
-          <div className="bg-white border border-slate-200 rounded-3xl p-5 flex flex-col justify-between shadow-2xs hover:border-slate-300 transition-colors">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 flex flex-col justify-between shadow-md hover:shadow-lg transition-shadow">
             <div className="space-y-2">
-              <div className="w-10 h-10 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-600">
+              <div className="w-10 h-10 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-600 shadow-xs">
                 <PiggyBank size={20} />
               </div>
-              <h3 className="font-bold text-slate-900 text-sm">Resgatar via Pix</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <h3 className="font-medium text-slate-900 text-base">Resgatar via Pix</h3>
+              <p className="text-xs text-slate-500 leading-relaxed font-normal">
                 Transfira o saldo disponível de forma rápida e segura direto para sua conta bancária de preferência.
               </p>
             </div>
@@ -567,7 +567,7 @@ export default function Cashback() {
                   setShowPixModal(true);
                 }}
                 disabled={currentBalance < 10}
-                className="w-full py-2 px-4 bg-sky-50 hover:bg-sky-100 disabled:bg-slate-50 disabled:text-slate-400 text-sky-700 font-semibold rounded-xl text-xs sm:text-sm transition-all text-center cursor-pointer disabled:cursor-not-allowed select-none"
+                className="w-full py-2.5 px-4 bg-sky-50 hover:bg-sky-100 disabled:bg-slate-50 disabled:text-slate-400 text-sky-700 font-medium rounded-2xl text-xs sm:text-sm transition-all text-center cursor-pointer disabled:cursor-not-allowed select-none shadow-xs"
               >
                 {currentBalance < 10 ? "Mínimo R$ 10,00 para Saque" : "Solicitar Saque Pix"}
               </button>
@@ -575,13 +575,13 @@ export default function Cashback() {
           </div>
 
           {/* Desconto de Cupom Option */}
-          <div className="bg-white border border-slate-200 rounded-3xl p-5 flex flex-col justify-between shadow-2xs hover:border-slate-300 transition-colors">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 flex flex-col justify-between shadow-md hover:shadow-lg transition-shadow">
             <div className="space-y-2">
-              <div className="w-10 h-10 rounded-2xl bg-yellow-50 flex items-center justify-center text-yellow-600">
+              <div className="w-10 h-10 rounded-2xl bg-yellow-50 flex items-center justify-center text-yellow-600 shadow-xs">
                 <TrendingUp size={20} />
               </div>
-              <h3 className="font-bold text-slate-900 text-sm">Abater nas Compras</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <h3 className="font-medium text-slate-900 text-base">Abater nas Compras</h3>
+              <p className="text-xs text-slate-500 leading-relaxed font-normal">
                 Converta parte ou o total do seu saldo em um cupom de desconto personalizado para economizar em nosso site.
               </p>
             </div>
@@ -594,7 +594,7 @@ export default function Cashback() {
                   setShowDiscountModal(true);
                 }}
                 disabled={currentBalance <= 0}
-                className="w-full py-2 px-4 bg-yellow-50 hover:bg-yellow-100 disabled:bg-slate-50 disabled:text-slate-400 text-yellow-800 font-semibold rounded-xl text-xs sm:text-sm transition-all text-center cursor-pointer disabled:cursor-not-allowed select-none"
+                className="w-full py-2.5 px-4 bg-yellow-50 hover:bg-yellow-100 disabled:bg-slate-50 disabled:text-slate-400 text-yellow-800 font-medium rounded-2xl text-xs sm:text-sm transition-all text-center cursor-pointer disabled:cursor-not-allowed select-none shadow-xs"
               >
                 {currentBalance <= 0 ? "Sem saldo disponível" : "Gerar Cupom de Desconto"}
               </button>
@@ -605,14 +605,14 @@ export default function Cashback() {
       </div>
 
       {/* Cashback Simulator Section */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-6">
-        <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
-          <div className="w-10 h-10 rounded-2xl bg-[#0071e3]/10 flex items-center justify-center text-[#0071e3]">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md space-y-6">
+        <div className="flex items-center gap-3 pb-4">
+          <div className="w-10 h-10 rounded-2xl bg-[#0071e3]/10 flex items-center justify-center text-[#0071e3] shadow-xs">
             <Calculator size={20} />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 text-base">Simulador de Cashback</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Simule o valor de uma compra e descubra o quanto você irá acumular de cashback!</p>
+            <h3 className="font-normal text-slate-900 text-lg">Simulador de Cashback</h3>
+            <p className="text-xs text-slate-500 mt-0.5 font-normal">Simule o valor de uma compra e descubra o quanto você irá acumular de cashback!</p>
           </div>
         </div>
 
@@ -620,9 +620,9 @@ export default function Cashback() {
           {/* Left Column: Form Input */}
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase">Valor da Compra Simulado</label>
-              <div className="relative rounded-xl shadow-2xs">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">R$</span>
+              <label className="text-xs font-medium text-slate-500 uppercase">Valor da Compra Simulado</label>
+              <div className="relative rounded-2xl shadow-xs">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-400">R$</span>
                 <input
                   type="text"
                   placeholder="0,00"
@@ -637,10 +637,10 @@ export default function Cashback() {
                       setSimValue(floatVal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
                     }
                   }}
-                  className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-sky-100 focus:border-[#0071e3] outline-none text-base font-bold text-slate-800"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 rounded-2xl focus:bg-white focus:ring-4 focus:ring-sky-100 outline-none text-base font-medium text-slate-800"
                 />
               </div>
-              <p className="text-[10px] text-slate-400 mt-1">Digite um valor para simular o retorno com base nos níveis de cliente configurados na tabela.</p>
+              <p className="text-[10px] text-slate-400 mt-1 font-normal">Digite um valor para simular o retorno com base nos níveis de cliente configurados na tabela.</p>
             </div>
 
             {/* Quick buttons */}
@@ -652,7 +652,7 @@ export default function Cashback() {
                   onClick={() => {
                     setSimValue(val.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
                   }}
-                  className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold text-slate-600 transition-colors cursor-pointer select-none"
+                  className="px-3.5 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-medium text-slate-600 transition-colors cursor-pointer select-none shadow-xs"
                 >
                   R$ {val}
                 </button>
@@ -660,23 +660,23 @@ export default function Cashback() {
             </div>
 
             {/* Rules explanation box */}
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/50 text-xs text-slate-600 space-y-2">
-              <span className="font-bold text-slate-700 block">Como funciona o nível e o acúmulo?</span>
-              <p className="leading-relaxed">
+            <div className="bg-slate-50 rounded-2xl p-4 text-xs text-slate-600 space-y-2">
+              <span className="font-medium text-slate-700 block">Como funciona o nível e o acúmulo?</span>
+              <p className="leading-relaxed font-normal">
                 Todo cliente inicia como <strong>Bronze</strong> (compras de R$ 1,00 até R$ 400,00). Ao realizar compras de R$ 401,00 até R$ 800,00 avança para <strong>Prata</strong>; de R$ 801,00 até R$ 1.200,00 torna-se <strong>Ouro</strong>; e compras acima de R$ 1.200,00 alcançam o nível <strong>Diamante</strong>.
               </p>
-              <p className="leading-relaxed">
+              <p className="leading-relaxed font-normal">
                 A cada recebimento de compra baixado no sistema financeiro, o nível do cliente é atualizado para as próximas compras, ajustando automaticamente a taxa de cashback e os preços exclusivos de sua categoria.
               </p>
-              <p className="leading-relaxed">
+              <p className="leading-relaxed font-normal">
                 Seus créditos de cashback acumulados ficam salvos na sua carteira e podem ser usados para gerar cupons de desconto de até 100% ou resgatados via Pix com 75% do valor líquido.
               </p>
             </div>
           </div>
 
           {/* Right Column: Calculations */}
-          <div className="bg-slate-50/50 rounded-2xl p-5 border border-slate-200/60 space-y-4">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Retorno por Nível de Cliente</span>
+          <div className="bg-slate-50/70 rounded-2xl p-5 space-y-4">
+            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider block">Retorno por Nível de Cliente</span>
             
             <div className="space-y-2.5">
               {rules.map((rule) => {
@@ -690,24 +690,24 @@ export default function Cashback() {
                 return (
                   <div 
                     key={rule.id || rule.nivel}
-                    className={`p-3.5 rounded-xl border transition-all ${
+                    className={`p-4 rounded-2xl transition-all shadow-xs ${
                       isCurrent 
-                        ? "bg-sky-50/60 border-sky-300 ring-2 ring-sky-200/50 shadow-2xs" 
-                        : "bg-white border-slate-200/60 hover:border-slate-300"
+                        ? "bg-sky-50 text-sky-900" 
+                        : "bg-white text-slate-800"
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className={`font-bold text-xs px-2.5 py-0.5 rounded-full border shadow-3xs ${style.badge}`}>
+                        <span className={`font-medium text-xs px-2.5 py-0.5 rounded-full shadow-xs ${style.badge}`}>
                           {style.emoji} {rule.nivel}
                         </span>
                         {isCurrent && (
-                          <span className="bg-[#0071e3] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                          <span className="bg-[#0071e3] text-white text-[9px] font-medium px-2 py-0.5 rounded-md uppercase tracking-wider">
                             Seu Nível
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-slate-600 font-bold">
+                      <span className="text-xs text-slate-600 font-medium">
                         {percent}% de retorno
                       </span>
                     </div>
@@ -715,22 +715,22 @@ export default function Cashback() {
                     <div className="flex items-baseline justify-between mt-3">
                       <div>
                         {minOrder > 0 ? (
-                          <p className="text-[10px] text-slate-400">
+                          <p className="text-[10px] text-slate-400 font-normal">
                             Compra mín: R$ {minOrder.toFixed(2).replace(".", ",")}
                           </p>
                         ) : (
-                          <p className="text-[10px] text-slate-400">
+                          <p className="text-[10px] text-slate-400 font-normal">
                             Sem valor mínimo
                           </p>
                         )}
                       </div>
                       <div className="text-right">
                         {!isEligible ? (
-                          <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
+                          <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-lg">
                             Abaixo do valor mínimo
                           </span>
                         ) : (
-                          <span className={`font-extrabold text-sm ${isCurrent ? "text-sky-700" : "text-slate-800"}`}>
+                          <span className={`font-medium text-base ${isCurrent ? "text-sky-700" : "text-slate-800"}`}>
                             + R$ {earned.toFixed(2).replace(".", ",")}
                           </span>
                         )}
@@ -754,9 +754,9 @@ export default function Cashback() {
                 
                 if (extraEarned > 0) {
                   return (
-                    <div className="bg-emerald-50/80 border border-emerald-200 text-emerald-950 p-3 rounded-xl text-[11px] leading-relaxed flex items-center gap-2 shadow-3xs">
+                    <div className="bg-emerald-50 text-emerald-950 p-4 rounded-2xl text-[11px] leading-relaxed flex items-center gap-2.5 shadow-sm">
                       <Sparkles size={16} className="text-amber-500 shrink-0" />
-                      <p>
+                      <p className="font-normal">
                         No nível <strong>{higherStyle.emoji} {higherTier.nivel} ({higherPercent}%)</strong>, você acumularia mais <strong>R$ {extraEarned.toFixed(2).replace(".", ",")}</strong> nesta compra! Faça mais pedidos para subir de nível.
                       </p>
                     </div>
@@ -772,11 +772,11 @@ export default function Cashback() {
       {/* Pix Modal Form */}
       {showPixModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-100 shadow-xl space-y-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-4">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Solicitar Saque via Pix</h3>
-                <p className="text-xs text-slate-500 mt-1">Transfira seu cashback para sua chave Pix bancária.</p>
+                <h3 className="text-lg font-medium text-slate-900">Solicitar Saque via Pix</h3>
+                <p className="text-xs text-slate-500 mt-1 font-normal">Transfira seu cashback para sua chave Pix bancária.</p>
               </div>
               <button 
                 onClick={() => setShowPixModal(false)}
@@ -787,18 +787,18 @@ export default function Cashback() {
             </div>
 
             {/* Reminder Warning Banner */}
-            <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-2xl text-xs flex flex-col gap-2 leading-relaxed shadow-3xs">
-              <div className="flex items-center gap-1.5 font-bold text-amber-800">
+            <div className="bg-amber-50 text-amber-900 p-4 rounded-2xl text-xs flex flex-col gap-2 leading-relaxed shadow-xs">
+              <div className="flex items-center gap-1.5 font-medium text-amber-800">
                 <AlertCircle size={15} className="text-amber-600 shrink-0" />
                 <span>Aviso de Conversão via Pix</span>
               </div>
-              <p>
+              <p className="font-normal">
                 Lembramos que, caso você opte por receber o cashback disponível através de transferência Pix, <strong>será devido o valor de 75% sobre o valor apresentado no painel</strong> (com abatimento de 25% referente a taxas de operação administrativa).
               </p>
             </div>
 
             {pixError && (
-              <div className="bg-red-50 text-red-700 p-3 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+              <div className="bg-red-50 text-red-700 p-3.5 rounded-2xl text-xs font-medium flex items-center gap-1.5 shadow-xs">
                 <AlertCircle size={14} />
                 <span>{pixError}</span>
               </div>
@@ -806,24 +806,24 @@ export default function Cashback() {
 
             <form onSubmit={handleRequestPix} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase">Valor do Saque</label>
-                <div className="relative rounded-xl shadow-2xs">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">R$</span>
+                <label className="text-xs font-medium text-slate-500 uppercase">Valor do Saque</label>
+                <div className="relative rounded-2xl shadow-xs">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-400">R$</span>
                   <input
                     type="text"
                     required
                     placeholder="0,00"
                     value={pixAmount}
                     onChange={(e) => setPixAmount(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-sky-100 focus:border-sky-500 outline-none text-sm transition-all text-slate-800"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-2xl focus:bg-white focus:ring-4 focus:ring-sky-100 outline-none text-sm transition-all text-slate-800 font-medium"
                   />
                 </div>
                 <div className="flex justify-between items-center mt-1">
-                  <p className="text-[10px] text-slate-400">Saldo disponível: R$ {currentBalance.toFixed(2).replace(".", ",")}</p>
+                  <p className="text-[10px] text-slate-400 font-normal">Saldo disponível: R$ {currentBalance.toFixed(2).replace(".", ",")}</p>
                   <button
                     type="button"
                     onClick={() => setPixAmount(currentBalance.toFixed(2))}
-                    className="text-[10px] text-sky-600 hover:text-sky-800 font-bold hover:underline"
+                    className="text-[10px] text-sky-600 hover:text-sky-800 font-medium hover:underline cursor-pointer"
                   >
                     Usar Saldo Máximo
                   </button>
@@ -837,18 +837,18 @@ export default function Cashback() {
                 const adminFee = val * 0.25;
                 const netValue = val * 0.75;
                 return (
-                  <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl space-y-2 mt-2 shadow-3xs">
-                    <div className="flex justify-between text-xs text-slate-500 font-medium">
+                  <div className="bg-slate-50 p-4 rounded-2xl space-y-2 mt-2 shadow-xs">
+                    <div className="flex justify-between text-xs text-slate-500 font-normal">
                       <span>Valor solicitado (Painel):</span>
-                      <span className="font-semibold text-slate-700">R$ {val.toFixed(2).replace(".", ",")}</span>
+                      <span className="font-medium text-slate-700">R$ {val.toFixed(2).replace(".", ",")}</span>
                     </div>
-                    <div className="flex justify-between text-xs text-slate-500 font-medium">
+                    <div className="flex justify-between text-xs text-slate-500 font-normal">
                       <span>Taxa Operacional / Administrativa (25%):</span>
-                      <span className="font-semibold text-red-500">- R$ {adminFee.toFixed(2).replace(".", ",")}</span>
+                      <span className="font-medium text-red-500">- R$ {adminFee.toFixed(2).replace(".", ",")}</span>
                     </div>
-                    <div className="flex justify-between text-xs font-bold text-slate-800 pt-2 border-t border-slate-200/50 items-center">
+                    <div className="flex justify-between text-xs font-medium text-slate-800 pt-2 items-center">
                       <span className="text-slate-600">Valor líquido creditado via Pix (75%):</span>
-                      <span className="text-emerald-600 text-sm font-extrabold bg-emerald-50/70 px-2 py-1 rounded-lg border border-emerald-100">
+                      <span className="text-emerald-600 text-sm font-medium bg-emerald-50 px-2.5 py-1 rounded-xl shadow-xs">
                         R$ {netValue.toFixed(2).replace(".", ",")}
                       </span>
                     </div>
@@ -857,14 +857,14 @@ export default function Cashback() {
               })()}
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase">Tipo de Chave Pix</label>
+                <label className="text-xs font-medium text-slate-500 uppercase">Tipo de Chave Pix</label>
                 <select
                   value={pixKeyType}
                   onChange={(e) => {
                     setPixKeyType(e.target.value);
-                    setPixKey(""); // Reset input when key type changes to prevent wrong mask
+                    setPixKey("");
                   }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:ring-4 focus:ring-sky-100 focus:border-sky-500 outline-none text-sm transition-all text-slate-700"
+                  className="w-full bg-slate-50 rounded-2xl px-3.5 py-2.5 focus:ring-4 focus:ring-sky-100 outline-none text-sm transition-all text-slate-700 shadow-xs cursor-pointer font-medium"
                 >
                   <option value="CPF">CPF</option>
                   <option value="CNPJ">CNPJ</option>
@@ -875,7 +875,7 @@ export default function Cashback() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase">Chave Pix</label>
+                <label className="text-xs font-medium text-slate-500 uppercase">Chave Pix</label>
                 <input
                   type="text"
                   required
@@ -892,13 +892,7 @@ export default function Cashback() {
                   }
                   value={pixKey}
                   onChange={(e) => setPixKey(formatPixKey(pixKeyType, e.target.value))}
-                  className={`w-full px-3 py-2 bg-slate-50 border rounded-xl focus:bg-white focus:ring-4 focus:ring-sky-100 focus:border-sky-500 outline-none text-sm transition-all text-slate-800 ${
-                    pixKey
-                      ? validatePixKey(pixKeyType, pixKey).isValid
-                        ? "border-green-400 focus:border-green-500"
-                        : "border-red-300 focus:border-red-400"
-                      : "border-slate-200"
-                  }`}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-2xl focus:bg-white focus:ring-4 focus:ring-sky-100 outline-none text-sm transition-all text-slate-800 shadow-xs font-medium"
                 />
                 {pixKey && (
                   <div className="mt-1">
@@ -923,7 +917,7 @@ export default function Cashback() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase">Telefone com DDD</label>
+                <label className="text-xs font-medium text-slate-500 uppercase">Telefone com DDD</label>
                 <input
                   type="text"
                   required
@@ -936,23 +930,23 @@ export default function Cashback() {
                     if (v.length > 9) v = `${v.slice(0, 10)}-${v.slice(10)}`;
                     setPixPhone(v);
                   }}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-sky-100 focus:border-sky-500 outline-none text-sm transition-all text-slate-800"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-2xl focus:bg-white focus:ring-4 focus:ring-sky-100 outline-none text-sm transition-all text-slate-800 shadow-xs font-medium"
                 />
-                <p className="text-[10px] text-slate-500">Para envio do comprovante do Pix realizado.</p>
+                <p className="text-[10px] text-slate-500 font-normal">Para envio do comprovante do Pix realizado.</p>
               </div>
 
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowPixModal(false)}
-                  className="flex-1 py-2 px-4 border border-slate-200 text-slate-600 font-semibold rounded-xl text-xs sm:text-sm hover:bg-slate-50 transition-colors cursor-pointer text-center"
+                  className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-600 font-medium rounded-2xl text-xs sm:text-sm hover:bg-slate-200 transition-colors cursor-pointer text-center"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-2 px-4 bg-sky-600 hover:bg-sky-700 disabled:bg-sky-400 text-white font-semibold rounded-xl text-xs sm:text-sm transition-colors cursor-pointer text-center animate-pulse-subtle"
+                  className="flex-1 py-2.5 px-4 bg-sky-600 hover:bg-sky-700 disabled:bg-sky-400 text-white font-medium rounded-2xl text-xs sm:text-sm transition-colors cursor-pointer text-center shadow-md"
                 >
                   {submitting ? "Enviando..." : "Confirmar Saque Pix"}
                 </button>
@@ -965,11 +959,11 @@ export default function Cashback() {
       {/* Discount Modal Form */}
       {showDiscountModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-100 shadow-xl space-y-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-4">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Gerar Cupom de Desconto</h3>
-                <p className="text-xs text-slate-500 mt-1">Converta seu cashback em um cupom promocional para compras.</p>
+                <h3 className="text-lg font-medium text-slate-900">Gerar Cupom de Desconto</h3>
+                <p className="text-xs text-slate-500 mt-1 font-normal">Converta seu cashback em um cupom promocional para compras.</p>
               </div>
               <button 
                 onClick={() => setShowDiscountModal(false)}
@@ -980,18 +974,18 @@ export default function Cashback() {
             </div>
 
             {/* Explanatory Note */}
-            <div className="bg-yellow-50 border border-yellow-200 text-yellow-900 p-4 rounded-2xl text-xs flex flex-col gap-1.5 leading-relaxed shadow-3xs">
-              <span className="font-bold flex items-center gap-1 text-yellow-850">
+            <div className="bg-yellow-50 text-yellow-900 p-4 rounded-2xl text-xs flex flex-col gap-1.5 leading-relaxed shadow-xs">
+              <span className="font-medium flex items-center gap-1 text-yellow-850">
                 <Sparkles size={14} className="text-yellow-600 shrink-0" />
                 Utilização Total do Cashback
               </span>
-              <p>
+              <p className="font-normal">
                 A geração do código promocional permite a <strong>utilização de todo o valor de cashback disponível</strong> no painel de uma vez só ou de um valor parcial para abater no fechamento de suas próximas compras.
               </p>
             </div>
 
             {discountError && (
-              <div className="bg-red-50 text-red-700 p-3 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+              <div className="bg-red-50 text-red-700 p-3.5 rounded-2xl text-xs font-medium flex items-center gap-1.5 shadow-xs">
                 <AlertCircle size={14} />
                 <span>{discountError}</span>
               </div>
@@ -999,7 +993,7 @@ export default function Cashback() {
 
             <form onSubmit={handleGenerateDiscount} className="space-y-4">
               {/* Checkbox for Full Balance Utilization */}
-              <div className="flex items-center gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <div className="flex items-center gap-2.5 bg-slate-50 p-3 rounded-2xl">
                 <input
                   type="checkbox"
                   id="useFullBalanceCheckbox"
@@ -1011,17 +1005,17 @@ export default function Cashback() {
                       setDiscountAmount(currentBalance.toFixed(2));
                     }
                   }}
-                  className="w-4 h-4 text-yellow-500 border-slate-300 rounded focus:ring-yellow-400 focus:ring-2"
+                  className="w-4 h-4 text-yellow-500 rounded focus:ring-yellow-400 focus:ring-2 cursor-pointer"
                 />
-                <label htmlFor="useFullBalanceCheckbox" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                <label htmlFor="useFullBalanceCheckbox" className="text-xs font-medium text-slate-700 cursor-pointer select-none">
                   Resgatar TODO o saldo disponível (R$ {currentBalance.toFixed(2).replace(".", ",")})
                 </label>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase">Valor do Cupom</label>
-                <div className="relative rounded-xl shadow-2xs">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">R$</span>
+                <label className="text-xs font-medium text-slate-500 uppercase">Valor do Cupom</label>
+                <div className="relative rounded-2xl shadow-xs">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-400">R$</span>
                   <input
                     type="text"
                     required
@@ -1029,11 +1023,11 @@ export default function Cashback() {
                     placeholder="0,00"
                     value={discountAmount}
                     onChange={(e) => setDiscountAmount(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-yellow-100 focus:border-yellow-500 disabled:opacity-75 disabled:bg-slate-100 disabled:cursor-not-allowed outline-none text-sm transition-all font-bold text-slate-800"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-2xl focus:bg-white focus:ring-4 focus:ring-yellow-100 disabled:opacity-75 disabled:bg-slate-100 disabled:cursor-not-allowed outline-none text-sm transition-all font-medium text-slate-800"
                   />
                 </div>
                 {!useFullBalance && (
-                  <p className="text-[10px] text-slate-400">Saldo disponível para conversão parcial: R$ {currentBalance.toFixed(2).replace(".", ",")}</p>
+                  <p className="text-[10px] text-slate-400 font-normal">Saldo disponível para conversão parcial: R$ {currentBalance.toFixed(2).replace(".", ",")}</p>
                 )}
               </div>
 
@@ -1041,14 +1035,14 @@ export default function Cashback() {
                 <button
                   type="button"
                   onClick={() => setShowDiscountModal(false)}
-                  className="flex-1 py-2 px-4 border border-slate-200 text-slate-600 font-semibold rounded-xl text-xs sm:text-sm hover:bg-slate-50 transition-colors cursor-pointer text-center"
+                  className="flex-1 py-2.5 px-4 bg-slate-100 text-slate-600 font-medium rounded-2xl text-xs sm:text-sm hover:bg-slate-200 transition-colors cursor-pointer text-center"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-2 px-4 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-400 text-slate-900 font-bold rounded-xl text-xs sm:text-sm transition-colors cursor-pointer text-center"
+                  className="flex-1 py-2.5 px-4 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-400 text-slate-900 font-medium rounded-2xl text-xs sm:text-sm transition-colors cursor-pointer text-center shadow-md"
                 >
                   {submitting ? "Gerando..." : "Gerar Cupom de Desconto"}
                 </button>
@@ -1057,8 +1051,6 @@ export default function Cashback() {
           </div>
         </div>
       )}
-
-{/* Transaction History removed from Client side as requested */}
 
     </div>
   );

@@ -15,15 +15,26 @@ export default function CustomerArea() {
   const navigate = useNavigate();
   
   const queryParams = new URLSearchParams(location.search);
-  const startAsSignup = queryParams.get("signup") === "true" || location.state?.signup === true;
   const isSugestaoFlow = queryParams.get("redirect") === "sugestao" || queryParams.get("sugestao") === "true" || sessionStorage.getItem("openSuggestion") === "true" || localStorage.getItem("openSuggestion") === "true";
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [isLogin, setIsLogin] = React.useState(!startAsSignup);
+  const [isLogin, setIsLogin] = React.useState(() => {
+    const isSignup = queryParams.get("signup") === "true" || location.state?.signup === true;
+    return !isSignup;
+  });
   const [isForgotPassword, setIsForgotPassword] = React.useState(false);
   const [resetSent, setResetSent] = React.useState(false);
   const [authError, setAuthError] = React.useState("");
+
+  React.useEffect(() => {
+    const currentParams = new URLSearchParams(location.search);
+    const isSignupUrl = currentParams.get("signup") === "true" || location.state?.signup === true;
+    setIsLogin(!isSignupUrl);
+    if (!isSignupUrl) {
+      setIsForgotPassword(false);
+    }
+  }, [location.search, location.state]);
 
   const auth = getAuth();
 
@@ -105,10 +116,10 @@ export default function CustomerArea() {
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-             <CompanyLogo className="w-auto h-[169px] object-contain" />
+             <CompanyLogo className="w-[45%] max-w-[45%] h-auto object-contain mx-auto" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Recuperar Senha</h1>
-          <p className="text-[16.1px] text-slate-500">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2 text-center w-full">Recuperar Senha</h1>
+          <p className="text-[16.1px] text-slate-500 text-center w-full mx-auto">
             Informe seu email para receber um link de redefinição.
           </p>
         </div>
@@ -118,7 +129,7 @@ export default function CustomerArea() {
           className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4"
         >
           {resetSent ? (
-            <div className="bg-green-50 text-green-700 p-4 rounded-lg text-sm mb-4">
+            <div className="bg-green-50 text-green-700 p-4 rounded-lg text-sm mb-4 text-center">
               Email de recuperação enviado! Verifique sua caixa de entrada (e pasta de spam) para redefinir sua senha.
             </div>
           ) : (
@@ -150,6 +161,7 @@ export default function CustomerArea() {
             onClick={() => {
               setIsForgotPassword(false);
               setResetSent(false);
+              navigate("/minha-conta");
             }}
             className="font-semibold text-brand-dark hover:underline"
           >
@@ -164,10 +176,10 @@ export default function CustomerArea() {
     <div className="max-w-md mx-auto">
       <div className="text-center mb-8">
         <div className="flex justify-center mb-6">
-           <CompanyLogo className="w-auto h-[169px] object-contain" />
+           <CompanyLogo className="w-[45%] max-w-[45%] h-auto object-contain mx-auto" />
         </div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Entrar</h1>
-        <p className="text-[16.1px] text-slate-500">Acesse sua Área do Cliente.</p>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2 text-center w-full">Entrar</h1>
+        <p className="text-[16.1px] text-slate-500 text-center w-full mx-auto">Acesse sua Área do Cliente.</p>
       </div>
 
       {isSugestaoFlow && (
@@ -234,7 +246,7 @@ export default function CustomerArea() {
       <div className="text-center mt-6 text-[16.1px]">
         <span className="text-slate-500 mr-2">Não tem uma conta?</span>
         <button
-          onClick={() => setIsLogin(false)}
+          onClick={() => navigate("/minha-conta?signup=true")}
           className="font-semibold text-brand-dark hover:underline"
         >
           Cadastre-se

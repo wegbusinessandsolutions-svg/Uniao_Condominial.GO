@@ -43,10 +43,10 @@ export default function PartnersCarousel() {
   const repeatedMarcas = [...marcas, ...marcas, ...marcas, ...marcas];
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 overflow-hidden relative">
+    <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md overflow-hidden relative">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-900">Marcas Parceiras</h2>
-        <a href="/cliente/marcas" className="text-sm font-medium text-[#0071e3] hover:underline">Ver todos</a>
+        <h2 className="text-xl sm:text-2xl font-normal text-slate-900">Marcas Parceiras</h2>
+        <a href="/cliente/marcas" className="text-sm sm:text-base font-normal text-[#0071e3] hover:underline">Ver todas</a>
       </div>
 
       <div className="relative w-full flex items-center overflow-hidden h-28 mask-image-fade">
@@ -72,7 +72,7 @@ export default function PartnersCarousel() {
           {repeatedMarcas.map((marca, idx) => (
             <div
               key={`${marca.id}-${idx}`}
-              className="flex-shrink-0 w-36 h-18 bg-white border border-slate-200/80 rounded-2xl flex items-center justify-center p-2.5 hover:border-[#0071e3]/30 shadow-2xs hover:shadow-md hover:scale-105 transition-all duration-300"
+              className="flex-shrink-0 w-36 h-20 bg-white rounded-2xl flex items-center justify-center p-3 shadow-xs hover:shadow-lg hover:scale-105 transition-all duration-300"
             >
               <OptimizedImage
                 src={marca.logomarca || ""}

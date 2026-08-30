@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { flushSync } from "react-dom";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Plus,
   Search,
@@ -24,6 +25,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Zap,
 } from "lucide-react";
 import {
   BarChart,
@@ -118,9 +120,10 @@ export default function GenericModulePage({
   const [filters, setFilters] = useState<FilterState>(initialFilterState);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number | "all">(15);
-  const [jumpPageInput, setJumpPageInput] = useState<string>("");
-  const tableRef = React.useRef<HTMLDivElement>(null);
+  const [pageSize, setPageSize] = useState<number | "all" | "virtual">(15);
+  const [jumpPageInput, setJumpPageInput] = useState<string>("" );
+  const tableRef = useRef<HTMLDivElement>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -650,12 +653,40 @@ export default function GenericModulePage({
     setCurrentPage(1);
   }, [filters, collectionName]);
 
+  // Virtual scrolling state and setup
+  const isVirtualMode = pageSize === "virtual" || (pageSize === "all" && filteredData.length > 50);
+
+  const rowVirtualizer = useVirtualizer({
+    count: isVirtualMode ? filteredData.length : 0,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 53,
+    overscan: 10,
+  });
+
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const totalVirtualHeight = rowVirtualizer.getTotalSize();
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0;
+  const paddingBottom =
+    virtualRows.length > 0
+      ? totalVirtualHeight - virtualRows[virtualRows.length - 1].end
+      : 0;
+
+  // Reset scroll on filter change
+  useEffect(() => {
+    if (tableContainerRef.current && isVirtualMode) {
+      tableContainerRef.current.scrollTop = 0;
+    }
+  }, [filters, isVirtualMode]);
+
   // Pagination calculations
-  const totalPages = pageSize === "all" ? 1 : Math.max(1, Math.ceil(filteredData.length / pageSize));
+  const totalPages =
+    pageSize === "all" || pageSize === "virtual"
+      ? 1
+      : Math.max(1, Math.ceil(filteredData.length / pageSize));
   const validCurrentPage = Math.min(currentPage, totalPages);
 
   const paginatedData = useMemo(() => {
-    if (pageSize === "all") return filteredData;
+    if (pageSize === "all" || pageSize === "virtual") return filteredData;
     const startIndex = (validCurrentPage - 1) * pageSize;
     return filteredData.slice(startIndex, startIndex + pageSize);
   }, [filteredData, validCurrentPage, pageSize]);
@@ -690,34 +721,34 @@ export default function GenericModulePage({
   return (
     <>
     <div className="space-y-6 print:hidden">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/90 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             {title}
           </h1>
           {description && (
-            <p className="text-sm text-slate-500 mt-1">{description}</p>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-normal leading-relaxed">{description}</p>
           )}
         </div>
-        <div className="flex items-center gap-2 print:hidden">
+        <div className="flex flex-wrap items-center gap-2.5 print:hidden">
           <button
             onClick={handlePrint}
-            className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors flex items-center gap-2 cursor-pointer"
+            className="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-all flex items-center gap-2 cursor-pointer shadow-2xs active:scale-[0.99]"
           >
-            <Printer size={16} /> Imprimir
+            <Printer size={15} className="text-slate-500" /> Imprimir
           </button>
           <button
             onClick={() => handleExportPdf()}
             disabled={isExportingPdf}
-            className="px-4 py-2 bg-sky-700 text-white border border-sky-800 rounded-lg text-sm font-medium hover:bg-sky-800 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-60 shadow-xs"
+            className="px-3.5 py-2 bg-sky-700 text-white border border-sky-800 rounded-xl text-xs font-semibold hover:bg-sky-800 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 shadow-xs active:scale-[0.99]"
             title="Exportar em PDF com todos os contatos e comunicado para condôminos"
           >
-            <Download size={16} /> {isExportingPdf ? "Gerando PDF..." : "Exportar PDF"}
+            <Download size={15} /> {isExportingPdf ? "Gerando PDF..." : "Exportar PDF"}
           </button>
           {collectionName && (
             <button
               onClick={() => handleOpenModal()}
-              className="px-4 py-2 bg-brand-dark text-white rounded-lg text-sm font-medium hover:bg-brand-dark/90 transition-colors flex items-center gap-2 cursor-pointer"
+              className="px-4 py-2 bg-[#0071e3] hover:bg-[#0071e3]/90 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:shadow active:scale-[0.99]"
             >
               <Plus size={16} /> {onAddMessage}
             </button>
@@ -726,20 +757,20 @@ export default function GenericModulePage({
       </div>
 
       {metrics.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 print:hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 print:hidden">
           {metrics.map((m, i) => (
             <div
               key={i}
-              className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm"
+              className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-sm transition-all space-y-2"
             >
-              <p className="text-sm font-medium text-slate-500 mb-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                 {m.label}
               </p>
-              <div className="flex items-end justify-between">
-                <h3 className="text-2xl font-bold text-slate-900">{m.value}</h3>
+              <div className="flex items-end justify-between gap-2">
+                <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">{m.value}</h3>
                 {m.trend && (
                   <span
-                    className={`text-xs font-semibold px-2 py-1 rounded-full ${m.trendUp ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}
+                    className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${m.trendUp ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60" : "bg-rose-50 text-rose-700 border border-rose-200/60"}`}
                   >
                     {m.trend}
                   </span>
@@ -912,10 +943,24 @@ export default function GenericModulePage({
       <div ref={tableRef} className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
         {/* Table Top Info & Quick Pagination Bar */}
         <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 print:hidden">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-slate-700">
               {filteredData.length === 0 ? (
                 "Nenhum registro"
+              ) : isVirtualMode ? (
+                <span className="flex items-center gap-1.5 text-sky-800">
+                  <Zap size={14} className="text-amber-500 fill-amber-500" />
+                  <strong>Modo Rolagem Virtual Ativo</strong> • Mostrando{" "}
+                  <strong className="text-slate-900">{filteredData.length}</strong> registros
+                  {data.length !== filteredData.length && (
+                    <span className="text-slate-400 font-normal ml-1">
+                      (filtrado de {data.length})
+                    </span>
+                  )}
+                  <span className="ml-1.5 px-2 py-0.5 bg-sky-100/80 text-sky-800 rounded-full font-bold text-[11px]">
+                    {virtualRows.length} linhas no DOM
+                  </span>
+                </span>
               ) : (
                 <>
                   Página <strong className="text-sky-700">{validCurrentPage}</strong> de{" "}
@@ -940,12 +985,46 @@ export default function GenericModulePage({
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Quick Virtual Scroll Toggle */}
+            {filteredData.length > 10 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPageSize((prev) => (prev === "virtual" ? 15 : "virtual"));
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors border cursor-pointer ${
+                  isVirtualMode
+                    ? "bg-sky-700 text-white border-sky-800 shadow-2xs"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                }`}
+                title={
+                  isVirtualMode
+                    ? "Clique para voltar à paginação clássica"
+                    : "Ativar Rolagem Virtual de alta performance para listas grandes"
+                }
+              >
+                <Zap
+                  size={13}
+                  className={
+                    isVirtualMode ? "text-amber-300 fill-amber-300" : "text-slate-400"
+                  }
+                />
+                <span>{isVirtualMode ? "Rolagem Virtual Ativa" : "Rolagem Virtual"}</span>
+              </button>
+            )}
+
             <div className="flex items-center gap-1.5">
               <span className="text-slate-500 font-medium">Itens por pág.:</span>
               <select
                 value={pageSize}
                 onChange={(e) => {
-                  const val = e.target.value === "all" ? "all" : Number(e.target.value);
+                  const val =
+                    e.target.value === "all"
+                      ? "all"
+                      : e.target.value === "virtual"
+                      ? "virtual"
+                      : Number(e.target.value);
                   setPageSize(val);
                   setCurrentPage(1);
                 }}
@@ -956,11 +1035,12 @@ export default function GenericModulePage({
                 <option value={25}>25 por pág.</option>
                 <option value={50}>50 por pág.</option>
                 <option value={100}>100 por pág.</option>
-                <option value="all">Exibir Todos</option>
+                <option value="virtual">⚡ Rolagem Virtual (Todos)</option>
+                <option value="all">Exibir Todos (Padrão)</option>
               </select>
             </div>
 
-            {pageSize !== "all" && totalPages > 1 && (
+            {!isVirtualMode && pageSize !== "all" && totalPages > 1 && (
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => {
@@ -992,9 +1072,20 @@ export default function GenericModulePage({
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
+        <div
+          ref={tableContainerRef}
+          className={`overflow-x-auto ${
+            isVirtualMode
+              ? "max-h-[620px] overflow-y-auto relative scroll-smooth focus:outline-none"
+              : ""
+          }`}
+        >
+          <table className="w-full text-left text-sm border-collapse">
+            <thead
+              className={`bg-slate-50 text-slate-700 border-b border-slate-200 ${
+                isVirtualMode ? "sticky top-0 z-20 bg-slate-50/95 backdrop-blur-xs shadow-2xs" : ""
+              }`}
+            >
               <tr>
                 {columns.map((col) => {
                   const isSorted = filters.sortBy === col.key;
@@ -1036,21 +1127,42 @@ export default function GenericModulePage({
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
-                Array.from({ length: 5 }).map((_, rIdx) => (
-                  <tr key={rIdx} className="animate-pulse">
+                Array.from({ length: 6 }).map((_, rIdx) => (
+                  <tr key={rIdx} className="hover:bg-slate-50/50 transition-colors">
                     {columns.map((col, cIdx) => (
                       <td key={col.key} className="px-4 py-4">
-                        <div
-                          className="h-4 bg-slate-100 rounded"
-                          style={{ width: cIdx === 0 ? "60%" : cIdx === 1 ? "45%" : "75%" }}
-                        />
+                        {cIdx === 0 ? (
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-slate-200/70 relative overflow-hidden shrink-0 before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent" />
+                            <div className="space-y-1.5 flex-1 max-w-[200px]">
+                              <div className="h-3.5 bg-slate-200/70 rounded relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent w-3/4" />
+                              <div className="h-2.5 bg-slate-100 rounded relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent w-1/2" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className="h-3.5 bg-slate-200/70 rounded relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent"
+                            style={{
+                              width:
+                                cIdx % 3 === 0
+                                  ? "65%"
+                                  : cIdx % 3 === 1
+                                  ? "45%"
+                                  : "80%",
+                            }}
+                          />
+                        )}
                       </td>
                     ))}
                     {collectionName && (
-                      <td className="px-4 py-4 print:hidden">
-                        <div className="h-4 bg-slate-100 rounded w-16 ml-auto" />
+                      <td className="px-4 py-4 print:hidden text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="h-7 w-7 bg-slate-100 rounded-md relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent" />
+                          <div className="h-7 w-7 bg-slate-100 rounded-md relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent" />
+                          <div className="h-7 w-7 bg-slate-100 rounded-md relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent" />
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -1078,6 +1190,84 @@ export default function GenericModulePage({
                     )}
                   </td>
                 </tr>
+              ) : isVirtualMode ? (
+                <>
+                  {paddingTop > 0 && (
+                    <tr>
+                      <td
+                        style={{ height: `${paddingTop}px` }}
+                        colSpan={columns.length + (collectionName ? 1 : 0)}
+                        className="p-0 m-0 border-0"
+                      />
+                    </tr>
+                  )}
+                  {virtualRows.map((virtualRow) => {
+                    const row = filteredData[virtualRow.index];
+                    if (!row) return null;
+                    return (
+                      <tr
+                        key={row.id || virtualRow.index}
+                        data-index={virtualRow.index}
+                        ref={rowVirtualizer.measureElement}
+                        className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 last:border-0"
+                      >
+                        {columns.map((col) => (
+                          <td key={col.key} className="px-4 py-3.5 text-slate-700">
+                            {col.render
+                              ? col.render(row[col.key], row)
+                              : row[col.key] !== undefined && row[col.key] !== null && row[col.key] !== ""
+                              ? String(row[col.key])
+                              : "—"}
+                          </td>
+                        ))}
+                        {collectionName && (
+                          <td className="px-4 py-3.5 print:hidden text-right">
+                            <div className="flex items-center justify-end gap-2.5">
+                              <button
+                                onClick={handlePrint}
+                                className="p-1 text-slate-400 hover:text-blue-900 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                                title="Imprimir"
+                              >
+                                <Printer size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleExportPdf(row)}
+                                disabled={isExportingPdf}
+                                className="p-1 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                                title="Baixar PDF deste Registro"
+                              >
+                                <Download size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleOpenModal(row)}
+                                className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
+                                title="Editar"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                onClick={() => setItemToDelete(row.id)}
+                                className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                                title="Excluir"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                  {paddingBottom > 0 && (
+                    <tr>
+                      <td
+                        style={{ height: `${paddingBottom}px` }}
+                        colSpan={columns.length + (collectionName ? 1 : 0)}
+                        className="p-0 m-0 border-0"
+                      />
+                    </tr>
+                  )}
+                </>
               ) : (
                 paginatedData.map((row, i) => (
                   <tr
@@ -1098,7 +1288,7 @@ export default function GenericModulePage({
                         <div className="flex items-center justify-end gap-2.5">
                           <button
                             onClick={handlePrint}
-                            className="p-1 text-slate-400 hover:text-blue-900 hover:bg-slate-100 rounded-md transition-colors"
+                            className="p-1 text-slate-400 hover:text-blue-900 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
                             title="Imprimir"
                           >
                             <Printer size={16} />
@@ -1113,14 +1303,14 @@ export default function GenericModulePage({
                           </button>
                           <button
                             onClick={() => handleOpenModal(row)}
-                            className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
                             title="Editar"
                           >
                             <Pencil size={16} />
                           </button>
                           <button
                             onClick={() => setItemToDelete(row.id)}
-                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                             title="Excluir"
                           >
                             <Trash2 size={16} />
@@ -1141,6 +1331,15 @@ export default function GenericModulePage({
             <span className="font-medium">
               {filteredData.length === 0 ? (
                 "0 registros"
+              ) : isVirtualMode ? (
+                <span className="flex items-center gap-1.5 text-sky-900">
+                  <Zap size={14} className="text-amber-500 fill-amber-500" />
+                  Mostrando todos os <strong>{filteredData.length}</strong> registros com{" "}
+                  <strong className="text-sky-700">Virtual Scrolling (60 FPS)</strong>
+                  <span className="text-slate-400 font-normal ml-1">
+                    (apenas ~{virtualRows.length} nós no DOM de cada vez)
+                  </span>
+                </span>
               ) : (
                 <>
                   Mostrando{" "}
@@ -1167,7 +1366,12 @@ export default function GenericModulePage({
               <select
                 value={pageSize}
                 onChange={(e) => {
-                  const val = e.target.value === "all" ? "all" : Number(e.target.value);
+                  const val =
+                    e.target.value === "all"
+                      ? "all"
+                      : e.target.value === "virtual"
+                      ? "virtual"
+                      : Number(e.target.value);
                   setPageSize(val);
                   setCurrentPage(1);
                 }}
@@ -1178,13 +1382,14 @@ export default function GenericModulePage({
                 <option value={25}>25</option>
                 <option value={50}>50</option>
                 <option value={100}>100</option>
+                <option value="virtual">⚡ Rolagem Virtual</option>
                 <option value="all">Todos</option>
               </select>
             </div>
           </div>
 
           {/* Pagination Navigation Buttons */}
-          {pageSize !== "all" && totalPages > 1 && (
+          {!isVirtualMode && pageSize !== "all" && totalPages > 1 && (
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1">
                 <button
@@ -1193,7 +1398,7 @@ export default function GenericModulePage({
                     tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
                   disabled={validCurrentPage === 1}
-                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
                   title="Primeira Página"
                 >
                   <ChevronsLeft size={14} />
@@ -1205,7 +1410,7 @@ export default function GenericModulePage({
                     tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
                   disabled={validCurrentPage === 1}
-                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
                   title="Página Anterior"
                 >
                   <ChevronLeft size={14} />
@@ -1227,7 +1432,7 @@ export default function GenericModulePage({
                             setCurrentPage(pageNum);
                             tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                           }}
-                          className={`min-w-[28px] h-7 px-2 rounded-lg font-bold text-xs transition-colors ${
+                          className={`min-w-[28px] h-7 px-2 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
                             validCurrentPage === pageNum
                               ? "bg-sky-600 text-white shadow-xs"
                               : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
@@ -1256,7 +1461,7 @@ export default function GenericModulePage({
                     tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
                   disabled={validCurrentPage === totalPages}
-                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
                   title="Próxima Página"
                 >
                   <ChevronRight size={14} />
@@ -1268,7 +1473,7 @@ export default function GenericModulePage({
                     tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
                   disabled={validCurrentPage === totalPages}
-                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
                   title="Última Página"
                 >
                   <ChevronsRight size={14} />
@@ -1300,7 +1505,7 @@ export default function GenericModulePage({
                   />
                   <button
                     type="submit"
-                    className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-semibold transition-colors"
+                    className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-semibold transition-colors cursor-pointer"
                   >
                     Ir
                   </button>

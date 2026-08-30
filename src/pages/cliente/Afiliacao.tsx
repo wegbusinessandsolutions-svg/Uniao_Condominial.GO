@@ -587,10 +587,10 @@ export default function Afiliacao() {
       {/* Feedback Toast */}
       {cancelFeedback && (
         <div
-          className={`p-4 rounded-2xl border flex items-center justify-between gap-3 shadow-xs ${
+          className={`p-4 rounded-3xl flex items-center justify-between gap-3 shadow-md ${
             cancelFeedback.type === "success"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-              : "bg-rose-50 border-rose-200 text-rose-800"
+              ? "bg-emerald-50 text-emerald-800"
+              : "bg-rose-50 text-rose-800"
           }`}
         >
           <div className="flex items-center gap-2.5">
@@ -599,11 +599,11 @@ export default function Afiliacao() {
             ) : (
               <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
             )}
-            <p className="text-sm font-semibold">{cancelFeedback.message}</p>
+            <p className="text-sm font-medium">{cancelFeedback.message}</p>
           </div>
           <button
             onClick={() => setCancelFeedback(null)}
-            className={`p-1.5 rounded-lg transition-colors ${
+            className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
               cancelFeedback.type === "success" ? "hover:bg-emerald-100" : "hover:bg-rose-100"
             }`}
           >
@@ -612,66 +612,66 @@ export default function Afiliacao() {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-md overflow-hidden">
         <div className="p-6 md:p-8">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-blue-50 text-[#0071e3] rounded-lg">
+            <div className="p-3 bg-blue-50 text-[#0071e3] rounded-2xl shadow-xs">
               <Building2 size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Afiliado - União Condominial</h2>
-              <p className="text-sm text-slate-500">Gerencie sua afiliação e benefícios exclusivos</p>
+              <h2 className="text-2xl font-normal text-slate-900 tracking-tight">Afiliado - União Condominial</h2>
+              <p className="text-sm text-slate-500 font-normal">Gerencie sua afiliação e benefícios exclusivos</p>
             </div>
           </div>
           
           <div className="mt-8">
             {(!afiliadoStatus || afiliadoStatus === "Cancelado" || queroAfiliar) && (
-              <div className="py-6 border-t border-slate-100">
+              <div className="py-6">
                 <label className="flex items-center gap-3 cursor-pointer group" onClick={() => setQueroAfiliar(!queroAfiliar)}>
-                  <div className={`w-6 h-6 rounded border flex items-center justify-center transition-colors ${queroAfiliar ? "bg-[#0071e3] border-[#0071e3]" : "bg-white border-slate-300 group-hover:border-[#0071e3]"}`}>
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors shadow-xs ${queroAfiliar ? "bg-[#0071e3]" : "bg-slate-100 group-hover:bg-slate-200"}`}>
                     {queroAfiliar && <Check className="w-4 h-4 text-white" />}
                   </div>
-                  <span className="font-semibold text-slate-800 text-[15px] select-none">Quero tornar meu condomínio Afiliado para obter vantagens exclusivas.</span>
+                  <span className="font-normal text-slate-800 text-base select-none">Quero tornar meu condomínio Afiliado para obter vantagens exclusivas.</span>
                 </label>
 
                 {queroAfiliar && (
-                  <div className="mt-5 p-5 bg-slate-50 border border-slate-200 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
-                    <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-                      Assinando o plano corporativo <strong>União Condominial</strong>, seu condomínio terá acesso a <strong className="text-slate-800">descontos de até 50%</strong> em serviços como limpeza de caixas d'água, manutenção de portões, CFTV, alarme e jardinagem. Além disso, a cada ano renovado, uma nova tabela de benefícios e cashback pode ser liberada.
+                  <div className="mt-5 p-6 bg-slate-50 rounded-3xl shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                    <p className="text-sm text-slate-600 mb-5 leading-relaxed font-normal">
+                      Assinando o plano corporativo <span className="font-medium text-slate-800">União Condominial</span>, seu condomínio terá acesso a <span className="font-medium text-slate-900">descontos de até 50%</span> em serviços como limpeza de caixas d'água, manutenção de portões, CFTV, alarme e jardinagem. Além disso, a cada ano renovado, uma nova tabela de benefícios e cashback pode ser liberada.
                     </p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-                      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Unidades do Condomínio</label>
+                      <div className="bg-white rounded-2xl p-4 shadow-sm">
+                        <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Unidades do Condomínio</label>
                         <input
                           type="number"
                           placeholder="Qtd. de apartamentos/casas"
                           value={unidades}
                           onChange={(e) => setUnidades(e.target.value ? Number(e.target.value) : "")}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 focus:border-[#0071e3] transition-all"
+                          className="w-full bg-slate-50 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 font-normal transition-all"
                         />
                       </div>
                       
-                      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-center">
-                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Valor da Mensalidade</label>
+                      <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col justify-center">
+                        <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Valor da Mensalidade</label>
                         {Number(unidades) > 0 ? (
                           <div className="flex items-baseline gap-1">
-                            <span className="text-2xl font-black text-[#0071e3]">
+                            <span className="text-2xl font-normal text-[#0071e3]">
                               R$ {calcValorMensalidade().toFixed(2).replace(".", ",")}
                             </span>
-                            <span className="text-sm font-semibold text-slate-500">/mês</span>
+                            <span className="text-sm font-normal text-slate-500">/mês</span>
                           </div>
                         ) : (
-                          <span className="text-sm text-slate-400 font-medium italic">Informe a quantidade</span>
+                          <span className="text-sm text-slate-400 font-normal italic">Informe a quantidade</span>
                         )}
                       </div>
                     </div>
 
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs mb-5">
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Melhor dia para Vencimento</label>
+                    <div className="bg-white rounded-2xl p-4 shadow-sm mb-5">
+                      <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">Melhor dia para Vencimento</label>
                       <div className="flex flex-wrap gap-2">
                         {[5, 10, 15, 20, 25, 30].map(dia => (
-                          <label key={dia} className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition-all ${diaVencimento === dia ? 'border-[#0071e3] bg-blue-50 text-[#0071e3] font-bold' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}>
+                          <label key={dia} className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl cursor-pointer transition-all ${diaVencimento === dia ? 'bg-[#0071e3] text-white shadow-md font-medium' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-normal'}`}>
                             <input type="radio" name="dia" value={dia} checked={diaVencimento === dia} onChange={() => setDiaVencimento(dia)} className="hidden" />
                             Dia {dia}
                           </label>
@@ -683,11 +683,11 @@ export default function Afiliacao() {
                       <button
                         onClick={handleAfiliar}
                         disabled={loadingAfil}
-                        className="w-full bg-[#0071e3] hover:bg-blue-600 text-white font-bold py-3.5 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+                        className="w-full bg-[#0071e3] hover:bg-blue-600 text-white font-medium py-3.5 px-4 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md"
                       >
                         {loadingAfil ? "Processando..." : "Aceitar e Assinar Termo de Afiliação"}
                       </button>
-                      <p className="text-xs text-slate-500 text-center mt-3">
+                      <p className="text-xs text-slate-500 text-center mt-3 font-normal">
                         Ao dar o aceite, o Termo de Afiliação à União Condominial será gerado e enviado para o e-mail cadastrado.
                       </p>
                     </div>
@@ -697,28 +697,28 @@ export default function Afiliacao() {
             )}
             
             {afiliadoStatus && afiliadoStatus !== "Cancelado" && (
-              <div className="py-6 border-t border-slate-100">
-                <div className="bg-sky-50 border border-sky-100 rounded-2xl p-6 flex flex-col items-center text-center gap-3">
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-[#0071e3] shadow-sm">
+              <div className="py-6">
+                <div className="bg-sky-50 rounded-3xl p-6 flex flex-col items-center text-center gap-3 shadow-sm">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-[#0071e3] shadow-md">
                     <Building2 size={32} />
                   </div>
-                  <h3 className="font-bold text-lg text-slate-900">
-                    Seu condomínio é um Afiliado a União Condominial desde: <span className="text-[#0071e3] font-black">{getFormattedDataAfiliacao()}</span>
+                  <h3 className="font-normal text-xl text-slate-900">
+                    Seu condomínio é um Afiliado a União Condominial desde: <span className="text-[#0071e3] font-medium">{getFormattedDataAfiliacao()}</span>
                   </h3>
                   
-                  <div className="text-slate-800 text-sm font-medium">
-                    Status atual: <span className="font-bold text-emerald-600">Ativo</span>.{" "}
+                  <div className="text-slate-800 text-sm font-normal">
+                    Status atual: <span className="font-medium text-emerald-600">Ativo</span>.{" "}
                     <button
                       type="button"
                       onClick={() => setShowCancelModal(true)}
-                      className="text-red-600 underline font-semibold hover:text-red-800 transition-colors ml-1 cursor-pointer"
+                      className="text-red-600 underline font-medium hover:text-red-800 transition-colors ml-1 cursor-pointer"
                     >
                       Cancelar Afiliação
                     </button>
                   </div>
 
                   {afiliadoStatus === "Pendente de Aceite por E-mail" && (
-                    <p className="text-sm text-slate-500 bg-white p-3 rounded-lg mt-2 shadow-xs border border-slate-100">
+                    <p className="text-sm text-slate-600 bg-white p-4 rounded-2xl mt-2 shadow-sm font-normal">
                       Acesse seu e-mail e responda "DE ACORDO" ao termo enviado para concluir sua afiliação.
                     </p>
                   )}
@@ -727,24 +727,24 @@ export default function Afiliacao() {
             )}
 
             {afiliadoStatus === "Cancelado" && !queroAfiliar && (
-              <div className="py-6 border-t border-slate-100 space-y-4">
-                <div className="bg-rose-50/60 border border-rose-100 rounded-2xl p-6 flex flex-col items-center text-center gap-3">
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-sm border border-rose-100">
+              <div className="py-6 space-y-4">
+                <div className="bg-rose-50/60 rounded-3xl p-6 flex flex-col items-center text-center gap-3 shadow-sm">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-md">
                     <Building2 size={32} />
                   </div>
-                  <h3 className="font-bold text-lg text-slate-900">
-                    Seu condomínio é um Afiliado a União Condominial desde: <span className="text-slate-700 font-black">{getFormattedDataAfiliacao()}</span>
+                  <h3 className="font-normal text-xl text-slate-900">
+                    Seu condomínio é um Afiliado a União Condominial desde: <span className="text-slate-700 font-medium">{getFormattedDataAfiliacao()}</span>
                   </h3>
-                  <div className="text-slate-800 text-sm">
-                    Status atual: <span className="font-bold text-red-600">Cancelado</span>.
+                  <div className="text-slate-800 text-sm font-normal">
+                    Status atual: <span className="font-medium text-red-600">Cancelado</span>.
                   </div>
-                  <p className="text-xs text-slate-600 max-w-lg mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-600 max-w-lg mt-1 leading-relaxed font-normal">
                     Sua afiliação encontra-se cancelada. Os descontos de até 50% em serviços condominiais rotineiros e os benefícios exclusivos aos condôminos foram suspensos.
                   </p>
                   <button
                     type="button"
                     onClick={() => setQueroAfiliar(true)}
-                    className="mt-3 inline-flex items-center gap-2 bg-[#0071e3] hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-sm cursor-pointer"
+                    className="mt-3 inline-flex items-center gap-2 bg-[#0071e3] hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-2xl transition-all shadow-md cursor-pointer"
                   >
                     <HeartHandshake className="w-5 h-5" />
                     Afiliar-se Novamente
@@ -754,39 +754,39 @@ export default function Afiliacao() {
             )}
             
             {(afiliadoStatus === "Cancelado" || (afiliadoStatus && afiliadoStatus !== "Cancelado")) && (
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-slate-100 text-slate-600 rounded-xl">
+                <div className="bg-slate-50/50 rounded-3xl p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 bg-white text-slate-600 rounded-2xl shadow-xs">
                       <Receipt className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-slate-900 text-base">Situação da Afiliação</h4>
-                      <p className="text-xs text-slate-500">Status do cadastro e histórico de mensalidades</p>
+                      <h4 className="font-normal text-slate-900 text-lg">Situação da Afiliação</h4>
+                      <p className="text-xs text-slate-500 font-normal">Status do cadastro e histórico de mensalidades</p>
                     </div>
                   </div>
                   
                   {afiliadoStatus === "Cancelado" && (
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-2.5">
+                  <div className="p-4 bg-white rounded-2xl flex items-start gap-3 shadow-xs">
                     <CheckCircle className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-bold text-slate-900 text-sm">
+                      <p className="font-medium text-slate-900 text-sm">
                         Afiliação Desativada
                       </p>
-                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                        Sua afiliação encontra-se cancelada e não há cobranças ativas. Para reativar seu plano e recuperar os descontos e vantagens, clique em <strong>Afiliar-se Novamente</strong>.
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed font-normal">
+                        Sua afiliação encontra-se cancelada e não há cobranças ativas. Para reativar seu plano e recuperar os descontos e vantagens, clique em <span className="font-medium">Afiliar-se Novamente</span>.
                       </p>
                     </div>
                   </div>
                   )}
 
                   {faturasAfil.length > 0 && (
-                    <div className="mt-4 pt-3 border-t border-slate-100">
+                    <div className="mt-4 pt-3">
                       <button
                         type="button"
                         onClick={() => setShowFaturasList(!showFaturasList)}
-                        className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-[#0071e3] transition-colors py-1 cursor-pointer"
+                        className="w-full flex items-center justify-between text-xs font-medium text-slate-700 hover:text-[#0071e3] transition-colors py-2 cursor-pointer bg-white p-3 rounded-2xl shadow-xs"
                       >
-                        <span className="flex items-center gap-1.5">
+                        <span className="flex items-center gap-2">
                           <FileText className="w-4 h-4 text-slate-400" />
                           Histórico de Parcelas da Afiliação ({faturasAfil.length} registradas)
                         </span>
@@ -794,18 +794,18 @@ export default function Afiliacao() {
                       </button>
 
                       {showFaturasList && (
-                        <div className="mt-3 overflow-x-auto">
+                        <div className="mt-3 overflow-x-auto bg-white rounded-2xl shadow-sm p-2">
                           <table className="w-full text-xs text-left">
-                            <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                            <thead className="text-slate-500 uppercase font-medium">
                               <tr>
-                                <th className="px-3 py-2">Parc.</th>
-                                <th className="px-3 py-2">Vencimento</th>
-                                <th className="px-3 py-2">Valor</th>
-                                <th className="px-3 py-2">Situação</th>
-                                <th className="px-3 py-2 text-center">Ações</th>
+                                <th className="px-3 py-2.5">Parc.</th>
+                                <th className="px-3 py-2.5">Vencimento</th>
+                                <th className="px-3 py-2.5">Valor</th>
+                                <th className="px-3 py-2.5">Situação</th>
+                                <th className="px-3 py-2.5 text-center">Ações</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100/60">
                               {faturasAfil.map((parc, idx) => {
                                 const isPago = parc.status === "Recebido" || parc.status === "Pago";
                                 const isCancelado = parc.status === "Cancelado";
@@ -833,30 +833,30 @@ export default function Afiliacao() {
                                 }
 
                                 return (
-                                  <tr key={parc.id || idx} className={`hover:bg-slate-50 ${isCancelado ? "opacity-60 bg-slate-50/50" : ""}`}>
-                                    <td className="px-3 py-2 font-bold text-slate-700">
+                                  <tr key={parc.id || idx} className={`hover:bg-slate-50 transition-colors ${isCancelado ? "opacity-60 bg-slate-50/50" : ""}`}>
+                                    <td className="px-3 py-2.5 font-medium text-slate-700">
                                       {parc.numeroParcela || idx + 1}/12
                                     </td>
-                                    <td className="px-3 py-2 font-medium text-slate-800">
+                                    <td className="px-3 py-2.5 font-normal text-slate-800">
                                       {parc.vencimento ? new Date(parc.vencimento + "T00:00:00").toLocaleDateString("pt-BR") : "-"}
                                     </td>
-                                    <td className="px-3 py-2 font-bold text-slate-900">
+                                    <td className="px-3 py-2.5 font-medium text-slate-900">
                                       R$ {Number(parc.valor || 0).toFixed(2).replace('.', ',')}
                                     </td>
-                                    <td className="px-3 py-2">
-                                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                                        isPago ? "bg-emerald-100 text-emerald-800 border border-emerald-200" :
-                                        isCancelado ? "bg-slate-200 text-slate-700 border border-slate-300 line-through" :
-                                        "bg-amber-100 text-amber-800 border border-amber-200"
+                                    <td className="px-3 py-2.5">
+                                      <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-medium shadow-2xs ${
+                                        isPago ? "bg-emerald-100 text-emerald-800" :
+                                        isCancelado ? "bg-slate-200 text-slate-700 line-through" :
+                                        "bg-amber-100 text-amber-800"
                                       }`}>
                                         {isPago ? "Pago" : isCancelado ? "Cancelado (>15d)" : "Aberto (<=15d)"}
                                       </span>
                                     </td>
-                                    <td className="px-3 py-2 text-center flex items-center justify-center gap-2">
+                                    <td className="px-3 py-2.5 text-center flex items-center justify-center gap-2">
                                       {!isPago && !isCancelado && (
                                         <button
                                           onClick={() => handleAbrirSolicitacaoBoleto(parc)}
-                                          className="p-1.5 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors cursor-pointer flex items-center gap-1"
+                                          className="p-1.5 rounded-xl text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
                                           title="Solicitação de envio de boleto para pagamento de mensalidade em atraso"
                                         >
                                           <Mail className="w-4 h-4" />
@@ -867,7 +867,7 @@ export default function Afiliacao() {
                                         nfeDisponivel ? (
                                           <button
                                             onClick={() => alert("Gerando arquivo PDF da Nota Fiscal...")}
-                                            className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                            className="p-1.5 rounded-xl text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer shadow-2xs"
                                             title="Imprimir NF-e"
                                           >
                                             <Printer className="w-4 h-4" />
@@ -875,7 +875,7 @@ export default function Afiliacao() {
                                         ) : (
                                           <button
                                             onClick={() => alert("A Nota Fiscal estará disponível para impressão 24h após a baixa bancária.")}
-                                            className="p-1.5 rounded-lg text-slate-300 cursor-not-allowed"
+                                            className="p-1.5 rounded-xl text-slate-300 cursor-not-allowed"
                                             title="NF-e em processamento (disponível 24h após pagamento)"
                                           >
                                             <Printer className="w-4 h-4" />
@@ -899,50 +899,50 @@ export default function Afiliacao() {
       </div>
 
       {showCancelModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 text-rose-600 mb-4 pb-3 border-b border-slate-100">
-              <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 text-rose-600 mb-4 pb-3">
+              <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0 shadow-xs">
                 <AlertTriangle className="w-5 h-5 text-rose-600" />
               </div>
               <div>
-                <h3 className="font-bold text-lg text-slate-900">Cancelar Afiliação</h3>
-                <p className="text-xs text-slate-500">Confirmação de desfiliação do condomínio</p>
+                <h3 className="font-normal text-xl text-slate-900">Cancelar Afiliação</h3>
+                <p className="text-xs text-slate-500 font-normal">Confirmação de desfiliação do condomínio</p>
               </div>
             </div>
             
-            <div className="space-y-4 text-sm text-slate-600 mb-6">
-              <p className="text-sm leading-relaxed text-slate-700">
-                Tem certeza de que deseja cancelar a afiliação do condomínio <strong>{afiliadoData?.nomeCondominio || user?.nome}</strong>?
+            <div className="space-y-4 text-sm text-slate-600 mb-6 font-normal">
+              <p className="text-sm leading-relaxed text-slate-700 font-normal">
+                Tem certeza de que deseja cancelar a afiliação do condomínio <span className="font-medium">{afiliadoData?.nomeCondominio || user?.nome}</span>?
               </p>
               
-              <div className="p-4 bg-rose-50/70 border border-rose-200 rounded-xl text-rose-950 space-y-2">
-                <p className="font-bold text-xs uppercase tracking-wider text-rose-900 flex items-center gap-1.5">
+              <div className="p-4 bg-rose-50/70 rounded-2xl text-rose-950 space-y-2 shadow-xs">
+                <p className="font-medium text-xs uppercase tracking-wider text-rose-900 flex items-center gap-1.5">
                   <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
                   Impacto do Cancelamento
                 </p>
-                <p className="text-xs leading-relaxed text-rose-900">
-                  O cancelamento é <strong>imediato</strong>. Seu condomínio perderá o acesso aos descontos de até <strong>50%</strong> em todos os serviços condominiais rotineiros e às vantagens exclusivas do Clube de Benefícios para síndicos e moradores.
+                <p className="text-xs leading-relaxed text-rose-900 font-normal">
+                  O cancelamento é <span className="font-medium">imediato</span>. Seu condomínio perderá o acesso aos descontos de até <span className="font-medium">50%</span> em todos os serviços condominiais rotineiros e às vantagens exclusivas do Clube de Benefícios para síndicos e moradores.
                 </p>
               </div>
               
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 font-normal">
                 Caso decida retornar no futuro, você poderá reativar sua afiliação a qualquer momento.
               </p>
             </div>
             
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <div className="flex justify-end gap-3 pt-4">
               <button
                 onClick={() => setShowCancelModal(false)}
                 disabled={canceling}
-                className="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+                className="px-5 py-2.5 text-slate-600 font-normal hover:bg-slate-100 rounded-2xl transition-colors disabled:opacity-50 cursor-pointer"
               >
                 Voltar
               </button>
               <button
                 onClick={handleConfirmCancel}
                 disabled={canceling}
-                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-2xl shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
               >
                 {canceling ? "Cancelando..." : "Confirmar Cancelamento"}
               </button>
@@ -953,18 +953,18 @@ export default function Afiliacao() {
 
       {/* Modal de Solicitação de Envio de Boleto para Mensalidade em Atraso */}
       {showSolicitacaoBoletoModal && selectedParcelaParaBoleto && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center shrink-0 shadow-xs">
                   <Mail className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-slate-900 leading-tight">
+                  <h3 className="font-normal text-xl text-slate-900 leading-tight">
                     Solicitação de Envio de Boleto
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 font-normal">
                     Pagamento de mensalidade de afiliado em atraso
                   </p>
                 </div>
@@ -973,7 +973,7 @@ export default function Afiliacao() {
                 type="button"
                 onClick={() => setShowSolicitacaoBoletoModal(false)}
                 disabled={solicitandoBoleto}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -981,25 +981,25 @@ export default function Afiliacao() {
 
             <div className="space-y-4 text-sm">
               {/* Card de Identificação do Cliente Conectado */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2.5">
+              <div className="bg-slate-50 rounded-2xl p-4 space-y-2.5 shadow-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div>
-                    <span className="text-slate-500 block">Nome do Cliente / Condomínio:</span>
-                    <span className="font-bold text-slate-900 text-sm">
+                    <span className="text-slate-500 block font-normal">Nome do Cliente / Condomínio:</span>
+                    <span className="font-medium text-slate-900 text-sm">
                       {profile?.displayName || profile?.nome || (profile as any)?.nomeFantasia || (profile as any)?.razaoSocial || afiliadoData?.nomeCondominio || "Condomínio"}
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-slate-500 block">C.N.P.J. Nº:</span>
-                    <span className="font-bold text-slate-900 font-mono text-sm">
+                    <span className="text-slate-500 block font-normal">C.N.P.J. Nº:</span>
+                    <span className="font-medium text-slate-900 font-mono text-sm">
                       {profile?.cnpj || profile?.cpfCnpj || (profile as any)?.cpf || (profile as any)?.documento || afiliadoData?.cnpj || "Não informado"}
                     </span>
                   </div>
 
                   <div className="sm:col-span-2">
-                    <span className="text-slate-500 block">Representado por:</span>
-                    <span className="font-bold text-slate-800 text-sm">
+                    <span className="text-slate-500 block font-normal">Representado por:</span>
+                    <span className="font-medium text-slate-800 text-sm">
                       {(profile as any)?.nomeResponsavel || (profile as any)?.responsavel || profile?.nome || afiliadoData?.nomeSindico || "Não informado"}
                     </span>
                   </div>
@@ -1007,51 +1007,51 @@ export default function Afiliacao() {
               </div>
 
               {/* Detalhes da Mensalidade / Parcela */}
-              <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-4">
+              <div className="bg-amber-50/70 rounded-2xl p-4 shadow-xs">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-900 block mb-0.5">
+                    <span className="text-xs font-medium uppercase tracking-wider text-amber-900 block mb-0.5">
                       Mensalidade Solicitada
                     </span>
-                    <p className="font-black text-slate-900 text-base">
+                    <p className="font-normal text-slate-900 text-lg">
                       Parcela {selectedParcelaParaBoleto.numeroParcela || 1}/12
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs text-amber-800 block">Valor da Mensalidade</span>
-                    <span className="text-lg font-black text-amber-900">
+                    <span className="text-xs text-amber-800 block font-normal">Valor da Mensalidade</span>
+                    <span className="text-xl font-normal text-amber-900">
                       R$ {Number(selectedParcelaParaBoleto.valor || 0).toFixed(2).replace('.', ',')}
                     </span>
                   </div>
                 </div>
 
-                <div className="mt-2 pt-2 border-t border-amber-200/80 flex items-center justify-between text-xs text-amber-900">
+                <div className="mt-3 pt-2.5 flex items-center justify-between text-xs text-amber-900">
                   <span>
-                    Vencimento original: <strong>{selectedParcelaParaBoleto.vencimento ? new Date(selectedParcelaParaBoleto.vencimento + "T00:00:00").toLocaleDateString("pt-BR") : "-"}</strong>
+                    Vencimento original: <span className="font-medium">{selectedParcelaParaBoleto.vencimento ? new Date(selectedParcelaParaBoleto.vencimento + "T00:00:00").toLocaleDateString("pt-BR") : "-"}</span>
                   </span>
-                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold border border-amber-300 text-[11px]">
+                  <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-medium text-[11px] shadow-2xs">
                     Em Aberto / Atraso
                   </span>
                 </div>
               </div>
 
               {/* Declaração formal de solicitação */}
-              <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-3.5 text-xs text-slate-700 leading-relaxed">
+              <div className="bg-blue-50/60 rounded-2xl p-4 text-xs text-slate-700 leading-relaxed shadow-xs font-normal">
                 <p>
-                  O cliente <strong>{profile?.displayName || profile?.nome || afiliadoData?.nomeCondominio || "Condomínio"}</strong>, C.N.P.J. Nº <strong>{profile?.cnpj || profile?.cpfCnpj || afiliadoData?.cnpj || "Não informado"}</strong>, representado por <strong>{(profile as any)?.nomeResponsavel || profile?.nome || afiliadoData?.nomeSindico || "Não informado"}</strong>, solicita a emissão de um novo boleto bancário atualizado para pagamento da mensalidade em atraso.
+                  O cliente <span className="font-medium">{profile?.displayName || profile?.nome || afiliadoData?.nomeCondominio || "Condomínio"}</span>, C.N.P.J. Nº <span className="font-medium">{profile?.cnpj || profile?.cpfCnpj || afiliadoData?.cnpj || "Não informado"}</span>, representado por <span className="font-medium">{(profile as any)?.nomeResponsavel || profile?.nome || afiliadoData?.nomeSindico || "Não informado"}</span>, solicita a emissão de um novo boleto bancário atualizado para pagamento da mensalidade em atraso.
                 </p>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Ao clicar em <strong>Solicitar</strong>, a notificação será encaminhada diretamente ao departamento financeiro responsável pela unidade para emissão e envio do novo boleto com a data de vencimento atualizada.
+                <p className="mt-2 text-[11px] text-slate-500 font-normal">
+                  Ao clicar em <span className="font-medium">Solicitar</span>, a notificação será encaminhada diretamente ao departamento financeiro responsável pela unidade para emissão e envio do novo boleto com a data de vencimento atualizada.
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-5 mt-5 border-t border-slate-100">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-5 mt-5">
               <button
                 type="button"
                 onClick={() => setShowSolicitacaoBoletoModal(false)}
                 disabled={solicitandoBoleto}
-                className="w-full sm:w-auto px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50 cursor-pointer text-sm"
+                className="w-full sm:w-auto px-5 py-2.5 text-slate-600 font-normal hover:bg-slate-100 rounded-2xl transition-colors disabled:opacity-50 cursor-pointer text-sm"
               >
                 Cancelar
               </button>
@@ -1059,7 +1059,7 @@ export default function Afiliacao() {
                 type="button"
                 onClick={handleConfirmarSolicitacaoBoleto}
                 disabled={solicitandoBoleto}
-                className="w-full sm:w-auto px-6 py-2.5 bg-[#0071e3] hover:bg-blue-600 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm"
+                className="w-full sm:w-auto px-6 py-2.5 bg-[#0071e3] hover:bg-blue-600 text-white font-medium rounded-2xl shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm"
               >
                 {solicitandoBoleto ? (
                   <>Processando...</>

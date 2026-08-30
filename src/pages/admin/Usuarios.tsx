@@ -759,34 +759,41 @@ export default function Usuarios() {
                     <th className="px-6 py-4 text-right">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {loading ? (
-                    Array.from({ length: 5 }).map((_, rIdx) => (
-                      <tr key={rIdx} className="animate-pulse">
+                    Array.from({ length: 6 }).map((_, rIdx) => (
+                      <tr key={rIdx} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-6 py-4">
-                          <div className="h-4 bg-slate-100 rounded w-32" />
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-slate-200/70 relative overflow-hidden shrink-0 before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent" />
+                            <div className="h-3.5 bg-slate-200/70 rounded relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent w-32" />
+                          </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="h-4 bg-slate-100 rounded w-48" />
+                          <div className="h-3.5 bg-slate-200/70 rounded relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent w-44" />
                         </td>
                         <td className="px-6 py-4">
-                          <div className="h-4 bg-slate-100 rounded w-24" />
+                          <div className="h-7 bg-slate-100 rounded-lg relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent w-28" />
                         </td>
                         <td className="px-6 py-4">
-                          <div className="h-4 bg-slate-100 rounded w-16" />
+                          <div className="h-6 bg-slate-100 rounded-full relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent w-20" />
                         </td>
                         <td className="px-6 py-4">
-                          <div className="h-4 bg-slate-100 rounded w-20" />
+                          <div className="h-6 bg-slate-100 rounded-full relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent w-20" />
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <div className="h-4 bg-slate-100 rounded w-12 ml-auto" />
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="h-7 w-7 bg-slate-100 rounded-md relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent" />
+                            <div className="h-7 w-7 bg-slate-100 rounded-md relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 before:to-transparent" />
+                          </div>
                         </td>
                       </tr>
                     ))
                   ) : filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-slate-500 bg-slate-50">
-                        Nenhum usuário encontrado.
+                      <td colSpan={6} className="px-6 py-12 text-center text-slate-500 bg-slate-50/50">
+                        <p className="font-semibold text-slate-700">Nenhum usuário encontrado.</p>
+                        <p className="text-xs text-slate-400 mt-1">Tente ajustar a busca ou o filtro de status.</p>
                       </td>
                     </tr>
                   ) : (

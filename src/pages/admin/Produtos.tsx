@@ -509,30 +509,36 @@ export default function Produtos() {
                 <th className="p-4 font-semibold text-center w-24">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
-                Array.from({ length: 5 }).map((_, rIdx) => (
-                  <tr key={rIdx} className="animate-pulse">
+                Array.from({ length: 6 }).map((_, rIdx) => (
+                  <tr key={rIdx} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-4">
-                      <div className="w-10 h-10 bg-slate-100 rounded" />
+                      <div className="w-10 h-10 bg-slate-200/70 dark:bg-slate-700/60 rounded-xl relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 dark:before:via-white/10 before:to-transparent" />
                     </td>
                     <td className="p-4">
-                      <div className="h-4 bg-slate-100 rounded w-16" />
+                      <div className="h-3.5 bg-slate-200/70 dark:bg-slate-700/60 rounded relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 dark:before:via-white/10 before:to-transparent w-16" />
                     </td>
                     <td className="p-4">
-                      <div className="h-4 bg-slate-100 rounded w-48" />
+                      <div className="space-y-1.5">
+                        <div className="h-3.5 bg-slate-200/70 dark:bg-slate-700/60 rounded relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 dark:before:via-white/10 before:to-transparent w-44" />
+                        <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 dark:before:via-white/10 before:to-transparent w-24" />
+                      </div>
                     </td>
                     <td className="p-4">
-                      <div className="h-4 bg-slate-100 rounded w-24" />
+                      <div className="h-6 bg-slate-100 dark:bg-slate-800 rounded-full relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 dark:before:via-white/10 before:to-transparent w-24" />
                     </td>
                     <td className="p-4">
-                      <div className="h-4 bg-slate-100 rounded w-16 ml-auto" />
+                      <div className="h-3.5 bg-slate-200/70 dark:bg-slate-700/60 rounded relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 dark:before:via-white/10 before:to-transparent w-16 ml-auto" />
                     </td>
                     <td className="p-4">
-                      <div className="h-4 bg-slate-100 rounded w-12 ml-auto" />
+                      <div className="h-3.5 bg-slate-200/70 dark:bg-slate-700/60 rounded relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 dark:before:via-white/10 before:to-transparent w-12 ml-auto" />
                     </td>
                     <td className="p-4">
-                      <div className="h-4 bg-slate-100 rounded w-16 mx-auto" />
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="h-7 w-7 bg-slate-100 dark:bg-slate-800 rounded-lg relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 dark:before:via-white/10 before:to-transparent" />
+                        <div className="h-7 w-7 bg-slate-100 dark:bg-slate-800 rounded-lg relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-linear-to-r before:from-transparent before:via-white/50 dark:before:via-white/10 before:to-transparent" />
+                      </div>
                     </td>
                   </tr>
                 ))

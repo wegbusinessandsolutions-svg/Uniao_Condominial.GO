@@ -170,18 +170,19 @@ export default function CustomerDashboard() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="bg-[#f4f9fc] border border-[#e2eef5] rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+      <div className="bg-[#f4f9fc] rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden">
         {/* Subtle decorative glowing lights in background for modern depth */}
         <div className="absolute -top-16 -right-16 w-36 h-36 rounded-full bg-[#46bad4]/10 blur-2xl pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-36 h-36 rounded-full bg-[#12235a]/5 blur-2xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col gap-5">
-          {/* Top Row: Date & Greeting on left, Classification on right */}
-          <div className="flex justify-between items-center w-full gap-4">
-            <div className="flex flex-col gap-2">
-              {/* Date in first position */}
-              <div className="flex items-center gap-2 flex-wrap text-sm">
-                <div className="bg-white border border-slate-200/80 shadow-xs px-4 py-2 rounded-2xl flex items-center gap-2.5 text-slate-700 font-medium text-xs sm:text-sm">
+          {/* Top Row: Left side has Date & Weather + Greeting; Right side has Classification aligned by the top */}
+          <div className="flex flex-row justify-between items-start w-full gap-3 sm:gap-4">
+            {/* Left Column: Date & Weather widgets on top, greeting below */}
+            <div className="flex flex-col items-start gap-2 flex-1 min-w-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-sm w-full max-w-xl">
+                {/* 1. Date Card */}
+                <div className="bg-white shadow-xs hover:shadow-md px-4 py-2.5 rounded-2xl flex items-center justify-start gap-2.5 text-slate-700 text-xs sm:text-sm font-normal min-h-[56px] transition-shadow w-full">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-pulse shrink-0"></span>
                   <div className="leading-tight">
                     <div>Hoje, {new Date().toLocaleDateString('pt-BR', { weekday: 'long' })},</div>
@@ -190,36 +191,33 @@ export default function CustomerDashboard() {
                     </div>
                   </div>
                 </div>
-                <WeatherWidget cidade={profile?.cidade} />
+
+                {/* 2. Temperature Card */}
+                <WeatherWidget cidade={profile?.cidade} className="w-full justify-start" />
               </div>
-              {/* Welcome message below date */}
-              <p className="text-[#64748b] text-sm font-semibold tracking-wide ml-1">Bem-vindo de volta</p>
+
             </div>
 
-            {/* Classification badge ahead of the two items */}
+            {/* Right Column: Classification Badge (aligned at the top with Date, spacious padding) */}
             {(() => {
               const rawLevel = (profile?.level || "Bronze").trim();
               const levelKey = rawLevel.toLowerCase();
 
               let badgeImage = badgeBronze;
               let badgeAlt = "Categoria Bronze";
-              let badgeBorderClass = "border-amber-200/80 hover:border-amber-300";
               let textClass = "text-[#78350f]";
 
               if (levelKey === "prata") {
                 badgeImage = badgePrata;
                 badgeAlt = "Categoria Prata";
-                badgeBorderClass = "border-slate-200 hover:border-slate-300";
                 textClass = "text-[#334155]";
               } else if (levelKey === "ouro") {
                 badgeImage = badgeOuro;
                 badgeAlt = "Categoria Ouro";
-                badgeBorderClass = "border-amber-300/80 hover:border-amber-400";
                 textClass = "text-[#854d0e]";
               } else if (levelKey === "diamante") {
                 badgeImage = badgeDiamante;
                 badgeAlt = "Categoria Diamante";
-                badgeBorderClass = "border-sky-200/80 hover:border-sky-300";
                 textClass = "text-[#0369a1]";
               }
 
@@ -228,30 +226,35 @@ export default function CustomerDashboard() {
                   type="button"
                   onClick={() => setIsClassificationModalOpen(true)}
                   title="Clique para ampliar a classificação do condomínio"
-                  className="group flex flex-col items-center justify-center p-2 sm:p-2.5 min-w-[110px] sm:min-w-[124px] bg-transparent hover:bg-white/70 active:scale-95 rounded-2xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+                  className="group flex flex-col items-center justify-center p-3.5 sm:px-5 sm:py-4 min-w-[122px] sm:min-w-[145px] bg-white shadow-xs hover:shadow-md active:scale-95 rounded-2xl transition-all duration-200 cursor-pointer shrink-0 focus:outline-none"
                 >
                   {/* Category Medal Image */}
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex items-center justify-center mb-1 drop-shadow-2xs transition-transform group-hover:scale-110 duration-300">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5 drop-shadow-2xs transition-transform group-hover:scale-105 duration-200">
                     <img
                       src={badgeImage}
                       alt={badgeAlt}
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <p className="text-[8px] sm:text-[9px] text-black font-extrabold uppercase tracking-widest leading-none group-hover:text-[#0071e3] transition-colors">
+
+                  {/* Title with comfortable breathing room */}
+                  <span className="text-[11px] sm:text-xs text-slate-400 font-normal uppercase tracking-wider block px-2 py-0.5 mb-0.5 leading-tight text-center">
                     Classificação
-                  </p>
-                  <p className={`text-xs sm:text-sm font-black tracking-wide mt-1 leading-none capitalize ${textClass}`}>
+                  </span>
+
+                  {/* Level value */}
+                  <span className={`text-[13px] sm:text-base font-medium tracking-wide capitalize leading-tight text-center ${textClass}`}>
                     {rawLevel}
-                  </p>
+                  </span>
                 </button>
               );
             })()}
           </div>
 
-          {/* Customer Identification at the bottom */}
-          <div className="w-full">
-            <h1 className="text-2xl sm:text-3.5xl font-extrabold text-[#0f172a] leading-tight tracking-tight max-w-[34rem]">
+          {/* Customer Identification (Font size reduced by 10%) */}
+          <div className="w-full -mt-2">
+            <p className="text-slate-500 text-sm sm:text-base font-normal tracking-wide ml-0.5 mb-1.5">Bem-vindo de volta,</p>
+            <h1 className="text-[27px] sm:text-[32.4px] font-normal text-[#0f172a] leading-tight tracking-tight max-w-[34rem]">
               Olá, {profile?.displayName || "Cliente"}
             </h1>
           </div>
@@ -261,21 +264,21 @@ export default function CustomerDashboard() {
       {/* Sugestão de Afiliação para Não Afiliados */}
       {!loadingAfiliado && !isAfiliado && (
         /* Caso Não Afiliado: Sugestão de Afiliação com Explicação dos Descontos */
-        <div className="bg-gradient-to-br from-blue-50/95 via-sky-50/40 to-white border border-blue-200/90 rounded-3xl p-6 sm:p-8 shadow-xs relative overflow-hidden transition-all hover:shadow-md">
+        <div className="bg-gradient-to-br from-blue-50/95 via-sky-50/40 to-white rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden transition-all hover:shadow-lg">
           <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 space-y-5">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#0071e3] text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 border border-blue-400">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#0071e3] text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
                   <HeartHandshake className="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-xs" />
                 </div>
                 <div>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-[#0071e3] border border-blue-200 mb-1.5">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-normal bg-blue-100 text-[#0071e3] mb-1.5 shadow-2xs">
                     <Sparkles size={13} className="text-amber-500" />
                     Oportunidade Exclusiva para seu Condomínio
                   </span>
-                  <h2 className="text-lg sm:text-2xl font-extrabold text-slate-900 leading-tight">
+                  <h2 className="text-xl sm:text-2xl font-normal text-slate-900 leading-tight">
                     Afilie-se à <span className="notranslate" translate="no">União Condominial</span> e economize até 50%
                   </h2>
                 </div>
@@ -283,62 +286,62 @@ export default function CustomerDashboard() {
 
               <Link
                 to="/cliente/meus-dados"
-                className="inline-flex items-center justify-center gap-2 w-full lg:w-auto py-3.5 px-6 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold rounded-2xl text-sm sm:text-base shadow-md shadow-blue-500/20 hover:shadow-lg transition-all active:scale-98 shrink-0"
+                className="inline-flex items-center justify-center gap-2 w-full lg:w-auto py-3.5 px-6 bg-[#0071e3] hover:bg-[#005bb5] text-white font-medium rounded-2xl text-base shadow-md shadow-blue-500/20 hover:shadow-lg transition-all active:scale-98 shrink-0"
               >
                 <span>Quero me Afiliar Agora</span>
                 <ArrowRight size={18} />
               </Link>
             </div>
 
-            <div className="bg-white/85 backdrop-blur-xs rounded-2xl p-4 sm:p-5 border border-blue-100 shadow-3xs space-y-3">
-              <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-medium">
-                Ao afiliar seu condomínio à <strong><span className="notranslate" translate="no">União Condominial.GO</span></strong>, você desbloqueia uma série de vantagens que reduzem significativamente os custos e despesas da gestão:
+            <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
+              <p className="text-base text-slate-700 leading-relaxed font-normal">
+                Ao afiliar seu condomínio à <span className="font-medium notranslate" translate="no">União Condominial.GO</span>, você desbloqueia uma série de vantagens que reduzem significativamente os custos e despesas da gestão:
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-                <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3 flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 text-[#0071e3] flex items-center justify-center shrink-0 font-bold text-xs">
+                <div className="bg-blue-50/80 rounded-2xl p-4 shadow-xs flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-blue-100 text-[#0071e3] flex items-center justify-center shrink-0 font-medium text-sm">
                     50%
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900">Serviços até 50% OFF</h4>
-                    <p className="text-[11px] text-slate-600 leading-tight mt-0.5">
+                    <h4 className="text-sm font-medium text-slate-900">Serviços até 50% OFF</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed mt-1 font-normal">
                       Limpeza de caixas d'água e gordura, jardinagem, portões, elétrica, CFTV e alarmes.
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-emerald-50/70 border border-emerald-100 rounded-xl p-3 flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-xs">
+                <div className="bg-emerald-50/80 rounded-2xl p-4 shadow-xs flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-medium text-sm">
                     🧴
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900">Preços Especiais</h4>
-                    <p className="text-[11px] text-slate-600 leading-tight mt-0.5">
+                    <h4 className="text-sm font-medium text-slate-900">Preços Especiais</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed mt-1 font-normal">
                       Produtos de limpeza e conservação de alta performance direto da distribuidora.
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-amber-50/70 border border-amber-100 rounded-xl p-3 flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 font-bold text-xs">
+                <div className="bg-amber-50/80 rounded-2xl p-4 shadow-xs flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 font-medium text-sm">
                     💰
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900">Cashback Acumulativo</h4>
-                    <p className="text-[11px] text-slate-600 leading-tight mt-0.5">
+                    <h4 className="text-sm font-medium text-slate-900">Cashback Acumulativo</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed mt-1 font-normal">
                       Créditos automáticos a cada pedido para abater em novas compras ou resgatar.
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-purple-50/70 border border-purple-100 rounded-xl p-3 flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 font-bold text-xs">
+                <div className="bg-purple-50/80 rounded-2xl p-4 shadow-xs flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 font-medium text-sm">
                     🤝
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900">Clube de Benefícios</h4>
-                    <p className="text-[11px] text-slate-600 leading-tight mt-0.5">
+                    <h4 className="text-sm font-medium text-slate-900">Clube de Benefícios</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed mt-1 font-normal">
                       Rede credenciada de empresas e prestadores homologados em Goiânia e região.
                     </p>
                   </div>
@@ -353,21 +356,21 @@ export default function CustomerDashboard() {
       <DashboardLiveTracker isAfiliado={isAfiliado ?? false} />
 
       {/* Cartão de Cashback e Benefícios */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xs border border-slate-200/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-2xs shrink-0 border border-emerald-100">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs shrink-0">
             <Receipt className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900">Cashback Acumulado no Condomínio</h2>
-            <p className="text-slate-500 text-xs sm:text-sm mt-0.5 font-medium">
+            <h2 className="text-xl sm:text-2xl font-normal text-slate-900">Cashback Acumulado no Condomínio</h2>
+            <p className="text-slate-500 text-sm sm:text-base mt-1 font-normal">
               Saldo disponível para abater em novos pedidos de produtos ou serviços.
             </p>
-            <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-3xl sm:text-4xl font-black text-[#0071e3]">
+            <div className="flex items-baseline gap-3 mt-3">
+              <span className="text-3xl sm:text-4xl font-light text-[#0071e3]">
                 R$ {profile?.cashbackBalance?.toFixed(2) || "0,00"}
               </span>
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+              <span className="text-xs sm:text-sm font-normal text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg shadow-2xs">
                 Disponível para Resgate
               </span>
             </div>
@@ -376,7 +379,7 @@ export default function CustomerDashboard() {
 
         <Link
           to="/cliente/cashback"
-          className="inline-flex items-center justify-center gap-2 w-full md:w-auto py-3.5 px-6 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold rounded-2xl text-xs sm:text-sm shadow-sm transition-all active:scale-98 shrink-0"
+          className="inline-flex items-center justify-center gap-2 w-full md:w-auto py-3.5 px-6 bg-[#0071e3] hover:bg-[#005bb5] text-white font-medium rounded-2xl text-sm sm:text-base shadow-sm transition-all active:scale-98 shrink-0"
         >
           <span>Ver Extrato e Resgatar</span>
           <ArrowRight size={16} />
@@ -391,7 +394,7 @@ export default function CustomerDashboard() {
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button 
               onClick={() => setIsSuggestionModalOpen(false)}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -402,7 +405,7 @@ export default function CustomerDashboard() {
                   <div className="w-10 h-10 bg-sky-100 text-[#0071e3] rounded-xl flex items-center justify-center shrink-0">
                     <Lightbulb size={20} />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900">
+                  <h3 className="text-2xl font-normal text-slate-900">
                     Envie sua Sugestão
                   </h3>
                 </div>
@@ -410,67 +413,67 @@ export default function CustomerDashboard() {
                 <form onSubmit={handleSubmitSuggestion} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Nome do Condomínio</label>
+                  <label className="text-sm font-normal text-slate-700">Nome do Condomínio</label>
                   <input 
                     type="text" 
                     readOnly 
                     disabled
                     value={(profile as any)?.nomeEmpresa || (profile as any)?.condominio || profile?.displayName || (profile as any)?.nomeCompleto || ""}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-sm font-normal shadow-xs"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Nome do Síndico / Responsável</label>
+                  <label className="text-sm font-normal text-slate-700">Nome do Síndico / Responsável</label>
                   <input 
                     type="text" 
                     readOnly 
                     disabled
                     value={(profile as any)?.nomeResponsavel || (profile as any)?.sindico || (profile as any)?.nomeCompleto || profile?.displayName || ""}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-sm font-normal shadow-xs"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Telefone para contato</label>
+                  <label className="text-sm font-normal text-slate-700">Telefone para contato</label>
                   <input 
                     type="text" 
                     readOnly 
                     disabled
                     value={(profile as any)?.telefone || (profile as any)?.phone || ""}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-sm font-normal shadow-xs"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">E-mail</label>
+                  <label className="text-sm font-normal text-slate-700">E-mail</label>
                   <input 
                     type="email" 
                     readOnly 
                     disabled
                     value={profile?.email || user?.email || ""}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-sm font-normal shadow-xs"
                   />
                 </div>
               </div>
               
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">Título</label>
+                <label className="text-sm font-normal text-slate-700">Título</label>
                 <input 
                   type="text" 
                   readOnly 
                   disabled
                   value="Sugestão"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-medium"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-sm font-normal shadow-xs"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">Descreva abaixo a sua sugestão</label>
+                <label className="text-sm font-normal text-slate-700">Descreva abaixo a sua sugestão</label>
                 <textarea 
                   required
                   rows={4}
                   value={suggestionText}
                   onChange={(e) => setSuggestionText(e.target.value)}
                   placeholder="Descreva abaixo a sua sugestão, iremos analisar tudo, juntaremos com as demais, estudaremos tudo e sendo em benefício a classe e viável a todos, logo ela poderá ser implementada. Muito Obrigado."
-                  className="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 text-sm focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 text-slate-900 text-base shadow-xs focus:ring-2 focus:ring-[#0071e3]/20 transition-all resize-none font-normal"
                 ></textarea>
               </div>
 
@@ -478,14 +481,14 @@ export default function CustomerDashboard() {
                 <button 
                   type="button"
                   onClick={() => setIsSuggestionModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors"
+                  className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-normal hover:bg-slate-200 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
                   disabled={isSubmittingSuggestion || !suggestionText.trim()}
-                  className="px-6 py-2.5 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-medium shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {isSubmittingSuggestion ? "Enviando..." : "Enviar"}
                 </button>
@@ -497,8 +500,8 @@ export default function CustomerDashboard() {
                 <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Lightbulb size={32} />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">Sugestão Enviada!</h3>
-                <p className="text-slate-600 mb-8 max-w-sm mx-auto">
+                <h3 className="text-2xl font-normal text-slate-900 mb-2">Sugestão Enviada!</h3>
+                <p className="text-slate-600 mb-8 max-w-sm mx-auto text-base font-normal">
                   A sugestão foi enviada, e será criteriosamente analisada, agradecemos sua contribuição.
                 </p>
                 <button 
@@ -506,7 +509,7 @@ export default function CustomerDashboard() {
                     setIsSuggestionModalOpen(false);
                     setTimeout(() => setIsSuggestionSuccess(false), 300);
                   }}
-                  className="px-8 py-3 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold transition-colors"
+                  className="px-8 py-3 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-medium transition-colors cursor-pointer shadow-md"
                 >
                   Fechar
                 </button>
@@ -548,7 +551,7 @@ export default function CustomerDashboard() {
             onClick={() => setIsClassificationModalOpen(false)}
           >
             <div 
-              className="relative bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
+              className="relative bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Efeito sutil de iluminação decorativa no topo */}
@@ -566,18 +569,18 @@ export default function CustomerDashboard() {
 
               {/* Título do Condomínio e Classificação */}
               <div className="relative z-10 mb-4">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-[#0071e3] border border-sky-100 uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-normal bg-sky-50 text-[#0071e3] shadow-2xs uppercase tracking-wider">
                   <Sparkles size={13} className="text-amber-500" />
                   Classificação do Condomínio
                 </span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-2 truncate px-4">
+                <h3 className="text-2xl font-normal text-slate-900 mt-2 truncate px-4">
                   {profile?.displayName || "Condomínio"}
                 </h3>
               </div>
 
-              {/* Apresentação da Classificação: Ícone Medalha 4x Maior que o tamanho inicial (224px ~ 256px) */}
+              {/* Apresentação da Classificação: Ícone Medalha 4x Maior */}
               <div className="relative z-10 flex flex-col items-center justify-center py-2">
-                <div className="w-56 h-56 sm:w-64 sm:h-64 rounded-full overflow-hidden flex items-center justify-center p-2 bg-gradient-to-b from-slate-50 to-white shadow-xl border border-slate-100 transition-transform duration-300 hover:scale-105">
+                <div className="w-56 h-56 sm:w-64 sm:h-64 rounded-full overflow-hidden flex items-center justify-center p-2 bg-gradient-to-b from-slate-50 to-white shadow-xl transition-transform duration-300 hover:scale-105">
                   <img
                     src={badgeImage}
                     alt={badgeAlt}
@@ -585,20 +588,22 @@ export default function CustomerDashboard() {
                   />
                 </div>
 
-                <p className="text-xs sm:text-sm text-slate-500 font-extrabold uppercase tracking-widest leading-none mt-5">
-                  Classificação
-                </p>
-                <p className={`text-2xl sm:text-3xl font-black tracking-wide mt-1.5 leading-none capitalize ${textClass}`}>
+                <div className="mt-5 mb-2 px-3.5 py-1 bg-slate-100/70 rounded-full inline-flex items-center justify-center">
+                  <p className="text-xs sm:text-sm text-slate-500 font-normal uppercase tracking-wider leading-none">
+                    Classificação
+                  </p>
+                </div>
+                <p className={`text-2xl sm:text-3xl font-light tracking-wide mt-1 leading-none capitalize ${textClass}`}>
                   {rawLevel}
                 </p>
               </div>
 
               {/* Botão Fechar abaixo da apresentação da classificação */}
-              <div className="relative z-10 pt-4 border-t border-slate-100 mt-4">
+              <div className="relative z-10 pt-4 mt-4">
                 <button
                   type="button"
                   onClick={() => setIsClassificationModalOpen(false)}
-                  className="w-full py-3.5 px-6 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold rounded-2xl text-base shadow-md hover:shadow-lg transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-3.5 px-6 bg-[#0071e3] hover:bg-[#005bb5] text-white font-medium rounded-2xl text-base shadow-md hover:shadow-lg transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
                 >
                   Fechar
                 </button>

@@ -1,0 +1,70 @@
+{
+  "name": "União Condominial.GO",
+  "short_name": "União Condominial",
+  "description": "Plataforma de E-Commerce, Gestão Condominial, Entregas e Serviços com Cashback.",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#0071e3",
+  "lang": "pt-BR",
+  "categories": ["business", "shopping", "productivity"],
+  "icons": [
+    {
+      "src": "/uniao-condominial-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/uniao-condominial-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/uniao-condominial-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/Cond_Vert_Horiz_UC.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Área do Cliente",
+      "short_name": "Cliente",
+      "description": "Acesse seus pedidos, cashback e condomínio",
+      "url": "/cliente",
+      "icons": [{ "src": "/uniao-condominial-logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Painel Administrativo",
+      "short_name": "Admin",
+      "description": "Painel de controle e gestão empresarial",
+      "url": "/admin",
+      "icons": [{ "src": "/uniao-condominial-logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Gestão de Entregas",
+      "short_name": "Entregas",
+      "description": "Rotas de despacho e entrega de pedidos",
+      "url": "/admin/rotas-entregas",
+      "icons": [{ "src": "/uniao-condominial-logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Catálogo da Loja",
+      "short_name": "Loja",
+      "description": "Compre produtos e materiais de limpeza",
+      "url": "/loja",
+      "icons": [{ "src": "/uniao-condominial-logo.png", "sizes": "192x192" }]
+    }
+  ]
+}

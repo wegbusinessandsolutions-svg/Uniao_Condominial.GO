@@ -64,18 +64,16 @@ const isInitialPendingStatus = (status?: string) => {
 
 export const getOSStatusDetails = (rawStatus?: string) => {
   const s = (rawStatus || "Aguardando confirmação - Data").trim();
-
-  // Normalize check
   const sLower = s.toLowerCase();
 
   if (sLower.includes("aguardando") || sLower.includes("solicitado") || sLower.includes("pendente") || sLower === "novo") {
     return {
       label: "Aguardando confirmação - Data",
       step: 1,
-      badgeClass: "bg-amber-50 text-amber-900 border-amber-300",
+      badgeClass: "bg-amber-100 text-amber-900",
       badgeDot: "bg-amber-500",
       icon: <Clock size={15} className="text-amber-600 animate-pulse shrink-0" />,
-      boxBg: "bg-amber-50/70 border-amber-200/90 text-amber-950",
+      boxBg: "bg-amber-50 text-amber-950 shadow-xs",
       desc: "Sua solicitação de serviço foi registrada com a data de preferência escolhida. A equipe está avaliando o agendamento e confirmará a visita técnica.",
       highlightText: "Aguardando confirmação da data"
     };
@@ -89,10 +87,10 @@ export const getOSStatusDetails = (rawStatus?: string) => {
       return {
         label: "Confirmada a Visita",
         step: 2,
-        badgeClass: "bg-sky-50 text-sky-800 border-sky-200",
+        badgeClass: "bg-sky-100 text-sky-800",
         badgeDot: "bg-sky-500",
         icon: <Calendar size={15} className="text-sky-600 shrink-0" />,
-        boxBg: "bg-sky-50/60 border-sky-200/80 text-sky-900",
+        boxBg: "bg-sky-50 text-sky-900 shadow-xs",
         desc: "A visita técnica foi confirmada. O prestador ou técnico credenciado comparecerá na data e turno acordados para a vistoria ou execução dos serviços.",
         highlightText: "Visita técnica programada"
       };
@@ -103,10 +101,10 @@ export const getOSStatusDetails = (rawStatus?: string) => {
       return {
         label: "Em Execução",
         step: 3,
-        badgeClass: "bg-blue-50 text-blue-800 border-blue-200",
+        badgeClass: "bg-blue-100 text-blue-800",
         badgeDot: "bg-blue-500",
         icon: <Wrench size={15} className="text-blue-600 shrink-0" />,
-        boxBg: "bg-blue-50/60 border-blue-200/80 text-blue-900",
+        boxBg: "bg-blue-50 text-blue-900 shadow-xs",
         desc: "Os serviços contratados estão sendo executados nas dependências do condomínio conforme o cronograma e escopo técnico aprovado.",
         highlightText: "Serviço em andamento"
       };
@@ -118,10 +116,10 @@ export const getOSStatusDetails = (rawStatus?: string) => {
       return {
         label: "Serviço Concluído",
         step: 4,
-        badgeClass: "bg-emerald-50 text-emerald-800 border-emerald-200",
+        badgeClass: "bg-emerald-100 text-emerald-800",
         badgeDot: "bg-emerald-500",
         icon: <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />,
-        boxBg: "bg-emerald-50/60 border-emerald-200/80 text-emerald-900",
+        boxBg: "bg-emerald-50 text-emerald-900 shadow-xs",
         desc: "Ordem de serviço finalizada com sucesso. A execução foi concluída e o termo de encerramento e garantia foram emitidos.",
         highlightText: "Serviço finalizado com garantia"
       };
@@ -132,10 +130,10 @@ export const getOSStatusDetails = (rawStatus?: string) => {
       return {
         label: "Cancelada pelo Cliente",
         step: 0,
-        badgeClass: "bg-rose-50 text-rose-800 border-rose-200",
+        badgeClass: "bg-rose-100 text-rose-800",
         badgeDot: "bg-rose-500",
         icon: <XCircle size={15} className="text-rose-600 shrink-0" />,
-        boxBg: "bg-rose-50/60 border-rose-200/80 text-rose-900",
+        boxBg: "bg-rose-50 text-rose-900 shadow-xs",
         desc: "Esta ordem de serviço foi cancelada e não haverá cobrança ou agendamento para este pedido.",
         highlightText: "Solicitação cancelada"
       };
@@ -144,10 +142,10 @@ export const getOSStatusDetails = (rawStatus?: string) => {
       return {
         label: s,
         step: 1,
-        badgeClass: "bg-slate-100 text-slate-800 border-slate-200",
+        badgeClass: "bg-slate-100 text-slate-800",
         badgeDot: "bg-slate-500",
         icon: <FileText size={15} className="text-slate-600 shrink-0" />,
-        boxBg: "bg-slate-50 border-slate-200 text-slate-800",
+        boxBg: "bg-slate-50 text-slate-800 shadow-xs",
         desc: `Status atual: ${s}. Em processamento pelo departamento de atendimento.`,
         highlightText: "Em atendimento"
       };
@@ -319,7 +317,6 @@ export default function MinhasOrdensServico() {
     setCancelError("");
 
     try {
-      // 0. Permission & Server-side status validation
       const docRef = doc(db, "ordens_servico", selectedOrderToCancel.id);
       const docSnap = await getDoc(docRef);
 
@@ -329,7 +326,6 @@ export default function MinhasOrdensServico() {
 
       const currentData = docSnap.data();
 
-      // Check ownership or admin permission
       const isOwner = currentData.clienteId === profile?.uid || currentData.clienteEmail === profile?.email;
       const isAdmin = profile?.role === "Administrador" || profile?.role === "admin" || profile?.role === "Admin" || profile?.role === "master";
 
@@ -337,7 +333,6 @@ export default function MinhasOrdensServico() {
         throw new Error("Permissão negada: você não é o proprietário desta ordem de serviço.");
       }
 
-      // Check final/already cancelled statuses
       if (currentData.status === "Cancelada pelo Cliente" || currentData.status === "Cancelado") {
         throw new Error("Esta ordem de serviço já se encontra cancelada.");
       }
@@ -345,7 +340,6 @@ export default function MinhasOrdensServico() {
         throw new Error("Não é possível cancelar uma ordem de serviço que já foi concluída.");
       }
 
-      // Validate 4h or 24h initial status rule for client
       if (!isAdmin) {
         const createdDate = getOrderDate(currentData.createdAt);
         if (createdDate) {
@@ -365,7 +359,6 @@ export default function MinhasOrdensServico() {
         }
       }
 
-      // 1. If order used cashback, refund it back to user balance
       const usedCashback = Number(currentData.cashbackUsado || 0);
       const targetUserId = currentData.clienteId || profile?.uid;
       if (usedCashback > 0 && targetUserId) {
@@ -394,7 +387,6 @@ export default function MinhasOrdensServico() {
         }
       }
 
-      // 2. Update service order status
       await updateDoc(docRef, {
         status: "Cancelada pelo Cliente",
         motivoCancelamento: motivoJustificativa.trim(),
@@ -418,7 +410,6 @@ export default function MinhasOrdensServico() {
     setDeleteError("");
 
     try {
-      // 0. Permission & Server-side status validation
       const docRef = doc(db, "ordens_servico", selectedOrderToDelete.id);
       const docSnap = await getDoc(docRef);
 
@@ -428,7 +419,6 @@ export default function MinhasOrdensServico() {
 
       const currentData = docSnap.data();
 
-      // Check ownership or admin permission
       const isOwner = currentData.clienteId === profile?.uid || currentData.clienteEmail === profile?.email;
       const isAdmin = profile?.role === "Administrador" || profile?.role === "admin" || profile?.role === "Admin" || profile?.role === "master";
 
@@ -436,12 +426,10 @@ export default function MinhasOrdensServico() {
         throw new Error("Permissão negada: você não pode excluir esta ordem de serviço.");
       }
 
-      // Check that status is still pending initial confirmation
       if (!isInitialPendingStatus(currentData.status) && !isAdmin) {
         throw new Error(`A solicitação mudou para o status '${currentData.status}' e não pode mais ser excluída.`);
       }
 
-      // Check 24 hours
       if (!isAdmin) {
         const createdDate = getOrderDate(currentData.createdAt);
         if (createdDate) {
@@ -452,7 +440,6 @@ export default function MinhasOrdensServico() {
         }
       }
 
-      // 1. If order used cashback, refund it back to user balance
       const usedCashback = Number(currentData.cashbackUsado || 0);
       const targetUserId = currentData.clienteId || profile?.uid;
       if (usedCashback > 0 && targetUserId) {
@@ -481,10 +468,7 @@ export default function MinhasOrdensServico() {
         }
       }
 
-      // 2. Delete document permanently from Firestore
       await deleteDoc(docRef);
-
-      // 3. Update local state
       setOrdens(prev => prev.filter(item => item.id !== selectedOrderToDelete.id));
       setSelectedOrderToDelete(null);
     } catch (err: any) {
@@ -538,38 +522,38 @@ export default function MinhasOrdensServico() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
-              <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center font-bold text-sm border border-sky-100">
+              <div className="w-9 h-9 rounded-2xl bg-sky-50 text-sky-700 flex items-center justify-center font-medium text-sm shadow-xs">
                 <Wrench size={18} />
               </div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900">Minhas Ordens de Serviço</h1>
+              <h1 className="text-xl sm:text-2xl font-medium text-slate-900">Minhas Ordens de Serviço</h1>
             </div>
-            <p className="text-slate-500 text-xs sm:text-sm leading-relaxed max-w-2xl">
+            <p className="text-slate-500 text-xs sm:text-sm leading-relaxed max-w-2xl font-normal">
               Acompanhe o status e a evolução em tempo real de todas as ordens de serviço solicitadas pelo seu condomínio.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-2 rounded-2xl border border-slate-200/70 text-xs text-slate-600 font-semibold self-stretch sm:self-auto justify-between sm:justify-start">
+          <div className="flex items-center gap-2 bg-slate-50 px-4 py-2.5 rounded-2xl text-xs text-slate-600 font-medium self-stretch sm:self-auto justify-between sm:justify-start shadow-xs">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               Sincronização em tempo real
             </span>
-            <span className="font-bold text-slate-900 bg-white px-2 py-0.5 rounded-lg border border-slate-200">
+            <span className="font-medium text-slate-900 bg-white px-2.5 py-0.5 rounded-xl shadow-xs">
               {ordens.length} O.S.
             </span>
           </div>
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-5 mt-4 border-t border-slate-100 no-scrollbar">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-5 mt-4 no-scrollbar">
           <button
             onClick={() => setStatusFilter("todos")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+            className={`px-4 py-2 rounded-2xl text-xs font-medium transition-all shrink-0 cursor-pointer ${
               statusFilter === "todos"
-                ? "bg-[#0071e3] text-white shadow-xs"
+                ? "bg-[#0071e3] text-white shadow-md"
                 : "bg-slate-100 hover:bg-slate-200 text-slate-600"
             }`}
           >
@@ -578,10 +562,10 @@ export default function MinhasOrdensServico() {
 
           <button
             onClick={() => setStatusFilter("solicitado")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
               statusFilter === "solicitado"
-                ? "bg-amber-600 text-white shadow-xs"
-                : "bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200"
+                ? "bg-amber-600 text-white shadow-md"
+                : "bg-amber-50 hover:bg-amber-100 text-amber-800 shadow-xs"
             }`}
           >
             <Clock size={13} />
@@ -590,10 +574,10 @@ export default function MinhasOrdensServico() {
 
           <button
             onClick={() => setStatusFilter("visita")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
               statusFilter === "visita"
-                ? "bg-sky-600 text-white shadow-xs"
-                : "bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200"
+                ? "bg-sky-600 text-white shadow-md"
+                : "bg-sky-50 hover:bg-sky-100 text-sky-800 shadow-xs"
             }`}
           >
             <Calendar size={13} />
@@ -602,10 +586,10 @@ export default function MinhasOrdensServico() {
 
           <button
             onClick={() => setStatusFilter("concluido")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
               statusFilter === "concluido"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200"
+                ? "bg-emerald-600 text-white shadow-md"
+                : "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 shadow-xs"
             }`}
           >
             <CheckCircle2 size={13} />
@@ -615,10 +599,10 @@ export default function MinhasOrdensServico() {
           {countCancelados > 0 && (
             <button
               onClick={() => setStatusFilter("cancelado")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-2xl text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                 statusFilter === "cancelado"
-                  ? "bg-rose-600 text-white shadow-xs"
-                  : "bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200"
+                  ? "bg-rose-600 text-white shadow-md"
+                  : "bg-rose-50 hover:bg-rose-100 text-rose-800 shadow-xs"
               }`}
             >
               <XCircle size={13} />
@@ -630,9 +614,9 @@ export default function MinhasOrdensServico() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-3xl border border-slate-200">
+        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-3xl shadow-md">
           <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-[#0071e3] mb-3"></div>
-          <p className="text-xs font-bold text-slate-500">Carregando ordens de serviço...</p>
+          <p className="text-xs font-medium text-slate-500">Carregando ordens de serviço...</p>
         </div>
       ) : (
         <div className="space-y-5">
@@ -647,21 +631,21 @@ export default function MinhasOrdensServico() {
             return (
               <div
                 key={o.id}
-                className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col space-y-4 relative overflow-hidden"
+                className="bg-white p-6 sm:p-7 rounded-3xl shadow-md hover:shadow-lg transition-all flex flex-col space-y-4 relative overflow-hidden"
               >
                 {/* Top Bar: OS Number, Date and Status Badge */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-xs sm:text-sm font-black text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/80">
+                      <span className="font-mono text-xs sm:text-sm font-medium text-slate-900 bg-slate-100 px-3 py-1 rounded-xl shadow-xs">
                         {osNumber}
                       </span>
                       <span className="text-xs text-slate-400">•</span>
-                      <span className="text-xs text-slate-500 font-medium">
+                      <span className="text-xs text-slate-500 font-normal">
                         Solicitado em: {createdDate ? createdDate.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : '—'}
                       </span>
                     </div>
-                    <h3 className="font-extrabold text-base sm:text-lg text-slate-900 pt-0.5">
+                    <h3 className="font-medium text-base sm:text-lg text-slate-900 pt-0.5">
                       {o.servicoNome || o.itens?.[0]?.nome || "Serviço Condominial"}
                     </h3>
                   </div>
@@ -669,13 +653,13 @@ export default function MinhasOrdensServico() {
                   {/* Prominent Status Badge */}
                   <div className="flex flex-col sm:items-end gap-1 shrink-0 w-full sm:w-auto">
                     <div
-                      className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black border self-start sm:self-auto shadow-3xs ${statusDetails.badgeClass}`}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium self-start sm:self-auto shadow-xs ${statusDetails.badgeClass}`}
                     >
                       <span className={`w-2 h-2 rounded-full ${statusDetails.badgeDot}`}></span>
                       {statusDetails.icon}
                       <span className="uppercase tracking-wide">{statusDetails.label}</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-semibold hidden sm:block">
+                    <span className="text-[10px] text-slate-400 font-normal hidden sm:block">
                       Status da Ordem de Serviço
                     </span>
                   </div>
@@ -683,13 +667,13 @@ export default function MinhasOrdensServico() {
 
                 {/* Visual Status Progression Tracker */}
                 {!isCancelled ? (
-                  <div className="bg-slate-50/90 p-4 rounded-2xl border border-slate-100 space-y-3">
+                  <div className="bg-slate-50/90 p-5 rounded-3xl space-y-3.5 shadow-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
                         <Sparkles size={14} className="text-[#0071e3]" />
                         Progresso do Atendimento:
                       </span>
-                      <span className="text-xs font-extrabold text-[#0071e3]">
+                      <span className="text-xs font-medium text-[#0071e3]">
                         {statusDetails.step === 4 ? "Finalizado e Concluído" : `Etapa ${statusDetails.step} de 3`}
                       </span>
                     </div>
@@ -717,15 +701,15 @@ export default function MinhasOrdensServico() {
                             </div>
                             <div className="text-center sm:text-left">
                               <span
-                                className={`text-[10px] sm:text-xs font-bold block leading-tight ${
+                                className={`text-[10px] sm:text-xs font-medium block leading-tight ${
                                   isDone || isCurrent ? "text-slate-900" : "text-slate-400"
                                 }`}
                               >
                                 {st.title}
                               </span>
                               <span
-                                className={`text-[9px] sm:text-[10px] hidden sm:block truncate ${
-                                  isDone ? "text-emerald-700 font-semibold" : isCurrent ? "text-[#0071e3] font-bold" : "text-slate-400"
+                                className={`text-[9px] sm:text-[10px] hidden sm:block truncate font-normal ${
+                                  isDone ? "text-emerald-700 font-medium" : isCurrent ? "text-[#0071e3] font-medium" : "text-slate-400"
                                 }`}
                               >
                                 {isDone ? "✓ Concluído" : isCurrent ? "● Em andamento" : "Aguardando"}
@@ -737,27 +721,27 @@ export default function MinhasOrdensServico() {
                     </div>
 
                     {/* Status Explanation Callout */}
-                    <div className={`p-3 rounded-xl border text-xs leading-relaxed flex items-start gap-2.5 ${statusDetails.boxBg}`}>
+                    <div className={`p-4 rounded-2xl text-xs leading-relaxed flex items-start gap-2.5 ${statusDetails.boxBg}`}>
                       {statusDetails.icon}
                       <div>
-                        <span className="font-bold block">Status Atual: {statusDetails.label}</span>
-                        <p className="mt-0.5 opacity-90">{statusDetails.desc}</p>
+                        <span className="font-medium block">Status Atual: {statusDetails.label}</span>
+                        <p className="mt-0.5 opacity-90 font-normal">{statusDetails.desc}</p>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl text-xs text-rose-900 space-y-1.5">
-                    <div className="flex items-center gap-2 font-bold text-rose-950">
+                  <div className="bg-rose-50 p-5 rounded-3xl text-xs text-rose-900 space-y-2 shadow-xs">
+                    <div className="flex items-center gap-2 font-medium text-rose-950">
                       <XCircle size={16} className="text-rose-600" />
                       <span>Ordem de Serviço Cancelada</span>
                     </div>
-                    <p className="text-rose-800 leading-relaxed">
+                    <p className="text-rose-800 leading-relaxed font-normal">
                       Esta solicitação foi cancelada. Caso precise novamente do serviço, você pode realizar uma nova solicitação no catálogo de Serviços Essenciais.
                     </p>
                     {o.motivoCancelamento && (
-                      <div className="mt-2 pt-2 border-t border-rose-200/80">
-                        <span className="font-bold text-rose-950 block">Justificativa do Cancelamento:</span>
-                        <p className="italic text-rose-800 mt-0.5">{o.motivoCancelamento}</p>
+                      <div className="mt-2 pt-2 border-t border-rose-200/60">
+                        <span className="font-medium text-rose-950 block">Justificativa do Cancelamento:</span>
+                        <p className="italic text-rose-800 mt-0.5 font-normal">{o.motivoCancelamento}</p>
                       </div>
                     )}
                   </div>
@@ -765,18 +749,18 @@ export default function MinhasOrdensServico() {
 
                 {/* Items Breakdown if present */}
                 {o.itens && Array.isArray(o.itens) && o.itens.length > 0 && (
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-2">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                  <div className="bg-slate-50 p-4 rounded-3xl space-y-2.5 shadow-xs">
+                    <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
                       Serviços Inclusos na O.S.
                     </span>
-                    <div className="divide-y divide-slate-200/60">
+                    <div className="space-y-2">
                       {o.itens.map((item: any, idx: number) => (
-                        <div key={idx} className="py-2 flex justify-between items-center text-xs">
-                          <span className="font-semibold text-slate-800 flex items-center gap-1.5">
+                        <div key={idx} className="p-2.5 bg-white rounded-2xl flex justify-between items-center text-xs shadow-xs">
+                          <span className="font-medium text-slate-800 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3]"></span>
                             {item.quantidade}x {item.nome}
                           </span>
-                          <span className="font-bold text-slate-700">
+                          <span className="font-medium text-slate-700">
                             R$ {formatCurrency(parsePrice(item.subtotal || parsePrice(item.valorUnitario) * item.quantidade))}
                           </span>
                         </div>
@@ -789,23 +773,23 @@ export default function MinhasOrdensServico() {
                 <div className="space-y-2 pt-1">
                   {/* Visita Confirmada / Agendada */}
                   {o.dataConfirmada || o.dataAgendada ? (
-                    <div className="bg-emerald-50 border border-emerald-200/90 rounded-xl p-3 text-xs text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="bg-emerald-50 rounded-2xl p-4 text-xs text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
                       <div className="flex items-center gap-2">
                         <CalendarCheck size={16} className="text-emerald-700 shrink-0" />
                         <div>
-                          <span className="font-bold text-emerald-900 block">
+                          <span className="font-medium text-emerald-900 block">
                             Visita Técnica Confirmada: {formatDateBR(o.dataConfirmada || o.dataAgendada)}
                           </span>
                           {o.turnoAgendado && (
-                            <span className="text-[11px] text-emerald-800">
-                              Turno: <strong>{o.turnoAgendado}</strong>
+                            <span className="text-[11px] text-emerald-800 font-normal">
+                              Turno: <span className="font-medium">{o.turnoAgendado}</span>
                             </span>
                           )}
                         </div>
                       </div>
 
                       {o.dataAlteradaPorAdmin && (
-                        <span className="text-[10px] bg-emerald-200/70 text-emerald-900 font-bold px-2 py-0.5 rounded-full self-start sm:self-auto">
+                        <span className="text-[10px] bg-emerald-200/70 text-emerald-900 font-medium px-2.5 py-0.5 rounded-full self-start sm:self-auto shadow-xs">
                           Ajustada pela equipe
                         </span>
                       )}
@@ -814,24 +798,24 @@ export default function MinhasOrdensServico() {
 
                   <div className="flex flex-wrap gap-2.5 text-xs text-slate-600">
                     {o.dataPreferencial && (
-                      <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl font-medium">
+                      <div className="flex items-center gap-1.5 bg-slate-100 px-3.5 py-2 rounded-2xl font-normal shadow-xs">
                         <Calendar size={14} className="text-[#0071e3]" />
                         <span>
                           {o.dataConfirmada || o.dataAgendada ? "Data Sugerida Inicialmente:" : "Data de Preferência:"}{" "}
-                          <strong>{formatDateBR(o.dataPreferencial)}</strong>
+                          <span className="font-medium">{formatDateBR(o.dataPreferencial)}</span>
                         </span>
                       </div>
                     )}
 
                     {o.observacoesAgendamento && (
-                      <div className="flex items-center gap-1.5 bg-sky-50 text-sky-900 border border-sky-200 px-3 py-1.5 rounded-xl font-medium">
+                      <div className="flex items-center gap-1.5 bg-sky-50 text-sky-900 px-3.5 py-2 rounded-2xl font-normal shadow-xs">
                         <MessageSquare size={14} className="text-[#0071e3]" />
                         <span>Nota da Equipe: {o.observacoesAgendamento}</span>
                       </div>
                     )}
 
                     {o.observacoes && (
-                      <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl font-medium">
+                      <div className="flex items-center gap-1.5 bg-slate-100 px-3.5 py-2 rounded-2xl font-normal shadow-xs">
                         <MessageSquare size={14} className="text-[#0071e3]" />
                         <span>Observações: {o.observacoes}</span>
                       </div>
@@ -840,27 +824,27 @@ export default function MinhasOrdensServico() {
                 </div>
 
                 {/* Footer with total price & cancel/delete buttons */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 border-t border-slate-100">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3">
                   <div className="space-y-0.5">
                     {o.cashbackUsado && parsePrice(o.cashbackUsado) > 0 ? (
                       <>
-                        <div className="text-[11px] text-slate-500 font-medium">
+                        <div className="text-[11px] text-slate-500 font-normal">
                           Valor Original: R$ {formatCurrency(parsePrice(o.valorOriginal || (parsePrice(o.valor) + parsePrice(o.cashbackUsado))))}
                         </div>
-                        <div className="text-[11px] text-emerald-700 font-bold flex items-center gap-1">
+                        <div className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
                           Abatimento de Cashback: - R$ {formatCurrency(parsePrice(o.cashbackUsado))}
                         </div>
                         <div className="pt-0.5">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Valor a Faturar</span>
-                          <span className="text-xl font-black text-[#0071e3]">
+                          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block">Valor a Faturar</span>
+                          <span className="text-xl font-medium text-[#0071e3]">
                             R$ {formatCurrency(parsePrice(o.valorFaturar ?? o.valor))}
                           </span>
                         </div>
                       </>
                     ) : (
                       <>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Valor Total do Serviço</span>
-                        <span className="text-xl font-black text-[#0071e3]">
+                        <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block">Valor Total do Serviço</span>
+                        <span className="text-xl font-medium text-[#0071e3]">
                           R$ {formatCurrency(parsePrice(o.valor))}
                         </span>
                       </>
@@ -873,11 +857,11 @@ export default function MinhasOrdensServico() {
                       <div className="flex flex-col items-end gap-1 w-full sm:w-auto">
                         <button
                           onClick={() => handleOpenCancelModal(o)}
-                          className="w-full sm:w-auto px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          className="w-full sm:w-auto px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium rounded-2xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
                         >
                           <XCircle size={15} /> Cancelar Ordem de Serviço
                         </button>
-                        <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
+                        <span className="text-[10px] text-slate-500 font-normal flex items-center gap-1">
                           <Clock size={11} className={cancelInfo.is24hRule ? "text-red-500" : "text-amber-600"} /> 
                           {cancelInfo.badgeText || (cancelInfo.is24hRule ? "Sem alteração há +24h" : `Restam ${cancelInfo.timeLeftFormatted} para cancelar`)}
                         </span>
@@ -891,11 +875,11 @@ export default function MinhasOrdensServico() {
                             setSelectedOrderToDelete(o);
                             setDeleteError("");
                           }}
-                          className="w-full sm:w-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                          className="w-full sm:w-auto px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-2xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md"
                         >
                           <Trash2 size={15} /> Excluir Ordem de Serviço
                         </button>
-                        <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
+                        <span className="text-[10px] text-slate-500 font-normal flex items-center gap-1">
                           <Clock size={11} className="text-slate-400" /> Sem alteração de status há +24h
                         </span>
                       </div>
@@ -907,12 +891,12 @@ export default function MinhasOrdensServico() {
           })}
 
           {filteredOrdens.length === 0 && (
-            <div className="bg-white p-10 rounded-3xl border border-slate-200 text-center space-y-3">
-              <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+            <div className="bg-white p-10 rounded-3xl shadow-md text-center space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto shadow-xs">
                 <FileText size={28} />
               </div>
-              <h3 className="font-bold text-slate-800 text-base">Nenhuma ordem de serviço encontrada</h3>
-              <p className="text-xs text-slate-500 max-w-md mx-auto">
+              <h3 className="font-medium text-slate-800 text-base">Nenhuma ordem de serviço encontrada</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto font-normal">
                 {statusFilter !== "todos" 
                   ? "Não foram encontradas ordens de serviço com o filtro selecionado." 
                   : "Você ainda não possui solicitações de ordens de serviço registradas."}
@@ -925,16 +909,16 @@ export default function MinhasOrdensServico() {
       {/* Cancellation Modal */}
       {selectedOrderToCancel && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-              <div className="flex items-center gap-2 text-rose-700 font-bold text-base">
+            <div className="px-6 py-5 bg-slate-50 flex justify-between items-center shadow-xs">
+              <div className="flex items-center gap-2 text-rose-700 font-medium text-base">
                 <AlertCircle size={20} />
                 <span>Cancelar Ordem de Serviço</span>
               </div>
               <button
                 onClick={() => setSelectedOrderToCancel(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200/50 transition-colors"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-2xl hover:bg-slate-200/50 transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -942,13 +926,13 @@ export default function MinhasOrdensServico() {
 
             {/* Modal Body */}
             <div className="p-6 space-y-4">
-              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 text-xs text-slate-700 space-y-1">
+              <div className="bg-slate-50 rounded-2xl p-4 text-xs text-slate-700 space-y-1 shadow-xs">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-900">OS Nº {selectedOrderToCancel.numeroOS || selectedOrderToCancel.id?.slice(0, 8)}</span>
-                  <span className={`font-bold flex items-center gap-1 px-2 py-0.5 rounded border ${
+                  <span className="font-medium text-slate-900">OS Nº {selectedOrderToCancel.numeroOS || selectedOrderToCancel.id?.slice(0, 8)}</span>
+                  <span className={`font-medium flex items-center gap-1 px-2.5 py-0.5 rounded-xl shadow-xs ${
                     getCancelEligibility(selectedOrderToCancel).is24hRule 
-                      ? "text-red-700 bg-red-50 border-red-200" 
-                      : "text-amber-700 bg-amber-50 border-amber-200"
+                      ? "text-red-700 bg-red-50" 
+                      : "text-amber-700 bg-amber-50"
                   }`}>
                     <Clock size={12} />
                     {getCancelEligibility(selectedOrderToCancel).is24hRule 
@@ -956,14 +940,14 @@ export default function MinhasOrdensServico() {
                       : `${getCancelEligibility(selectedOrderToCancel).timeLeftFormatted} restantes`}
                   </span>
                 </div>
-                <p className="font-semibold text-slate-800">{selectedOrderToCancel.servicoNome}</p>
-                <p className="text-slate-500">
+                <p className="font-medium text-slate-800">{selectedOrderToCancel.servicoNome}</p>
+                <p className="text-slate-500 font-normal">
                   Valor: R$ {formatCurrency(parsePrice(selectedOrderToCancel.valor))}
                 </p>
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-800">
+                <label className="block text-xs font-medium text-slate-800">
                   Motivo / Justificativa do Cancelamento <span className="text-rose-500">*</span>
                 </label>
                 <textarea
@@ -971,15 +955,15 @@ export default function MinhasOrdensServico() {
                   value={motivoJustificativa}
                   onChange={(e) => setMotivoJustificativa(e.target.value)}
                   placeholder="Por favor, explique o motivo do cancelamento da ordem de serviço..."
-                  className="w-full text-xs p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 outline-hidden transition-all text-slate-900"
+                  className="w-full text-xs p-3.5 bg-slate-50 rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none transition-all text-slate-900 shadow-xs font-normal"
                 />
-                <p className="text-[11px] text-slate-400 italic">
+                <p className="text-[11px] text-slate-400 italic font-normal">
                   Esta ordem de serviço continuará visível no seu histórico marcada como cancelada.
                 </p>
               </div>
 
               {cancelError && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <div className="bg-rose-50 text-rose-800 p-3.5 rounded-2xl text-xs font-medium flex items-center gap-2 shadow-xs">
                   <AlertCircle size={16} className="shrink-0" />
                   <span>{cancelError}</span>
                 </div>
@@ -987,12 +971,12 @@ export default function MinhasOrdensServico() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-2.5">
+            <div className="px-6 py-4 bg-slate-50 flex flex-col sm:flex-row justify-end gap-2.5 shadow-xs">
               <button
                 type="button"
                 onClick={() => setSelectedOrderToCancel(null)}
                 disabled={isCancelling}
-                className="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl transition-colors"
+                className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium rounded-2xl transition-colors shadow-xs cursor-pointer"
               >
                 Manter Ordem de Serviço
               </button>
@@ -1000,7 +984,7 @@ export default function MinhasOrdensServico() {
                 type="button"
                 onClick={handleConfirmCancel}
                 disabled={isCancelling || !motivoJustificativa.trim()}
-                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white text-xs font-medium rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
               >
                 {isCancelling ? (
                   <>
@@ -1022,16 +1006,16 @@ export default function MinhasOrdensServico() {
       {/* Deletion Modal */}
       {selectedOrderToDelete && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-              <div className="flex items-center gap-2 text-red-700 font-bold text-base">
+            <div className="px-6 py-5 bg-slate-50 flex justify-between items-center shadow-xs">
+              <div className="flex items-center gap-2 text-red-700 font-medium text-base">
                 <Trash2 size={20} />
                 <span>Excluir Ordem de Serviço</span>
               </div>
               <button
                 onClick={() => setSelectedOrderToDelete(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200/50 transition-colors"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-2xl hover:bg-slate-200/50 transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1039,29 +1023,29 @@ export default function MinhasOrdensServico() {
 
             {/* Modal Body */}
             <div className="p-6 space-y-4">
-              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 text-xs text-slate-700 space-y-1">
+              <div className="bg-slate-50 rounded-2xl p-4 text-xs text-slate-700 space-y-1 shadow-xs">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-900">OS Nº {selectedOrderToDelete.numeroOS || selectedOrderToDelete.id?.slice(0, 8)}</span>
-                  <span className="text-red-700 font-bold flex items-center gap-1 bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                  <span className="font-medium text-slate-900">OS Nº {selectedOrderToDelete.numeroOS || selectedOrderToDelete.id?.slice(0, 8)}</span>
+                  <span className="text-red-700 font-medium flex items-center gap-1 bg-red-50 px-2.5 py-0.5 rounded-xl shadow-xs">
                     <Clock size={12} />
                     Sem alteração há +24h
                   </span>
                 </div>
-                <p className="font-semibold text-slate-800">{selectedOrderToDelete.servicoNome}</p>
-                <p className="text-slate-500">
+                <p className="font-medium text-slate-800">{selectedOrderToDelete.servicoNome}</p>
+                <p className="text-slate-500 font-normal">
                   Valor: R$ {formatCurrency(parsePrice(selectedOrderToDelete.valor))}
                 </p>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 space-y-1">
-                <p className="font-bold">Atenção:</p>
-                <p>
-                  Esta solicitação permaneceu com o status <strong>'Aguardando confirmação - Data'</strong> por mais de 24 horas sem alteração de status. Ao confirmar, a ordem de serviço será permanentemente excluída do aplicativo.
+              <div className="bg-amber-50 rounded-2xl p-4 text-xs text-amber-900 space-y-1 shadow-xs">
+                <p className="font-medium">Atenção:</p>
+                <p className="font-normal">
+                  Esta solicitação permaneceu com o status <span className="font-medium">'Aguardando confirmação - Data'</span> por mais de 24 horas sem alteração de status. Ao confirmar, a ordem de serviço será permanentemente excluída do aplicativo.
                 </p>
               </div>
 
               {deleteError && (
-                <div className="bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <div className="bg-rose-50 text-rose-800 p-3.5 rounded-2xl text-xs font-medium flex items-center gap-2 shadow-xs">
                   <AlertCircle size={16} className="shrink-0" />
                   <span>{deleteError}</span>
                 </div>
@@ -1069,12 +1053,12 @@ export default function MinhasOrdensServico() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-2.5">
+            <div className="px-6 py-4 bg-slate-50 flex flex-col sm:flex-row justify-end gap-2.5 shadow-xs">
               <button
                 type="button"
                 onClick={() => setSelectedOrderToDelete(null)}
                 disabled={isDeleting}
-                className="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl transition-colors"
+                className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium rounded-2xl transition-colors shadow-xs cursor-pointer"
               >
                 Cancelar
               </button>
@@ -1082,7 +1066,7 @@ export default function MinhasOrdensServico() {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-medium rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
               >
                 {isDeleting ? (
                   <>

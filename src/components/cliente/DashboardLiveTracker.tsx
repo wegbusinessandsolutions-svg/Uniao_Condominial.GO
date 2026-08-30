@@ -183,7 +183,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: "Aguardando Confirmação",
           step: 1,
-          badgeBg: "bg-blue-50 text-blue-700 border-blue-200",
+          badgeBg: "bg-blue-50 text-blue-700 shadow-2xs",
           icon: <Clock size={14} className="text-blue-600 animate-pulse" />,
           desc: "Pedido recebido e aguardando processamento da central.",
         };
@@ -193,7 +193,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: "Em Separação no Estoque",
           step: 2,
-          badgeBg: "bg-amber-50 text-amber-800 border-amber-200",
+          badgeBg: "bg-amber-50 text-amber-800 shadow-2xs",
           icon: <Package size={14} className="text-amber-600" />,
           desc: "Itens sendo separados e conferidos no Centro de Distribuição.",
         };
@@ -205,7 +205,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: "Faturado (NF-e Emitida)",
           step: 3,
-          badgeBg: "bg-purple-50 text-purple-700 border-purple-200",
+          badgeBg: "bg-purple-50 text-purple-700 shadow-2xs",
           icon: <FileText size={14} className="text-purple-600" />,
           desc: "Nota fiscal emitida e produtos embalados para envio.",
         };
@@ -217,7 +217,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: "Em Rota de Entrega",
           step: 4,
-          badgeBg: "bg-sky-50 text-sky-700 border-sky-200",
+          badgeBg: "bg-sky-50 text-sky-700 shadow-2xs",
           icon: <Truck size={14} className="text-sky-600 animate-bounce" />,
           desc: "Entregador a caminho do endereço do seu condomínio.",
         };
@@ -227,7 +227,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: "Entregue com Sucesso",
           step: 5,
-          badgeBg: "bg-emerald-50 text-emerald-800 border-emerald-200",
+          badgeBg: "bg-emerald-50 text-emerald-800 shadow-2xs",
           icon: <CheckCircle2 size={14} className="text-emerald-600" />,
           desc: "Mercadorias entregues e recebidas na portaria/administração.",
         };
@@ -237,7 +237,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: "Cancelado",
           step: 0,
-          badgeBg: "bg-rose-50 text-rose-700 border-rose-200",
+          badgeBg: "bg-rose-50 text-rose-700 shadow-2xs",
           icon: <AlertCircle size={14} className="text-rose-600" />,
           desc: "Pedido cancelado ou estornado.",
         };
@@ -245,7 +245,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: rawStatus || "Em Processamento",
           step: 1,
-          badgeBg: "bg-slate-100 text-slate-700 border-slate-200",
+          badgeBg: "bg-slate-100 text-slate-700 shadow-2xs",
           icon: <Clock size={14} />,
           desc: "Processando informações do pedido.",
         };
@@ -259,7 +259,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
       return {
         label: "Aguardando confirmação - Data",
         step: 1,
-        badgeBg: "bg-amber-50 text-amber-900 border-amber-300",
+        badgeBg: "bg-amber-50 text-amber-900 shadow-2xs",
         icon: <Clock size={14} className="text-amber-600 animate-pulse" />,
         desc: "Solicitação recebida com data de preferência. Aguardando confirmação da data.",
       };
@@ -272,7 +272,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: "Visita Agendada",
           step: 2,
-          badgeBg: "bg-sky-50 text-sky-700 border-sky-200",
+          badgeBg: "bg-sky-50 text-sky-700 shadow-2xs",
           icon: <Calendar size={14} className="text-sky-600" />,
           desc: "Data confirmada para visita técnica e execução no condomínio.",
         };
@@ -281,7 +281,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: "Em Execução",
           step: 3,
-          badgeBg: "bg-amber-50 text-amber-800 border-amber-200",
+          badgeBg: "bg-amber-50 text-amber-800 shadow-2xs",
           icon: <Wrench size={14} className="text-amber-600" />,
           desc: "Técnicos executando os serviços solicitados nas dependências.",
         };
@@ -290,7 +290,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: "Serviço Concluído",
           step: 4,
-          badgeBg: "bg-emerald-50 text-emerald-800 border-emerald-200",
+          badgeBg: "bg-emerald-50 text-emerald-800 shadow-2xs",
           icon: <CheckCircle2 size={14} className="text-emerald-600" />,
           desc: "Ordem de serviço finalizada com termo de entrega e garantia.",
         };
@@ -299,7 +299,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: "Cancelada",
           step: 0,
-          badgeBg: "bg-rose-50 text-rose-700 border-rose-200",
+          badgeBg: "bg-rose-50 text-rose-700 shadow-2xs",
           icon: <AlertCircle size={14} className="text-rose-600" />,
           desc: "Ordem de serviço cancelada a pedido do condomínio.",
         };
@@ -307,7 +307,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         return {
           label: rawStatus || "Em Análise",
           step: 1,
-          badgeBg: "bg-slate-100 text-slate-700 border-slate-200",
+          badgeBg: "bg-slate-100 text-slate-700 shadow-2xs",
           icon: <FileText size={14} />,
           desc: "Em processamento com o departamento comercial.",
         };
@@ -472,7 +472,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
   return (
     <div className="space-y-4">
       {/* Top Header Card with Quick Stats and Filter Pills */}
-      <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-md">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#0071e3] to-sky-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
@@ -480,29 +480,29 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 leading-tight">
+                <h3 className="text-xl sm:text-2xl font-normal text-slate-900 leading-tight">
                   Painel de Acompanhamento
                 </h3>
                 {hasActiveItems && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-normal bg-emerald-50 text-emerald-700 shadow-2xs animate-pulse">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     Em Tempo Real
                   </span>
                 )}
               </div>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
+              <p className="text-sm text-slate-500 font-normal mt-0.5">
                 Rastreamento instantâneo de pedidos de compras e ordens de serviço
               </p>
             </div>
           </div>
 
           {/* Quick Tab Filters */}
-          <div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80 self-start sm:self-auto overflow-x-auto max-w-full">
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl self-start sm:self-auto overflow-x-auto max-w-full shadow-2xs">
             <button
               onClick={() => setActiveTab("todos")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-normal transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === "todos"
-                  ? "bg-white text-slate-900 shadow-3xs"
+                  ? "bg-white text-slate-900 shadow-sm font-medium"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -510,32 +510,32 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
             </button>
             <button
               onClick={() => setActiveTab("pedidos")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-normal transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
                 activeTab === "pedidos"
-                  ? "bg-white text-[#0071e3] shadow-3xs"
+                  ? "bg-white text-[#0071e3] shadow-sm font-medium"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <ShoppingBag size={13} />
+              <ShoppingBag size={14} />
               Pedidos ({pedidos.length})
               {activePedidos.length > 0 && (
-                <span className="bg-[#0071e3] text-white text-[10px] px-1.5 py-0.2 rounded-full font-black">
+                <span className="bg-[#0071e3] text-white text-[11px] px-1.5 py-0.2 rounded-full font-normal">
                   {activePedidos.length}
                 </span>
               )}
             </button>
             <button
               onClick={() => setActiveTab("ordens")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-normal transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
                 activeTab === "ordens"
-                  ? "bg-white text-sky-700 shadow-3xs"
+                  ? "bg-white text-sky-700 shadow-sm font-medium"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <Wrench size={13} />
+              <Wrench size={14} />
               Serviços ({ordens.length})
               {activeOrdens.length > 0 && (
-                <span className="bg-sky-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black">
+                <span className="bg-sky-600 text-white text-[11px] px-1.5 py-0.2 rounded-full font-normal">
                   {activeOrdens.length}
                 </span>
               )}
@@ -547,12 +547,12 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
       {/* Loading Skeleton */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 animate-pulse space-y-4">
+          <div className="bg-white rounded-3xl p-6 shadow-md animate-pulse space-y-4">
             <div className="h-4 bg-slate-200 rounded w-1/3" />
             <div className="h-10 bg-slate-100 rounded-2xl" />
             <div className="h-20 bg-slate-50 rounded-2xl" />
           </div>
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 animate-pulse space-y-4">
+          <div className="bg-white rounded-3xl p-6 shadow-md animate-pulse space-y-4">
             <div className="h-4 bg-slate-200 rounded w-1/3" />
             <div className="h-10 bg-slate-100 rounded-2xl" />
             <div className="h-20 bg-slate-50 rounded-2xl" />
@@ -562,71 +562,71 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
         /* Empty State: No Orders or Service Requests yet */
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Card to Make First Purchase */}
-          <div className="bg-gradient-to-br from-white to-blue-50/40 border border-blue-200/80 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col justify-between relative overflow-hidden group hover:border-blue-300 transition-all">
+          <div className="bg-gradient-to-br from-white to-blue-50/40 rounded-3xl p-6 sm:p-7 shadow-md flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all">
             <div className="space-y-3.5">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-blue-100 text-[#0071e3] flex items-center justify-center shadow-3xs group-hover:scale-105 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-blue-100 text-[#0071e3] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
                   <ShoppingBag className="w-6 h-6" />
                 </div>
-                <span className="text-[11px] font-black uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
+                <span className="text-xs font-normal uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full shadow-2xs">
                   Loja Direta
                 </span>
               </div>
               <div>
-                <h4 className="text-base sm:text-lg font-black text-slate-900">
+                <h4 className="text-lg sm:text-xl font-normal text-slate-900">
                   Nenhum pedido de produtos no momento
                 </h4>
-                <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                <p className="text-sm text-slate-600 mt-1 leading-relaxed font-normal">
                   Adquira produtos químicos profissionais, sacos para lixo, papéis e equipamentos para seu condomínio com tabela exclusiva.
                 </p>
               </div>
             </div>
 
-            <div className="pt-5 mt-4 border-t border-blue-100/80">
+            <div className="pt-5 mt-4">
               <Link
                 to="/produtos"
-                className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 bg-[#0071e3] hover:bg-[#005bb5] text-white font-bold rounded-2xl text-xs sm:text-sm shadow-sm transition-all active:scale-98"
+                className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-4 bg-[#0071e3] hover:bg-[#005bb5] text-white font-medium rounded-2xl text-sm sm:text-base shadow-sm transition-all active:scale-98"
               >
                 <span>Conhecer Catálogo de Produtos</span>
-                <ArrowRight size={15} />
+                <ArrowRight size={16} />
               </Link>
             </div>
           </div>
 
           {/* Card to Request First Service */}
-          <div className="bg-gradient-to-br from-white to-emerald-50/40 border border-emerald-200/80 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col justify-between relative overflow-hidden group hover:border-emerald-300 transition-all">
+          <div className="bg-gradient-to-br from-white to-emerald-50/40 rounded-3xl p-6 sm:p-7 shadow-md flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all">
             <div className="space-y-3.5">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-3xs group-hover:scale-105 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
                   <Wrench className="w-6 h-6" />
                 </div>
                 {isAfiliado ? (
-                  <span className="text-[11px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-full border border-emerald-300">
+                  <span className="text-xs font-normal uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-3 py-1 rounded-full shadow-2xs">
                     50% OFF para Afiliados
                   </span>
                 ) : (
-                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                  <span className="text-xs font-normal uppercase tracking-wider text-slate-600 bg-slate-100 px-3 py-1 rounded-full shadow-2xs">
                     Serviços Rotineiros
                   </span>
                 )}
               </div>
               <div>
-                <h4 className="text-base sm:text-lg font-black text-slate-900">
+                <h4 className="text-lg sm:text-xl font-normal text-slate-900">
                   Nenhuma ordem de serviço aberta
                 </h4>
-                <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                <p className="text-sm text-slate-600 mt-1 leading-relaxed font-normal">
                   Precisa de limpeza de caixas d'água, higienização de caixas de gordura, jardinagem ou manutenção predial? Abra uma O.S. online.
                 </p>
               </div>
             </div>
 
-            <div className="pt-5 mt-4 border-t border-emerald-100/80">
+            <div className="pt-5 mt-4">
               <Link
                 to="/cliente/servicos"
-                className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs sm:text-sm shadow-sm transition-all active:scale-98"
+                className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-2xl text-sm sm:text-base shadow-sm transition-all active:scale-98"
               >
                 <span>Solicitar Ordem de Serviço</span>
-                <ArrowRight size={15} />
+                <ArrowRight size={16} />
               </Link>
             </div>
           </div>
@@ -639,19 +639,19 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-blue-100 text-[#0071e3] flex items-center justify-center text-xs font-bold">
-                    <ShoppingBag size={14} />
+                  <div className="w-7 h-7 rounded-xl bg-blue-100 text-[#0071e3] flex items-center justify-center text-xs font-normal">
+                    <ShoppingBag size={15} />
                   </div>
-                  <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                  <h4 className="font-normal text-slate-900 text-base sm:text-lg">
                     Pedidos de Produtos ({pedidos.length})
                   </h4>
                 </div>
                 <Link
                   to="/cliente/pedidos"
-                  className="text-xs font-bold text-[#0071e3] hover:underline flex items-center gap-1"
+                  className="text-sm font-normal text-[#0071e3] hover:underline flex items-center gap-1"
                 >
                   <span>Ver todos em Meus Pedidos</span>
-                  <ChevronRight size={13} />
+                  <ChevronRight size={14} />
                 </Link>
               </div>
 
@@ -668,33 +668,29 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                   return (
                     <div
                       key={pedido.firebaseId}
-                      className={`bg-white border rounded-3xl p-5 shadow-xs transition-all hover:shadow-md flex flex-col justify-between ${
-                        statusInfo.step > 0 && statusInfo.step < 5
-                          ? "border-blue-200/90 ring-1 ring-blue-100"
-                          : "border-slate-200/80"
-                      }`}
+                      className="bg-white rounded-3xl p-5 sm:p-6 shadow-md transition-all hover:shadow-lg flex flex-col justify-between"
                     >
                       <div>
                         {/* Order Header */}
                         <div className="flex items-start justify-between gap-3 mb-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#0071e3] flex items-center justify-center font-bold text-sm shrink-0 border border-blue-100">
+                            <div className="w-11 h-11 rounded-2xl bg-blue-50 text-[#0071e3] flex items-center justify-center font-medium text-sm shrink-0 shadow-2xs">
                               <ShoppingBag size={18} />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-mono font-black text-slate-900 text-sm">
+                                <span className="font-mono font-normal text-slate-900 text-base">
                                   {orderNum}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-slate-400 font-medium">
+                              <p className="text-xs text-slate-500 font-normal">
                                 Realizado em {formatDate(pedido.dataHora || pedido.createdAt)}
                               </p>
                             </div>
                           </div>
 
                           <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border ${statusInfo.badgeBg}`}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-normal shadow-2xs ${statusInfo.badgeBg}`}
                           >
                             {statusInfo.icon}
                             {statusInfo.label}
@@ -702,12 +698,12 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                         </div>
 
                         {/* Visual Progress Steps */}
-                        <div className="my-4 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100">
+                        <div className="my-4 bg-slate-50 p-4 rounded-2xl shadow-2xs">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-extrabold text-slate-700">
+                            <span className="text-xs font-medium text-slate-700">
                               Etapa Atual do Pedido:
                             </span>
-                            <span className="text-[11px] font-bold text-[#0071e3]">
+                            <span className="text-xs font-normal text-[#0071e3]">
                               {statusInfo.step === 5 ? "100% Concluído" : `Etapa ${statusInfo.step} de 4`}
                             </span>
                           </div>
@@ -733,7 +729,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                                     } ${isCurrent ? "animate-pulse" : ""}`}
                                   />
                                   <span
-                                    className={`text-[9px] font-bold block text-center truncate ${
+                                    className={`text-[10px] font-normal block text-center truncate ${
                                       isCompleted ? "text-slate-900" : "text-slate-400"
                                     }`}
                                   >
@@ -744,31 +740,31 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                             })}
                           </div>
 
-                          <p className="text-[11px] text-slate-500 leading-snug mt-1">
+                          <p className="text-xs text-slate-500 leading-snug mt-1 font-normal">
                             {statusInfo.desc}
                           </p>
                         </div>
 
                         {/* Order Summary Specs */}
-                        <div className="flex items-center justify-between text-xs py-2 px-1 border-t border-slate-100">
-                          <div className="text-slate-600">
+                        <div className="flex items-center justify-between text-sm py-2 px-1">
+                          <div className="text-slate-600 font-normal">
                             <span>Itens: </span>
-                            <strong className="text-slate-900">
+                            <span className="text-slate-900 font-medium">
                               {getPedidoItens(pedido).length} produto(s)
-                            </strong>
+                            </span>
                           </div>
                           <div>
-                            <span className="text-slate-500">Total: </span>
-                            <strong className="text-slate-900 font-extrabold text-sm text-[#0071e3]">
+                            <span className="text-slate-500 font-normal">Total: </span>
+                            <span className="font-light text-base text-[#0071e3]">
                               {formatCurrency(total)}
-                            </strong>
+                            </span>
                           </div>
                         </div>
 
                         {/* Inline Item Peek Toggle */}
                         {isExpanded && (
-                          <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                          <div className="mt-3 pt-3 space-y-2">
+                            <p className="text-xs font-normal text-slate-400 uppercase tracking-wider">
                               Produtos no Pedido:
                             </p>
                             <div className="space-y-1.5 max-h-36 overflow-y-auto">
@@ -780,18 +776,18 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                                 return (
                                   <div
                                     key={iIdx}
-                                    className="flex items-center justify-between gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100"
+                                    className="flex items-center justify-between gap-2 text-sm bg-slate-50 p-3 rounded-xl shadow-2xs"
                                   >
                                     <div className="min-w-0 pr-2">
-                                      <p className="text-slate-800 font-bold truncate max-w-[180px]" title={it.descricao || it.nome}>
+                                      <p className="text-slate-800 font-normal truncate max-w-[180px]" title={it.descricao || it.nome}>
                                         {it.descricao || it.nome || "Produto"}
                                       </p>
-                                      <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                                      <p className="text-xs text-slate-500 font-normal mt-0.5">
                                         {q}x {formatCurrency(u)}
                                       </p>
                                     </div>
                                     <div className="text-right shrink-0">
-                                      <span className="text-slate-900 font-black text-xs">
+                                      <span className="text-slate-900 font-normal text-sm">
                                         {formatCurrency(itemTot)}
                                       </span>
                                     </div>
@@ -804,23 +800,23 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                       </div>
 
                       {/* Card Action Buttons */}
-                      <div className="flex items-center justify-between gap-2 pt-3 mt-3 border-t border-slate-100">
+                      <div className="flex items-center justify-between gap-2 pt-3 mt-3">
                         <button
                           onClick={() =>
                             setExpandedItemId(
                               isExpanded ? null : `order-${pedido.firebaseId}`
                             )
                           }
-                          className="text-[11px] font-bold text-slate-600 hover:text-slate-900 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1 cursor-pointer"
+                          className="text-xs font-normal text-slate-600 hover:text-slate-900 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           {isExpanded ? (
                             <>
-                              <ChevronUp size={13} />
+                              <ChevronUp size={14} />
                               Ocultar itens
                             </>
                           ) : (
                             <>
-                              <ChevronDown size={13} />
+                              <ChevronDown size={14} />
                               Ver itens ({pedido.itens?.length || 0})
                             </>
                           )}
@@ -828,10 +824,10 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
 
                         <Link
                           to="/cliente/pedidos"
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-[#0071e3] text-[#0071e3] hover:text-white text-xs font-bold transition-all shadow-3xs"
+                          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-[#0071e3] text-[#0071e3] hover:text-white text-sm font-medium transition-all shadow-2xs"
                         >
                           <span>Acompanhar Pedido</span>
-                          <ArrowRight size={13} />
+                          <ArrowRight size={14} />
                         </Link>
                       </div>
                     </div>
@@ -846,19 +842,19 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-bold">
-                    <Wrench size={14} />
+                  <div className="w-7 h-7 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-normal">
+                    <Wrench size={15} />
                   </div>
-                  <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                  <h4 className="font-normal text-slate-900 text-base sm:text-lg">
                     Ordens de Serviço ({ordens.length})
                   </h4>
                 </div>
                 <Link
                   to="/cliente/ordens-servico"
-                  className="text-xs font-bold text-sky-700 hover:underline flex items-center gap-1"
+                  className="text-sm font-normal text-sky-700 hover:underline flex items-center gap-1"
                 >
                   <span>Ver todas em Minhas O.S.</span>
-                  <ChevronRight size={13} />
+                  <ChevronRight size={14} />
                 </Link>
               </div>
 
@@ -871,33 +867,29 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                   return (
                     <div
                       key={os.id}
-                      className={`bg-white border rounded-3xl p-5 shadow-xs transition-all hover:shadow-md flex flex-col justify-between ${
-                        statusInfo.step > 0 && statusInfo.step < 4
-                          ? "border-sky-200/90 ring-1 ring-sky-100"
-                          : "border-slate-200/80"
-                      }`}
+                      className="bg-white rounded-3xl p-5 sm:p-6 shadow-md transition-all hover:shadow-lg flex flex-col justify-between"
                     >
                       <div>
                         {/* OS Header */}
                         <div className="flex items-start justify-between gap-3 mb-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-10 h-10 rounded-2xl bg-sky-50 text-sky-700 flex items-center justify-center font-bold text-sm shrink-0 border border-sky-100">
+                            <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-700 flex items-center justify-center font-medium text-sm shrink-0 shadow-2xs">
                               <Wrench size={18} />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-mono font-black text-slate-900 text-sm">
+                                <span className="font-mono font-normal text-slate-900 text-base">
                                   {osNumber}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-slate-400 font-medium">
+                              <p className="text-xs text-slate-500 font-normal">
                                 Solicitado em {formatDate(os.createdAt)}
                               </p>
                             </div>
                           </div>
 
                           <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border ${statusInfo.badgeBg}`}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-normal shadow-2xs ${statusInfo.badgeBg}`}
                           >
                             {statusInfo.icon}
                             {statusInfo.label}
@@ -906,29 +898,29 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
 
                         {/* Service Title */}
                         <div className="my-2">
-                          <h5 className="font-extrabold text-slate-900 text-sm leading-snug">
+                          <h5 className="font-normal text-slate-900 text-base leading-snug">
                             {os.servicoNome || os.itens?.[0]?.nome || "Serviço Condominial"}
                           </h5>
                           {os.dataConfirmada || os.dataAgendada ? (
-                            <p className="text-xs text-emerald-700 flex items-center gap-1 mt-1 font-bold">
-                              <Calendar size={12} className="text-emerald-600" />
+                            <p className="text-sm text-emerald-700 flex items-center gap-1.5 mt-1 font-normal">
+                              <Calendar size={14} className="text-emerald-600" />
                               <span>Visita Confirmada: {os.dataConfirmada || os.dataAgendada} {os.turnoAgendado ? `(${os.turnoAgendado})` : ''}</span>
                             </p>
                           ) : os.dataPreferencial ? (
-                            <p className="text-xs text-slate-500 flex items-center gap-1 mt-1 font-medium">
-                              <Calendar size={12} className="text-sky-600" />
+                            <p className="text-sm text-slate-500 flex items-center gap-1.5 mt-1 font-normal">
+                              <Calendar size={14} className="text-sky-600" />
                               <span>Data preferencial: {os.dataPreferencial}</span>
                             </p>
                           ) : null}
                         </div>
 
                         {/* Visual Progress Steps */}
-                        <div className="my-3 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100">
+                        <div className="my-3 bg-slate-50 p-4 rounded-2xl shadow-2xs">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-extrabold text-slate-700">
+                            <span className="text-xs font-medium text-slate-700">
                               Progresso do Atendimento:
                             </span>
-                            <span className="text-[11px] font-bold text-sky-700">
+                            <span className="text-xs font-normal text-sky-700">
                               {statusInfo.step === 4 ? "Concluído" : `Etapa ${statusInfo.step} de 3`}
                             </span>
                           </div>
@@ -953,7 +945,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                                     } ${isCurrent ? "animate-pulse" : ""}`}
                                   />
                                   <span
-                                    className={`text-[9px] font-bold block text-center truncate ${
+                                    className={`text-[10px] font-normal block text-center truncate ${
                                       isCompleted ? "text-slate-900" : "text-slate-400"
                                     }`}
                                   >
@@ -964,14 +956,14 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                             })}
                           </div>
 
-                          <p className="text-[11px] text-slate-500 leading-snug">
+                          <p className="text-xs text-slate-500 leading-snug font-normal">
                             {statusInfo.desc}
                           </p>
                         </div>
 
                         {/* Price / Items spec */}
-                        <div className="flex items-center justify-between text-xs py-2 px-1 border-t border-slate-100">
-                          <div className="text-slate-600">
+                        <div className="flex items-center justify-between text-sm py-2 px-1">
+                          <div className="text-slate-600 font-normal">
                             {os.itens?.length ? (
                               <span>{os.itens.length} serviço(s)</span>
                             ) : (
@@ -979,20 +971,20 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                             )}
                           </div>
                           <div>
-                            <span className="text-slate-500">Valor: </span>
-                            <strong className="text-slate-900 font-extrabold text-sm">
+                            <span className="text-slate-500 font-normal">Valor: </span>
+                            <span className="font-light text-base text-slate-900">
                               {formatCurrency(os.valor || os.valorFaturar || os.valorOriginal || 0)}
-                            </strong>
+                            </span>
                           </div>
                         </div>
 
                         {/* Inline Item Peek */}
                         {isExpanded && os.observacoes && (
-                          <div className="mt-3 pt-3 border-t border-slate-100 bg-sky-50/50 p-2.5 rounded-xl border border-sky-100">
-                            <p className="text-[11px] font-bold text-sky-900 mb-1">
+                          <div className="mt-3 p-3 bg-sky-50 rounded-2xl shadow-2xs">
+                            <p className="text-xs font-medium text-sky-900 mb-1">
                               Observações / Instruções:
                             </p>
-                            <p className="text-xs text-slate-700 leading-relaxed">
+                            <p className="text-sm text-slate-700 leading-relaxed font-normal">
                               {os.observacoes}
                             </p>
                           </div>
@@ -1000,34 +992,34 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                       </div>
 
                       {/* Card Action Buttons */}
-                      <div className="flex items-center justify-between gap-2 pt-3 mt-3 border-t border-slate-100">
+                      <div className="flex items-center justify-between gap-2 pt-3 mt-3">
                         {os.observacoes ? (
                           <button
                             onClick={() =>
                               setExpandedItemId(isExpanded ? null : `os-${os.id}`)
                             }
-                            className="text-[11px] font-bold text-slate-600 hover:text-slate-900 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1 cursor-pointer"
+                            className="text-xs font-normal text-slate-600 hover:text-slate-900 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors flex items-center gap-1 cursor-pointer"
                           >
                             {isExpanded ? (
                               <>
-                                <ChevronUp size={13} /> Ocultar detalhes
+                                <ChevronUp size={14} /> Ocultar detalhes
                               </>
                             ) : (
                               <>
-                                <ChevronDown size={13} /> Ver instruções
+                                <ChevronDown size={14} /> Ver instruções
                               </>
                             )}
                           </button>
                         ) : (
-                          <span className="text-[11px] text-slate-400">Atendimento prioritário</span>
+                          <span className="text-xs text-slate-400 font-normal">Atendimento prioritário</span>
                         )}
 
                         <Link
                           to="/cliente/ordens-servico"
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white text-xs font-bold transition-all shadow-3xs"
+                          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white text-sm font-medium transition-all shadow-2xs"
                         >
                           <span>Acompanhar O.S.</span>
-                          <ArrowRight size={13} />
+                          <ArrowRight size={14} />
                         </Link>
                       </div>
                     </div>

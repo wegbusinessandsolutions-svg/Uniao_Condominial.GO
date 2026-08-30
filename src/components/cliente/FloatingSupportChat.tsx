@@ -279,17 +279,17 @@ export default function FloatingSupportChat() {
     switch (status) {
       case "A Caminho":
       case "Em Trânsito":
-        return { label: "A Caminho", bg: "bg-amber-100 text-amber-800 border-amber-200" };
+        return { label: "A Caminho", bg: "bg-amber-100 text-amber-800" };
       case "Entregue":
       case "Concluído":
-        return { label: "Entregue", bg: "bg-emerald-100 text-emerald-800 border-emerald-200" };
+        return { label: "Entregue", bg: "bg-emerald-100 text-emerald-800" };
       case "Em Separação":
       case "Aprovado":
-        return { label: "Em Separação", bg: "bg-blue-100 text-blue-800 border-blue-200" };
+        return { label: "Em Separação", bg: "bg-blue-100 text-blue-800" };
       case "Cancelado":
-        return { label: "Cancelado", bg: "bg-rose-100 text-rose-800 border-rose-200" };
+        return { label: "Cancelado", bg: "bg-rose-100 text-rose-800" };
       default:
-        return { label: status || "Pendente", bg: "bg-slate-100 text-slate-800 border-slate-200" };
+        return { label: status || "Pendente", bg: "bg-slate-100 text-slate-800" };
     }
   };
 
@@ -304,19 +304,19 @@ export default function FloatingSupportChat() {
               setIsMinimized(false);
               setUnreadCount(0);
             }}
-            className="group flex items-center gap-3 bg-[#0071e3] hover:bg-[#0077ed] text-white px-5 py-3.5 rounded-full shadow-2xl transition-all transform hover:scale-105 active:scale-95 border border-white/20"
+            className="group flex items-center gap-3 bg-[#0071e3] hover:bg-[#0077ed] text-white px-5 py-3.5 rounded-full shadow-2xl transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
             title="Suporte em tempo real"
           >
             <div className="relative">
               <MessageCircle size={24} className="animate-pulse" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-white animate-bounce" />
+                <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-rose-500 rounded-full animate-bounce" />
               )}
             </div>
-            <span className="font-bold text-sm tracking-wide hidden sm:inline">
+            <span className="font-medium text-sm tracking-wide hidden sm:inline">
               Suporte Pedidos
             </span>
-            <span className="bg-white/20 text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full text-white">
+            <span className="bg-white/20 text-[10px] uppercase font-medium px-2 py-0.5 rounded-full text-white">
               Online
             </span>
           </button>
@@ -326,25 +326,25 @@ export default function FloatingSupportChat() {
         {isOpen && (
           <div
             className={`
-              w-[92vw] sm:w-[410px] bg-white rounded-2xl shadow-2xl border border-slate-200 
+              w-[92vw] sm:w-[410px] bg-white rounded-3xl shadow-2xl 
               flex flex-col overflow-hidden transition-all duration-300 z-50
-              ${isMinimized ? "h-[64px]" : "h-[560px] max-h-[82vh]"}
+              ${isMinimized ? "h-[68px]" : "h-[560px] max-h-[82vh]"}
             `}
           >
             {/* Header do Chat */}
-            <div className="bg-gradient-to-r from-[#0071e3] to-sky-700 p-4 text-white flex items-center justify-between shrink-0 shadow-sm">
+            <div className="bg-gradient-to-r from-[#0071e3] to-sky-700 p-4 text-white flex items-center justify-between shrink-0 shadow-md">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-xs flex items-center justify-center border border-white/20 shrink-0">
+                <div className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-xs flex items-center justify-center shrink-0 shadow-xs">
                   <Headphones size={20} className="text-white" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <h3 className="font-extrabold text-sm tracking-tight truncate text-sky-200">
-                      Suporte União Condominial.<span className="text-emerald-300 font-extrabold">GO</span>
+                    <h3 className="font-normal text-sm tracking-tight truncate text-sky-100">
+                      Suporte União Condominial.<span className="text-emerald-300 font-medium">GO</span>
                     </h3>
                     <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
                   </div>
-                  <p className="text-[11px] text-sky-100 truncate">
+                  <p className="text-[11px] text-sky-100/90 truncate font-normal">
                     Atendimento em tempo real sobre seus pedidos
                   </p>
                 </div>
@@ -353,14 +353,14 @@ export default function FloatingSupportChat() {
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => setIsMinimized(!isMinimized)}
-                  className="p-1.5 hover:bg-white/10 rounded-lg text-white/80 hover:text-white transition-colors"
+                  className="p-2 hover:bg-white/10 rounded-xl text-white/80 hover:text-white transition-colors cursor-pointer"
                   title={isMinimized ? "Expandir" : "Minimizar"}
                 >
                   <Minimize2 size={16} />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 hover:bg-white/10 rounded-lg text-white/80 hover:text-white transition-colors"
+                  className="p-2 hover:bg-white/10 rounded-xl text-white/80 hover:text-white transition-colors cursor-pointer"
                   title="Fechar Chat"
                 >
                   <X size={18} />
@@ -371,10 +371,10 @@ export default function FloatingSupportChat() {
             {!isMinimized && (
               <>
                 {/* Seletor de Pedido para Contexto */}
-                <div className="bg-slate-50 p-3 border-b border-slate-200 shrink-0">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      <ShoppingBag size={12} className="text-[#0071e3]" />
+                <div className="bg-slate-50 p-4 shrink-0 shadow-xs">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <label className="text-[11px] font-medium text-slate-600 uppercase tracking-wider flex items-center gap-1">
+                      <ShoppingBag size={13} className="text-[#0071e3]" />
                       Atendimento referente ao pedido:
                     </label>
                   </div>
@@ -383,7 +383,7 @@ export default function FloatingSupportChat() {
                     <select
                       value={selectedPedidoId}
                       onChange={(e) => setSelectedPedidoId(e.target.value)}
-                      className="w-full bg-white text-slate-800 text-xs font-semibold rounded-lg border border-slate-300 py-2 pl-3 pr-8 shadow-2xl focus:outline-none focus:ring-2 focus:ring-[#0071e3] transition-all appearance-none cursor-pointer"
+                      className="w-full bg-white text-slate-800 text-xs font-normal rounded-xl py-2.5 pl-3.5 pr-8 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3] transition-all appearance-none cursor-pointer"
                     >
                       <option value="geral">Dúvida / Atendimento Geral</option>
                       {pedidos.map((p) => {
@@ -396,22 +396,22 @@ export default function FloatingSupportChat() {
                         );
                       })}
                     </select>
-                    <ChevronDown size={14} className="absolute right-3 top-2.5 text-slate-400 pointer-events-none" />
+                    <ChevronDown size={14} className="absolute right-3.5 top-3 text-slate-400 pointer-events-none" />
                   </div>
 
                   {/* Card do Pedido Selecionado */}
                   {selectedPedidoObj && (
-                    <div className="mt-2.5 bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xl flex items-center justify-between text-xs">
+                    <div className="mt-3 bg-white p-3 rounded-2xl shadow-sm flex items-center justify-between text-xs">
                       <div className="min-w-0">
-                        <span className="font-bold text-slate-800">
+                        <span className="font-medium text-slate-800 text-sm">
                           #{selectedPedidoObj.numeroPedido || selectedPedidoObj.codigoPedido || selectedPedidoObj.firebaseId}
                         </span>
-                        <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                        <div className="text-[11px] text-slate-500 truncate mt-0.5 font-normal">
                           {selectedPedidoObj.itens?.length || 0} item(ns) • {selectedPedidoObj.dataHora ? new Date(selectedPedidoObj.dataHora).toLocaleDateString("pt-BR") : ""}
                         </div>
                       </div>
                       <div className="text-right shrink-0 ml-2">
-                        <span className={`inline-block px-2 py-0.5 text-[10px] font-bold rounded-full border ${getStatusBadge(selectedPedidoObj.status).bg}`}>
+                        <span className={`inline-block px-2.5 py-1 text-[11px] font-medium rounded-full shadow-2xs ${getStatusBadge(selectedPedidoObj.status).bg}`}>
                           {getStatusBadge(selectedPedidoObj.status).label}
                         </span>
                       </div>
@@ -420,39 +420,39 @@ export default function FloatingSupportChat() {
                 </div>
 
                 {/* Sugestões Rápidas (Chips) */}
-                <div className="px-3 py-2 bg-slate-100/70 border-b border-slate-200 flex gap-1.5 overflow-x-auto text-[11px] scrollbar-none shrink-0">
+                <div className="px-3.5 py-2.5 bg-slate-100/60 flex gap-2 overflow-x-auto text-xs scrollbar-none shrink-0">
                   <button
                     onClick={() => handleSendMessage("Qual o status do meu pedido?")}
-                    className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-medium px-2.5 py-1 rounded-full border border-slate-200 shadow-2xl transition-all flex items-center gap-1 active:scale-95"
+                    className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-normal px-3 py-1.5 rounded-full shadow-xs transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
                   >
-                    <Truck size={12} className="text-[#0071e3]" />
+                    <Truck size={13} className="text-[#0071e3]" />
                     Status do Pedido
                   </button>
                   <button
                     onClick={() => handleSendMessage("Quero alterar o endereço de entrega")}
-                    className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-medium px-2.5 py-1 rounded-full border border-slate-200 shadow-2xl transition-all flex items-center gap-1 active:scale-95"
+                    className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-normal px-3 py-1.5 rounded-full shadow-xs transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
                   >
-                    <AlertCircle size={12} className="text-amber-500" />
+                    <AlertCircle size={13} className="text-amber-500" />
                     Alterar Endereço
                   </button>
                   <button
                     onClick={() => handleSendMessage("Dúvida sobre Pagamento / Cashback")}
-                    className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-medium px-2.5 py-1 rounded-full border border-slate-200 shadow-2xl transition-all flex items-center gap-1 active:scale-95"
+                    className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-normal px-3 py-1.5 rounded-full shadow-xs transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
                   >
-                    <Sparkles size={12} className="text-emerald-500" />
+                    <Sparkles size={13} className="text-emerald-500" />
                     Pagamento & Cashback
                   </button>
                   <button
                     onClick={() => handleSendMessage("Quero falar com um atendente humano")}
-                    className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-medium px-2.5 py-1 rounded-full border border-slate-200 shadow-2xl transition-all flex items-center gap-1 active:scale-95"
+                    className="shrink-0 bg-white hover:bg-sky-50 text-slate-700 hover:text-[#0071e3] font-normal px-3 py-1.5 rounded-full shadow-xs transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
                   >
-                    <User size={12} className="text-indigo-500" />
+                    <User size={13} className="text-indigo-500" />
                     Atendente Humano
                   </button>
                 </div>
 
                 {/* ÁREA DE MENSAGENS (Scrollable) */}
-                <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/50">
+                <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/40">
                   {mensagens.map((msg, idx) => {
                     const isUser = msg.sender === "cliente";
                     const isBot = msg.sender === "bot";
@@ -463,22 +463,22 @@ export default function FloatingSupportChat() {
                         className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}
                       >
                         <div className="flex items-center gap-1 mb-1 px-1">
-                          <span className="text-[10px] font-bold text-slate-400">
+                          <span className="text-[11px] font-normal text-slate-400">
                             {isUser ? "Você" : isBot ? "Atendente Virtual" : msg.senderName || "Suporte"}
                           </span>
-                          <span className="text-[9px] text-slate-300">
+                          <span className="text-[10px] text-slate-300">
                             {msg.dataHora ? new Date(msg.dataHora).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : ""}
                           </span>
                         </div>
 
                         <div
                           className={`
-                            max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed shadow-xs whitespace-pre-line
+                            max-w-[85%] rounded-3xl p-3.5 text-xs leading-relaxed shadow-sm whitespace-pre-line font-normal
                             ${
                               isUser
                                 ? "bg-[#0071e3] text-white rounded-br-none"
                                 : isBot
-                                ? "bg-white text-slate-800 border border-slate-200/80 rounded-bl-none font-sans"
+                                ? "bg-white text-slate-800 rounded-bl-none font-sans"
                                 : "bg-emerald-700 text-white rounded-bl-none"
                             }
                           `}
@@ -491,7 +491,7 @@ export default function FloatingSupportChat() {
 
                   {/* Bot Typing Indicator */}
                   {botTyping && (
-                    <div className="flex items-center gap-2 text-xs text-slate-400 italic bg-white p-2.5 rounded-xl border border-slate-200 w-fit">
+                    <div className="flex items-center gap-2 text-xs text-slate-400 italic bg-white p-3 rounded-2xl shadow-xs w-fit">
                       <Bot size={14} className="text-[#0071e3] animate-spin" />
                       <span>Atendente digitando...</span>
                     </div>
@@ -506,19 +506,19 @@ export default function FloatingSupportChat() {
                     e.preventDefault();
                     handleSendMessage();
                   }}
-                  className="p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0"
+                  className="p-3.5 bg-white flex items-center gap-2 shrink-0 shadow-inner"
                 >
                   <input
                     type="text"
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="Digite sua dúvida sobre o pedido..."
-                    className="flex-1 bg-slate-100 text-slate-800 text-xs rounded-xl px-3.5 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:bg-white transition-all"
+                    className="flex-1 bg-slate-100 text-slate-800 text-xs rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:bg-white transition-all font-normal"
                   />
                   <button
                     type="submit"
                     disabled={!inputText.trim() || sending}
-                    className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white p-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center shrink-0"
+                    className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white p-3 rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center shrink-0 cursor-pointer"
                     title="Enviar mensagem"
                   >
                     <Send size={16} />

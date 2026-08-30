@@ -71,19 +71,19 @@ export default function CustomerLayout() {
   if (profile.status === "Pendente") {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-        <header className="bg-white border-b border-slate-200 h-16 flex items-center px-4 sm:px-6 lg:px-8">
-          <div className="font-bold text-xl text-brand-dark tracking-tight">WegBusiness</div>
+        <header className="bg-white shadow-sm h-16 flex items-center px-4 sm:px-6 lg:px-8">
+          <div className="text-2xl font-light text-brand-dark tracking-tight">WegBusiness</div>
         </header>
         <main className="flex-1 flex items-center justify-center p-6">
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full text-center">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">Cadastro em Análise</h2>
-            <p className="text-slate-600 mb-6">
+          <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">
+            <h2 className="text-2xl font-normal text-slate-900 mb-4">Cadastro em Análise</h2>
+            <p className="text-slate-600 mb-6 leading-relaxed">
               Seu cadastro foi recebido com sucesso e está pendente de aprovação pela nossa equipe.
               Você receberá um e-mail assim que seu acesso for liberado.
             </p>
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center w-full gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium"
+              className="flex items-center justify-center w-full gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors font-medium cursor-pointer"
             >
               <LogOut size={18} />
               Sair
@@ -118,7 +118,7 @@ export default function CustomerLayout() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row relative">
       {/* Header móvel */}
-      <header className="md:hidden bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sticky top-0 z-40 w-full shrink-0">
+      <header className="md:hidden bg-white shadow-sm h-16 flex items-center justify-between px-4 sticky top-0 z-40 w-full shrink-0">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="p-2 -ml-2 text-slate-600 hover:text-slate-900 focus:outline-none transition-colors"
@@ -127,10 +127,10 @@ export default function CustomerLayout() {
           <Menu size={24} />
         </button>
         <div className="text-center flex-1 pt-1 px-2">
-          <span className="font-bold text-slate-800 text-[17px] block leading-none notranslate" translate="no">
+          <span className="font-medium text-slate-800 text-lg block leading-none notranslate" translate="no">
             União Condominial.<span className="text-emerald-600">GO</span>
           </span>
-          <span className="text-[13px] text-[#0071e3] font-semibold mt-1 block leading-none">Área do Cliente</span>
+          <span className="text-sm text-[#0071e3] font-normal mt-1 block leading-none">Área do Cliente</span>
         </div>
         <div className="flex items-center">
         </div>
@@ -146,18 +146,18 @@ export default function CustomerLayout() {
 
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 w-[360px] bg-white border-r border-slate-200 text-slate-800 flex flex-col h-full transform transition-transform duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-50 w-[360px] bg-white shadow-md text-slate-800 flex flex-col h-full transform transition-transform duration-300 ease-in-out
           md:relative md:transform-none md:z-0 md:flex md:h-auto md:min-h-screen shrink-0
           ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-6 flex items-center justify-between">
           <div>
-            <h2 className="text-[14px] text-brand-dark font-bold uppercase tracking-wider mb-1 notranslate" translate="no">
+            <h2 className="text-sm text-brand-dark font-normal uppercase tracking-wider mb-1 notranslate" translate="no">
               União Condominial.<span className="text-emerald-600">GO</span>
             </h2>
-            <h3 className="text-[22px] font-bold text-slate-900 leading-tight">Área do Cliente</h3>
-            <p className="text-[18px] font-bold text-[#0071e3] mt-2 whitespace-normal break-words leading-tight" title={profile?.displayName}>
+            <h3 className="text-2xl font-normal text-slate-900 leading-tight">Área do Cliente</h3>
+            <p className="text-base font-medium text-[#0071e3] mt-2 whitespace-normal break-words leading-tight" title={profile?.displayName}>
               {profile?.displayName}
             </p>
           </div>
@@ -175,8 +175,8 @@ export default function CustomerLayout() {
                     end={item.end}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center space-x-3 px-3 py-2 rounded-lg text-[15px] transition-colors ${
-                        isActive ? "bg-brand-light/10 text-brand-dark font-semibold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      `flex items-center space-x-3 px-3 py-2 rounded-xl text-base transition-colors ${
+                        isActive ? "bg-brand-light/10 text-brand-dark font-medium" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-normal"
                       }`
                     }
                   >
@@ -190,7 +190,7 @@ export default function CustomerLayout() {
 
           {catalogItems.length > 0 && (
             <div>
-              <h4 className="px-3 text-[13px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Catálogo</h4>
+              <h4 className="px-3 text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5">Catálogo</h4>
               <ul className="space-y-0.5">
                 {catalogItems.map((item) => (
                   <li key={item.name}>
@@ -198,8 +198,8 @@ export default function CustomerLayout() {
                       to={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={({ isActive }) =>
-                        `flex items-center space-x-3 px-3 py-2 rounded-lg text-[15px] transition-colors ${
-                          isActive ? "bg-brand-light/10 text-brand-dark font-semibold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        `flex items-center space-x-3 px-3 py-2 rounded-xl text-base transition-colors ${
+                          isActive ? "bg-brand-light/10 text-brand-dark font-medium" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-normal"
                         }`
                       }
                     >
@@ -214,7 +214,7 @@ export default function CustomerLayout() {
 
           {advantageItems.length > 0 && (
             <div>
-              <h4 className="px-3 text-[13px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Vantagens</h4>
+              <h4 className="px-3 text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5">Vantagens</h4>
               <ul className="space-y-0.5">
                 {advantageItems.map((item) => (
                   <li key={item.name}>
@@ -222,8 +222,8 @@ export default function CustomerLayout() {
                       to={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={({ isActive }) =>
-                        `flex items-center space-x-3 px-3 py-2 rounded-lg text-[15px] transition-colors ${
-                          isActive ? "bg-brand-light/10 text-brand-dark font-semibold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        `flex items-center space-x-3 px-3 py-2 rounded-xl text-base transition-colors ${
+                          isActive ? "bg-brand-light/10 text-brand-dark font-medium" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-normal"
                         }`
                       }
                     >
@@ -237,7 +237,7 @@ export default function CustomerLayout() {
           )}
         </nav>
 
-        <div className="p-4 border-t border-slate-200 mt-auto space-y-1">
+        <div className="p-4 mt-auto space-y-1">
           <NavLink
             to="/cliente#mural"
             onClick={() => {
@@ -248,10 +248,10 @@ export default function CustomerLayout() {
               }
             }}
             className={({ isActive }) =>
-              `flex items-center space-x-3 px-3 py-2 rounded-lg text-[15px] transition-colors ${
+              `flex items-center space-x-3 px-3 py-2 rounded-xl text-base transition-colors ${
                 location.pathname === "/cliente" && location.hash === "#mural"
-                  ? "bg-brand-light/10 text-brand-dark font-semibold"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-brand-light/10 text-brand-dark font-medium"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-normal"
               }`
             }
           >
@@ -263,8 +263,8 @@ export default function CustomerLayout() {
             to="/cliente/suporte"
             onClick={() => setIsMobileMenuOpen(false)}
             className={({ isActive }) =>
-              `flex items-center space-x-3 px-3 py-2 rounded-lg text-[15px] transition-colors ${
-                isActive ? "bg-brand-light/10 text-brand-dark font-semibold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              `flex items-center space-x-3 px-3 py-2 rounded-xl text-base transition-colors ${
+                isActive ? "bg-brand-light/10 text-brand-dark font-medium" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-normal"
               }`
             }
           >
@@ -277,7 +277,7 @@ export default function CustomerLayout() {
               setIsMobileMenuOpen(false);
               handleLogout();
             }}
-            className="flex items-center space-x-3 px-3 py-2 w-full text-slate-600 hover:bg-slate-50 hover:text-red-600 rounded-lg transition-colors text-[15px] font-medium cursor-pointer"
+            className="flex items-center space-x-3 px-3 py-2 w-full text-slate-600 hover:bg-slate-50 hover:text-red-600 rounded-xl transition-colors text-base font-normal cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>Sair</span>
@@ -291,16 +291,15 @@ export default function CustomerLayout() {
           <Outlet />
         </div>
 
-        {/* Voltar ao Menu Superior (visible only on mobile) */}
         {/* Abrir Menu (visible only on mobile) */}
-        <div className="md:hidden mt-12 pt-6 border-t border-slate-200 flex justify-center">
+        <div className="md:hidden mt-12 pt-6 flex justify-center">
           <button
             onClick={() => {
               setIsMobileMenuOpen(true);
             }}
-            className="flex items-center gap-2 text-[#0071e3] hover:text-[#0071e3]/80 font-bold text-[15px] transition-all py-2.5 px-6 bg-white rounded-full shadow-sm border border-slate-200 hover:scale-105 active:scale-95 cursor-pointer"
+            className="flex items-center gap-2 text-[#0071e3] hover:text-[#0071e3]/80 font-medium text-base transition-all py-3 px-7 bg-white rounded-full shadow-md hover:scale-105 active:scale-95 cursor-pointer"
           >
-            <Menu size={16} />
+            <Menu size={18} />
             Abrir Menu
           </button>
         </div>

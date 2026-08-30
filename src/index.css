@@ -57,6 +57,16 @@
   }
 }
 
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.8s infinite;
+}
+
 /* Modern SaaS Theme Overrides */
 
 /* Elegant Soft Shadows */
