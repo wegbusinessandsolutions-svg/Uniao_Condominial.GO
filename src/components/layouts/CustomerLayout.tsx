@@ -133,9 +133,7 @@ export default function CustomerLayout() {
           </span>
           <span className="text-sm text-[#0071e3] font-normal mt-1 block leading-none">Área do Cliente</span>
         </div>
-        <div className="flex items-center">
-          <A2HSNavButton variant="header" />
-        </div>
+        <div className="w-10"></div>
       </header>
 
       {/* Backdrop para mobile drawer */}
@@ -234,33 +232,34 @@ export default function CustomerLayout() {
                     </NavLink>
                   </li>
                 ))}
+                <li>
+                  <NavLink
+                    to="/cliente#mural"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      const element = document.getElementById("mural");
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                    className={({ isActive }) =>
+                      `flex items-center space-x-3 px-3 py-2 rounded-xl text-base transition-colors ${
+                        location.pathname === "/cliente" && location.hash === "#mural"
+                          ? "bg-brand-light/10 text-brand-dark font-medium"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-normal"
+                      }`
+                    }
+                  >
+                    <Megaphone className="w-4 h-4 text-emerald-600" />
+                    <span className="whitespace-nowrap">Mural Condominial - Público</span>
+                  </NavLink>
+                </li>
               </ul>
             </div>
           )}
         </nav>
 
         <div className="p-4 mt-auto space-y-1">
-          <NavLink
-            to="/cliente#mural"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              const element = document.getElementById("mural");
-              if (element) {
-                element.scrollIntoView({ behavior: "smooth" });
-              }
-            }}
-            className={({ isActive }) =>
-              `flex items-center space-x-3 px-3 py-2 rounded-xl text-base transition-colors ${
-                location.pathname === "/cliente" && location.hash === "#mural"
-                  ? "bg-brand-light/10 text-brand-dark font-medium"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-normal"
-              }`
-            }
-          >
-            <Megaphone className="w-4 h-4 text-emerald-600" />
-            <span className="whitespace-nowrap">Mural Condominial - Público</span>
-          </NavLink>
-
           <NavLink
             to="/cliente/suporte"
             onClick={() => setIsMobileMenuOpen(false)}
