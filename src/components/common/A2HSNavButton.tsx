@@ -39,7 +39,7 @@ export const A2HSNavButton: React.FC<A2HSNavButtonProps> = ({
     );
   }
 
-  const defaultLabel = label || (isIOS ? "Instalar Aplicativo" : "Instalar Aplicativo");
+  const defaultLabel = label || (isIOS ? "Instalar - Aplicativo da União Condominial" : "Instalar - Aplicativo da União Condominial");
 
   if (variant === "footer") {
     return (

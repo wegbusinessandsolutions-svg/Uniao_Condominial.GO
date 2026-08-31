@@ -175,7 +175,7 @@ export default function ShopLayout() {
                   <Link to="/sobre" className="text-slate-600 hover:text-brand-dark transition-colors font-medium">Sobre a União Condominial</Link>
                 </li>
                 <li>
-                  <A2HSNavButton variant="footer" label="Instalar Aplicativo - U.C." />
+                  <A2HSNavButton variant="footer" label="Instalar - Aplicativo da União Condominial" />
                 </li>
               </ul>
             </div>
