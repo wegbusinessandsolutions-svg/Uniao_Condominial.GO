@@ -3,7 +3,7 @@ import { Download, Smartphone, CheckCircle2 } from "lucide-react";
 import { useA2HS } from "../../context/A2HSContext";
 
 interface A2HSNavButtonProps {
-  variant?: "sidebar" | "header" | "compact" | "pill" | "banner";
+  variant?: "sidebar" | "header" | "compact" | "pill" | "banner" | "footer";
   className?: string;
   label?: string;
 }
@@ -17,13 +17,13 @@ export const A2HSNavButton: React.FC<A2HSNavButtonProps> = ({
 
   // Se o aplicativo já estiver instalado e rodando em modo standalone
   if (isInstalled) {
-    if (variant === "compact") {
+    if (variant === "compact" || variant === "footer") {
       return (
         <span
-          className={`inline-flex items-center gap-1 text-xs text-emerald-600 font-medium ${className}`}
+          className={`inline-flex items-center gap-1.5 text-xs sm:text-base text-emerald-600 font-medium ${className}`}
           title="Aplicativo instalado na tela inicial"
         >
-          <CheckCircle2 size={14} />
+          <CheckCircle2 size={15} />
           <span>App Instalado</span>
         </span>
       );
@@ -39,7 +39,21 @@ export const A2HSNavButton: React.FC<A2HSNavButtonProps> = ({
     );
   }
 
-  const defaultLabel = label || (isIOS ? "Instalar App (A2HS)" : "Instalar App (A2HS)");
+  const defaultLabel = label || (isIOS ? "Instalar Aplicativo" : "Instalar Aplicativo");
+
+  if (variant === "footer") {
+    return (
+      <button
+        type="button"
+        onClick={openInstallGuide}
+        className={`inline-flex items-center gap-1.5 text-slate-600 hover:text-[#0071e3] transition-colors font-medium text-sm sm:text-base text-left cursor-pointer ${className}`}
+        title="Adicionar aplicativo à sua tela inicial"
+      >
+        <Download size={15} className="text-[#0071e3] shrink-0" />
+        <span>{defaultLabel}</span>
+      </button>
+    );
+  }
 
   if (variant === "header") {
     return (

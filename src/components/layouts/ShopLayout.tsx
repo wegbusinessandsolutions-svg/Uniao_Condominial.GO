@@ -77,8 +77,6 @@ export default function ShopLayout() {
 
           {/* User actions / Cart */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-            <A2HSNavButton variant="header" />
-
             {profile ? (
               <>
                 <Link
@@ -174,7 +172,10 @@ export default function ShopLayout() {
                   <Link to="/cliente/servicos" className="text-slate-600 hover:text-brand-dark transition-colors font-medium">Serviços Condominiais Rotineiros</Link>
                 </li>
                 <li>
-                  <Link to="/sobre" className="text-slate-600 hover:text-brand-dark transition-colors font-medium">Sobre a U.C.</Link>
+                  <Link to="/sobre" className="text-slate-600 hover:text-brand-dark transition-colors font-medium">Sobre a União Condominial</Link>
+                </li>
+                <li>
+                  <A2HSNavButton variant="footer" label="Instalar Aplicativo - U.C." />
                 </li>
               </ul>
             </div>
