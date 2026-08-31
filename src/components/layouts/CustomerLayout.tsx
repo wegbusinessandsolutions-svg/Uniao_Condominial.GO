@@ -7,6 +7,7 @@ import { Home, FileText, User, ShoppingBag, MapPin, Package, Tag, Heart, CreditC
 import { getAuth } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import { A2HSNavButton } from "../common/A2HSNavButton";
 
 export default function CustomerLayout() {
   const { profile, loading } = useAuth();
@@ -133,6 +134,7 @@ export default function CustomerLayout() {
           <span className="text-sm text-[#0071e3] font-normal mt-1 block leading-none">Área do Cliente</span>
         </div>
         <div className="flex items-center">
+          <A2HSNavButton variant="header" />
         </div>
       </header>
 
@@ -271,6 +273,10 @@ export default function CustomerLayout() {
             <Headphones className="w-4 h-4 text-[#0071e3]" />
             <span className="whitespace-nowrap">Fale Conosco - Suporte</span>
           </NavLink>
+
+          <div className="pt-1">
+            <A2HSNavButton variant="sidebar" />
+          </div>
 
           <button
             onClick={() => {

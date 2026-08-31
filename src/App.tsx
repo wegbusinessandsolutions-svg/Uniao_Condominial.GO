@@ -10,6 +10,9 @@ import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "./context/ToastContext";
 import { FranqueadaProvider } from "./context/FranqueadaContext";
+import { A2HSProvider } from "./context/A2HSContext";
+import { A2HSPromptBanner } from "./components/common/A2HSPromptBanner";
+import { A2HSInstallModal } from "./components/common/A2HSInstallModal";
 import { GeolocationLoginPrompt } from "./components/common/GeolocationLoginPrompt";
 import ShopLayout from "./components/layouts/ShopLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
@@ -105,6 +108,7 @@ export default function App() {
           <FranqueadaProvider>
             <CartProvider>
               <ThemeProvider>
+                <A2HSProvider>
                 <GeolocationLoginPrompt />
                 <Routes>
           <Route path="/aceite-afiliacao/:id" element={<AceiteAfiliacao />} />
@@ -551,11 +555,14 @@ export default function App() {
           </Route>
             </Routes>
             <ScrollToTopButton />
-          </ThemeProvider>
-        </CartProvider>
-      </FranqueadaProvider>
-    </AuthProvider>
-    </BrowserRouter>
+            <A2HSPromptBanner />
+            <A2HSInstallModal />
+                </A2HSProvider>
+              </ThemeProvider>
+            </CartProvider>
+          </FranqueadaProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </ToastProvider>
   );
 }

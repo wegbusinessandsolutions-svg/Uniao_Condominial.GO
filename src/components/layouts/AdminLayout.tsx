@@ -38,6 +38,7 @@ import { FileText,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { A2HSNavButton } from "../common/A2HSNavButton";
 import { getAuth, signOut } from "firebase/auth";
 import { AdminContentSkeleton } from "../ui/Skeleton";
 import {
@@ -621,6 +622,10 @@ export default function AdminLayout() {
             )}
           </button>
 
+          <div className="pt-1">
+            <A2HSNavButton variant="sidebar" />
+          </div>
+
           <button
             onClick={() => {
               setIsMobileMenuOpen(false);
@@ -690,6 +695,8 @@ export default function AdminLayout() {
                 <span className="hidden sm:inline">Exportar CSV</span>
               </button>
             )}
+            <A2HSNavButton variant="header" />
+
             <button
               onClick={() => {
                 localStorage.removeItem("union_admin_tour_completed");

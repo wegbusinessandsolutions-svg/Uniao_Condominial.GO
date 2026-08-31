@@ -4,6 +4,7 @@ import { ShoppingCart, Menu, Search, User } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { LegalModal } from "../common/LegalModal";
+import { A2HSNavButton } from "../common/A2HSNavButton";
 
 export default function ShopLayout() {
   const { profile } = useAuth();
@@ -76,6 +77,8 @@ export default function ShopLayout() {
 
           {/* User actions / Cart */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <A2HSNavButton variant="header" />
+
             {profile ? (
               <>
                 <Link
