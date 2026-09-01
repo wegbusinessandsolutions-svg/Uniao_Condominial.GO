@@ -35,6 +35,7 @@ import { FileText,
   ChevronRight,
   FileSpreadsheet,
   ShieldAlert,
+  Wrench,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -99,6 +100,7 @@ export const navGroups: NavGroup[] = [
               { name: "Controle de Afiliados U.C.", path: "/admin/comercial/afiliados", icon: Building2 },
               { name: "Dashboard - Comercial", path: "/admin/comercial", icon: LayoutDashboard },
               { name: "Dashboard - Comercial Externo", path: "/admin/comercial-externo", icon: MapPin },
+              { name: "Dashboard - Prestador de Serviços", path: "/admin/prestador-servicos", icon: Wrench },
               { name: "Ordens de Serviço", path: "/admin/comercial/ordens-servico", icon: FileText },
               { name: "Produtos", path: "/admin/produtos", icon: Package },
               { name: "Serviços Condominiais Rotineiros", path: "/admin/comercial/servicos", icon: Package },

@@ -37,6 +37,8 @@ interface PhotoUploadStepProps {
   photos: ServicePhoto[];
   onChangePhotos: (photos: ServicePhoto[]) => void;
   orderId?: string;
+  nomeCondominio?: string;
+  enderecoCompleto?: string;
   title?: string;
   description?: string;
   disabled?: boolean;
@@ -47,6 +49,8 @@ export default function PhotoUploadStep({
   photos,
   onChangePhotos,
   orderId,
+  nomeCondominio,
+  enderecoCompleto,
   title,
   description,
   disabled = false,
@@ -155,13 +159,16 @@ export default function PhotoUploadStep({
     };
   }, [refreshCacheStatus, triggerSequentialSync]);
 
-  // Process image with permanent date and time watermark (DD/MM/AAAA HH:MM) at bottom-right
+  // Process image with permanent Timemark / Foto 100% Real watermark
   const processImageFile = async (file: File, captureDate: Date = new Date()): Promise<string> => {
     const result = await applyDateTimeWatermark(file, {
       captureDate,
-      maxDimension: 1280,
-      quality: 0.85,
+      maxDimension: 1440,
+      quality: 0.88,
       includeSeconds: false,
+      nomeCondominio,
+      enderecoCompleto,
+      style: "timemark_real",
     });
     return result.dataUrl;
   };

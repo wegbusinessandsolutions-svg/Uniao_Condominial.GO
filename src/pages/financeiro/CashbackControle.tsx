@@ -8,6 +8,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
+import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
 import { 
   Coins, 
   Search, 
@@ -484,9 +485,7 @@ export default function CashbackControle() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-1.5 text-slate-500 text-xs">
                             <Calendar size={14} />
-                            {new Date(tx.date).toLocaleDateString("pt-BR", {
-                              day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
-                            })}
+                            {formatDateTimeBR(tx.date)}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -651,7 +650,7 @@ export default function CashbackControle() {
                           {req.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                         </td>
                         <td className="px-6 py-4 text-xs text-slate-500">
-                          {req.dataInclusao ? new Date(req.dataInclusao + "T12:00:00").toLocaleDateString("pt-BR") : "-"}
+                          {formatDateBR(req.dataInclusao, "-")}
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
@@ -1034,7 +1033,7 @@ export default function CashbackControle() {
                   <div className="flex justify-between items-center text-emerald-700 font-medium">
                     <span>Data do Pagamento Pix Realizado:</span>
                     <span className="font-bold font-mono">
-                      {new Date((selectedRecord.data as RedemptionRequest).pagoEm + "T12:00:00").toLocaleDateString("pt-BR")}
+                      {formatDateBR((selectedRecord.data as RedemptionRequest).pagoEm)}
                     </span>
                   </div>
                 )}

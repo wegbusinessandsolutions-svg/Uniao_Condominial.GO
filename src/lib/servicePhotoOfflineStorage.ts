@@ -148,6 +148,18 @@ export async function getAllPendingPhotosFromIndexedDB(): Promise<CachedServiceP
 }
 
 /**
+ * Retrieves the count of pending offline photos waiting for sync
+ */
+export async function getPendingSyncPhotosCount(): Promise<number> {
+  try {
+    const pending = await getAllPendingPhotosFromIndexedDB();
+    return pending.length;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Cache complete OS data in IndexedDB for offline view/execution
  */
 export async function cacheOrderInIndexedDB(order: RoutineServiceOrder): Promise<void> {

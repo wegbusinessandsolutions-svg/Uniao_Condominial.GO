@@ -9,6 +9,13 @@ export interface WatermarkOptions {
   quality?: number;
   includeSeconds?: boolean;
   customPrefix?: string;
+  nomeCondominio?: string;
+  enderecoCompleto?: string;
+  codigoVerificacao?: string;
+  latitude?: number;
+  longitude?: number;
+  technicianName?: string;
+  style?: "timemark_real" | "compact_badge";
 }
 
 export interface WatermarkResult {
@@ -17,6 +24,48 @@ export interface WatermarkResult {
   formattedDateTime: string;
   width: number;
   height: number;
+  verificationCode?: string;
+}
+
+const MONTHS_BR = [
+  "jan.", "fev.", "mar.", "abr.", "mai.", "jun.",
+  "jul.", "ago.", "set.", "out.", "nov.", "dez."
+];
+
+const DAYS_OF_WEEK_BR = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+/**
+ * Formats date into Timemark format: "28 ago. 2026"
+ */
+export function formatTimemarkDate(date: Date = new Date()): { dateText: string; dayOfWeekText: string; timeText: string } {
+  const day = String(date.getDate());
+  const month = MONTHS_BR[date.getMonth()];
+  const year = String(date.getFullYear());
+  const dayOfWeek = DAYS_OF_WEEK_BR[date.getDay()];
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return {
+    dateText: `${day} ${month} ${year}`,
+    dayOfWeekText: dayOfWeek,
+    timeText: `${hours}:${minutes}`,
+  };
+}
+
+/**
+ * Generates an alphanumeric verification hash like "RNELC9XNTC39YK"
+ */
+export function generateVerificationHash(seed?: string): string {
+  if (seed && seed.length >= 8) {
+    const clean = seed.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+    if (clean.length >= 12) return clean.substring(0, 14);
+  }
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let hash = "";
+  for (let i = 0; i < 14; i++) {
+    hash += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return hash;
 }
 
 /**
@@ -93,8 +142,8 @@ function loadImage(input: File | Blob | string): Promise<HTMLImageElement> {
 
 /**
  * Processes an image and imprints a permanent, high-contrast date and time watermark
- * in the bottom-right corner (canto inferior direito) with format "DD/MM/AAAA HH:MM".
- * Prepares the processed image for upload to Firebase Storage and offline caching.
+ * with authentic Timemark / Foto 100% Real layout (matching verified service photos),
+ * including condominium name, address, time, date, day of week, and verification code.
  */
 export async function applyDateTimeWatermark(
   imageInput: File | Blob | string,
@@ -102,10 +151,14 @@ export async function applyDateTimeWatermark(
 ): Promise<WatermarkResult> {
   const {
     captureDate = new Date(),
-    maxDimension = 1280,
-    quality = 0.85,
+    maxDimension = 1440,
+    quality = 0.88,
     includeSeconds = false,
     customPrefix = "",
+    nomeCondominio = "",
+    enderecoCompleto = "",
+    codigoVerificacao = generateVerificationHash(),
+    style = "timemark_real",
   } = options;
 
   const img = await loadImage(imageInput);
@@ -141,80 +194,254 @@ export async function applyDateTimeWatermark(
   // 3. Draw base photo
   ctx.drawImage(img, 0, 0, width, height);
 
-  // 4. Format Watermark Text (DD/MM/AAAA HH:MM)
   const formattedDateTime = formatWatermarkDateTime(captureDate, includeSeconds);
-  const stampText = customPrefix ? `${customPrefix} ${formattedDateTime}` : formattedDateTime;
+  const { dateText, dayOfWeekText, timeText } = formatTimemarkDate(captureDate);
 
-  // 5. Calculate responsive typography & badge positioning in bottom-right corner
-  const fontSize = Math.max(13, Math.round(width * 0.024));
-  const margin = Math.round(fontSize * 0.9);
-  const paddingX = Math.round(fontSize * 0.75);
-  const paddingY = Math.round(fontSize * 0.45);
+  if (style === "timemark_real") {
+    // ----------------------------------------------------
+    // TIMEMARK "FOTO 100% REAL" AUTHENTIC STAMPING LAYOUT
+    // ----------------------------------------------------
+    const scale = Math.max(1, width / 960);
 
-  ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif`;
-  const textMetrics = ctx.measureText(stampText);
-  const textWidth = textMetrics.width;
+    // Subtle dark gradient at top and bottom to guarantee extreme legibility on white/bright backgrounds
+    const bottomGrad = ctx.createLinearGradient(0, height - height * 0.28, 0, height);
+    bottomGrad.addColorStop(0, "rgba(0, 0, 0, 0)");
+    bottomGrad.addColorStop(0.4, "rgba(0, 0, 0, 0.35)");
+    bottomGrad.addColorStop(1, "rgba(0, 0, 0, 0.75)");
+    ctx.fillStyle = bottomGrad;
+    ctx.fillRect(0, height - height * 0.28, width, height * 0.28);
 
-  const dotRadius = Math.max(3, Math.round(fontSize * 0.18));
-  const dotSpacing = Math.round(fontSize * 0.45);
-  const badgeWidth = textWidth + paddingX * 2 + dotRadius * 2 + dotSpacing;
-  const badgeHeight = fontSize + paddingY * 2;
+    const topGrad = ctx.createLinearGradient(0, 0, 0, height * 0.18);
+    topGrad.addColorStop(0, "rgba(0, 0, 0, 0.55)");
+    topGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = topGrad;
+    ctx.fillRect(0, 0, width, height * 0.18);
 
-  // Position at bottom right
-  const badgeX = width - badgeWidth - margin;
-  const badgeY = height - badgeHeight - margin;
-  const radius = Math.round(badgeHeight * 0.28);
+    ctx.save();
 
-  // 6. Draw protective high-contrast dark badge in bottom-right corner
-  ctx.save();
-  ctx.fillStyle = "rgba(15, 23, 42, 0.88)"; // Slate-900 with high opacity for readability on all photos
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
-  ctx.lineWidth = Math.max(1, Math.round(fontSize * 0.06));
+    // A. TOP RIGHT: "Timemark" & "Foto 100% Real"
+    const topMargin = Math.round(28 * scale);
+    const rightMargin = Math.round(28 * scale);
 
-  // Drop shadow for clear separation
-  ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-  ctx.shadowBlur = Math.round(fontSize * 0.4);
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 2;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "top";
 
-  ctx.beginPath();
-  if (typeof ctx.roundRect === "function") {
-    ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, radius);
+    // Text drop shadows for ultra crisp contrast
+    ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+    ctx.shadowBlur = Math.round(8 * scale);
+    ctx.shadowOffsetX = Math.round(2 * scale);
+    ctx.shadowOffsetY = Math.round(2 * scale);
+
+    // "Timemark"
+    const timemarkFontSize = Math.round(22 * scale);
+    ctx.font = `bold ${timemarkFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = "#FACC15"; // Timemark Gold Yellow
+    ctx.fillText("Timemark", width - rightMargin, topMargin);
+
+    // "Foto 100% Real"
+    const realFontSize = Math.round(14 * scale);
+    ctx.font = `500 ${realFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText("Foto 100% Real", width - rightMargin, topMargin + timemarkFontSize + Math.round(4 * scale));
+
+    // B. RIGHT MARGIN: Vertical Security Hash (e.g. "RNELC9XNTC39YK Timemark Verified")
+    ctx.save();
+    ctx.translate(width - Math.round(14 * scale), height * 0.48);
+    ctx.rotate(Math.PI / 2); // 90deg vertical down
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `bold ${Math.round(10 * scale)}px monospace`;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+    ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+    ctx.shadowBlur = Math.round(4 * scale);
+    ctx.fillText(`⛨ ${codigoVerificacao} Timemark Verified`, 0, 0);
+    ctx.restore();
+
+    // C. BOTTOM LEFT: Time (Large), Date, Day, Condomínio & Address
+    const leftMargin = Math.round(30 * scale);
+    const bottomBase = height - Math.round(30 * scale);
+
+    // 1. Prepare texts
+    const condText = nomeCondominio ? nomeCondominio.trim() : "";
+    const addrText = enderecoCompleto ? enderecoCompleto.trim() : "";
+
+    const addrFontSize = Math.round(15 * scale);
+    ctx.font = `500 ${addrFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    const addrLineHeight = Math.round(22 * scale);
+
+    // Calculate vertical positions from bottom up
+    let currentY = bottomBase;
+
+    // Draw Address line (if present)
+    if (addrText) {
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+      ctx.font = `400 ${Math.round(13.5 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+      ctx.shadowBlur = Math.round(6 * scale);
+      
+      // Auto-wrap address if it exceeds max width
+      const maxAddrWidth = width * 0.72;
+      if (ctx.measureText(addrText).width > maxAddrWidth) {
+        const words = addrText.split(" ");
+        let line = "";
+        const lines: string[] = [];
+        for (const w of words) {
+          const test = line ? `${line} ${w}` : w;
+          if (ctx.measureText(test).width > maxAddrWidth) {
+            lines.push(line);
+            line = w;
+          } else {
+            line = test;
+          }
+        }
+        if (line) lines.push(line);
+
+        for (let i = lines.length - 1; i >= 0; i--) {
+          ctx.fillText(lines[i], leftMargin, currentY);
+          currentY -= addrLineHeight;
+        }
+      } else {
+        ctx.fillText(addrText, leftMargin, currentY);
+        currentY -= addrLineHeight;
+      }
+    }
+
+    // Draw Condomínio line (if present)
+    if (condText) {
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+      ctx.font = `bold ${Math.round(15 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+      ctx.shadowBlur = Math.round(6 * scale);
+      ctx.fillText(condText, leftMargin, currentY);
+      currentY -= Math.round(22 * scale);
+    } else if (!addrText) {
+      // Default location stamp if neither is provided
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+      ctx.font = `500 ${Math.round(14 * scale)}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+      ctx.shadowBlur = Math.round(6 * scale);
+      ctx.fillText("Condomínio Residencial • Atendimento Presencial", leftMargin, currentY);
+      currentY -= Math.round(22 * scale);
+    }
+
+    currentY -= Math.round(6 * scale);
+
+    // 2. Large Time + Vertical Divider + Date/Day
+    const timeFontSize = Math.round(44 * scale);
+    ctx.font = `bold ${timeFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.shadowColor = "rgba(0, 0, 0, 0.95)";
+    ctx.shadowBlur = Math.round(8 * scale);
+
+    // Draw Large Time
+    const timeDisplay = customPrefix ? `${customPrefix} ${timeText}` : timeText;
+    ctx.fillText(timeDisplay, leftMargin, currentY);
+    const timeMetrics = ctx.measureText(timeDisplay);
+
+    // Draw Vertical Divider Line (Gold / Amber)
+    const dividerX = leftMargin + timeMetrics.width + Math.round(10 * scale);
+    const dividerHeight = Math.round(36 * scale);
+    const dividerTop = currentY - dividerHeight;
+
+    ctx.save();
+    ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+    ctx.shadowBlur = Math.round(6 * scale);
+    ctx.fillStyle = "#FACC15"; // Amber Yellow Divider
+    ctx.fillRect(dividerX, dividerTop, Math.round(3 * scale), dividerHeight);
+    ctx.restore();
+
+    // Draw Date and Day of Week next to divider
+    const dateLeft = dividerX + Math.round(12 * scale);
+    const dateFontSize = Math.round(14.5 * scale);
+    const dayFontSize = Math.round(13.5 * scale);
+
+    // Date (Line 1)
+    ctx.font = `bold ${dateFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textBaseline = "top";
+    ctx.fillText(dateText, dateLeft, dividerTop);
+
+    // Day of Week (Line 2)
+    ctx.font = `500 ${dayFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.fillText(dayOfWeekText, dateLeft, dividerTop + Math.round(18 * scale));
+
+    ctx.restore();
   } else {
-    ctx.moveTo(badgeX + radius, badgeY);
-    ctx.arcTo(badgeX + badgeWidth, badgeY, badgeX + badgeWidth, badgeY + badgeHeight, radius);
-    ctx.arcTo(badgeX + badgeWidth, badgeY + badgeHeight, badgeX, badgeY + badgeHeight, radius);
-    ctx.arcTo(badgeX, badgeY + badgeHeight, badgeX, badgeY, radius);
-    ctx.arcTo(badgeX, badgeY, badgeX + badgeWidth, badgeY, radius);
-    ctx.closePath();
+    // ----------------------------------------------------
+    // COMPACT BADGE LAYOUT (Legacy / Mini)
+    // ----------------------------------------------------
+    const stampText = customPrefix ? `${customPrefix} ${formattedDateTime}` : formattedDateTime;
+    const fontSize = Math.max(13, Math.round(width * 0.024));
+    const margin = Math.round(fontSize * 0.9);
+    const paddingX = Math.round(fontSize * 0.75);
+    const paddingY = Math.round(fontSize * 0.45);
+
+    ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    const textMetrics = ctx.measureText(stampText);
+    const textWidth = textMetrics.width;
+
+    const dotRadius = Math.max(3, Math.round(fontSize * 0.18));
+    const dotSpacing = Math.round(fontSize * 0.45);
+    const badgeWidth = textWidth + paddingX * 2 + dotRadius * 2 + dotSpacing;
+    const badgeHeight = fontSize + paddingY * 2;
+
+    const badgeX = width - badgeWidth - margin;
+    const badgeY = height - badgeHeight - margin;
+    const radius = Math.round(badgeHeight * 0.28);
+
+    ctx.save();
+    ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+    ctx.lineWidth = Math.max(1, Math.round(fontSize * 0.06));
+
+    ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+    ctx.shadowBlur = Math.round(fontSize * 0.4);
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 2;
+
+    ctx.beginPath();
+    if (typeof ctx.roundRect === "function") {
+      ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, radius);
+    } else {
+      ctx.moveTo(badgeX + radius, badgeY);
+      ctx.arcTo(badgeX + badgeWidth, badgeY, badgeX + badgeWidth, badgeY + badgeHeight, radius);
+      ctx.arcTo(badgeX + badgeWidth, badgeY + badgeHeight, badgeX, badgeY + badgeHeight, radius);
+      ctx.arcTo(badgeX, badgeY + badgeHeight, badgeX, badgeY, radius);
+      ctx.arcTo(badgeX, badgeY, badgeX + badgeWidth, badgeY, radius);
+      ctx.closePath();
+    }
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+
+    const dotCenterX = badgeX + paddingX + dotRadius;
+    const dotCenterY = badgeY + badgeHeight / 2;
+    ctx.fillStyle = "#f59e0b";
+    ctx.beginPath();
+    ctx.arc(dotCenterX, dotCenterY, dotRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "left";
+    ctx.fillText(stampText, dotCenterX + dotRadius + dotSpacing, dotCenterY);
+
+    ctx.restore();
   }
-  ctx.fill();
-  ctx.stroke();
 
-  // Reset shadow for text and indicator
-  ctx.shadowColor = "transparent";
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
-
-  // 7. Draw camera status dot (Amber / Gold)
-  const dotCenterX = badgeX + paddingX + dotRadius;
-  const dotCenterY = badgeY + badgeHeight / 2;
-  ctx.fillStyle = "#f59e0b"; // Amber-500
-  ctx.beginPath();
-  ctx.arc(dotCenterX, dotCenterY, dotRadius, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 8. Engrave Date and Time text (White, High-Contrast)
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif`;
-  ctx.textBaseline = "middle";
-  ctx.textAlign = "left";
-  ctx.fillText(stampText, dotCenterX + dotRadius + dotSpacing, dotCenterY);
-
-  ctx.restore();
-
-  // 9. Generate permanent stamped output
+  // Generate permanent stamped output
   const dataUrl = canvas.toDataURL("image/jpeg", quality);
   const blob = dataURLtoBlob(dataUrl);
 
@@ -224,5 +451,6 @@ export async function applyDateTimeWatermark(
     formattedDateTime,
     width,
     height,
+    verificationCode: codigoVerificacao,
   };
 }

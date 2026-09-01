@@ -12,6 +12,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useFranqueada } from "../../context/FranqueadaContext";
 import { processarCancelamentoAfiliacaoFinanceiro } from "../../services/afiliacaoFinanceiroService";
 import { formatarCPF, formatarCNPJ } from "../../lib/documentValidators";
+import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
 
 export default function Usuarios() {
   const { profile } = useAuth();
@@ -834,7 +835,7 @@ export default function Usuarios() {
                             </span>
                             {item.status === "Cancelado" && item.dataCancelamento && (
                               <div className="text-[11px] text-rose-600 font-medium mt-1">
-                                {new Date(item.dataCancelamento).toLocaleDateString("pt-BR")} às {new Date(item.dataCancelamento).toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}
+                                {formatDateTimeBR(item.dataCancelamento)}
                               </div>
                             )}
                           </div>
@@ -952,11 +953,7 @@ export default function Usuarios() {
                     </tr>
                   ) : (
                     filteredLogs.map((log) => {
-                      const formattedDate = log.date?.toDate
-                        ? log.date.toDate().toLocaleString("pt-BR")
-                        : log.date
-                        ? new Date(log.date).toLocaleString("pt-BR")
-                        : "-";
+                      const formattedDate = formatDateTimeBR(log.date);
                       return (
                         <tr key={log.id} className="hover:bg-slate-50/80 transition-colors group">
                           <td className="px-6 py-4 text-slate-600 font-mono text-xs">{formattedDate}</td>

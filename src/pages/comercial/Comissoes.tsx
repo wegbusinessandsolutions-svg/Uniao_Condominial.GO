@@ -3,6 +3,7 @@ import { DollarSign, Search, CheckCircle, Clock } from "lucide-react";
 import { collection, query, getDocs, updateDoc, doc, where } from "firebase/firestore";
 import { initFirebase } from "../../lib/firebase";
 import { useAuth } from "../../context/AuthContext";
+import { formatDateBR } from "../../lib/dateUtils";
 
 export default function Comissoes() {
   const { profile } = useAuth();
@@ -158,7 +159,7 @@ export default function Comissoes() {
                 filteredItems.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50 transition">
                     <td className="px-6 py-4">
-                      {new Date(item.dataCriacao).toLocaleDateString("pt-BR")}
+                      {formatDateBR(item.dataCriacao)}
                     </td>
                     <td className="px-6 py-4 font-medium text-brand-dark">
                       #{item.numeroPedido}

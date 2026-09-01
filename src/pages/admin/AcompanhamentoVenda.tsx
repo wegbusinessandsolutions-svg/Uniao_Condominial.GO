@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Eye, Search, Clock, FileText, ArrowRight, X, Printer } from "lucide-react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { initFirebase } from "../../lib/firebase";
+import { formatDateTimeBR } from "../../lib/dateUtils";
 
 export default function AcompanhamentoVenda() {
   const [pedidos, setPedidos] = useState<any[]>([]);
@@ -98,7 +99,7 @@ export default function AcompanhamentoVenda() {
       return `
         <div style="margin-bottom: 15px; border-left: 2px solid #ccc; padding-left: 15px;">
           <h4 style="margin: 0;">${evento.status}</h4>
-          <p style="margin: 5px 0; color: #555;">${new Date(evento.dataHora).toLocaleString("pt-BR")} 
+          <p style="margin: 5px 0; color: #555;">${formatDateTimeBR(evento.dataHora)} 
           - <span style="color: #0284c7; font-weight: bold;">Tempo na fase: ${tempoDecorrido}</span>
           </p>
           <p style="margin: 0; font-size: 14px;">${evento.descricao}</p>
@@ -137,7 +138,7 @@ export default function AcompanhamentoVenda() {
             </div>
             <div class="info-item">
               <span class="info-label">Data/Hora da Solicitação</span>
-              <span class="info-value">${new Date(pedido.dataHora).toLocaleString("pt-BR")}</span>
+              <span class="info-value">${formatDateTimeBR(pedido.dataHora)}</span>
             </div>
             <div class="info-item">
               <span class="info-label">Status Atual</span>
@@ -324,7 +325,7 @@ export default function AcompanhamentoVenda() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-slate-600">
-                      {new Date(pedido.dataHora).toLocaleString("pt-BR")}
+                      {formatDateTimeBR(pedido.dataHora)}
                     </td>
                     <td className="px-6 py-4 font-medium text-slate-900">
                       {formatCurrency(pedido.totais?.totalPedido || 0)}
@@ -389,7 +390,7 @@ export default function AcompanhamentoVenda() {
                     <div>
                       <span className="block text-slate-500 mb-1">Data/Hora</span>
                       <span className="font-medium text-slate-900">
-                        {new Date(pedidoSelecionado.dataHora).toLocaleString("pt-BR")}
+                        {formatDateTimeBR(pedidoSelecionado.dataHora)}
                       </span>
                     </div>
                     <div>
@@ -434,7 +435,7 @@ export default function AcompanhamentoVenda() {
                                 )}
                               </span>
                               <span className="text-xs text-slate-400">
-                                {new Date(evento.dataHora).toLocaleString("pt-BR")}
+                                {formatDateTimeBR(evento.dataHora)}
                               </span>
                               <span className="text-xs font-semibold text-blue-600 ml-2 bg-blue-50 px-2 py-0.5 rounded-full">
                                 Tempo: {tempoDecorrido}

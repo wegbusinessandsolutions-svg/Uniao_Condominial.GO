@@ -20,7 +20,8 @@ import {
   Boxes,
   UserCheck,
   MapPin,
-  Compass
+  Compass,
+  Wrench
 } from "lucide-react";
 import { collection, getDocs, query } from "firebase/firestore";
 import { initFirebase } from "../../lib/firebase";
@@ -32,6 +33,7 @@ export default function PermissoesUsuario() {
     Financeiro: 0,
     Comercial: 0,
     "Comercial Externo": 0,
+    "Prestador de Serviços": 0,
     Expedição: 0,
     Entregador: 0,
     Cliente: 0,
@@ -66,6 +68,8 @@ export default function PermissoesUsuario() {
             counts["Comercial Externo"]++;
           } else if (r === "Comercial") {
             counts["Comercial"]++;
+          } else if (["Prestador", "Prestador de Serviços", "Prestador de Servicos", "Técnico", "Tecnico"].includes(r)) {
+            counts["Prestador de Serviços"]++;
           } else if (r === "Entregador") {
             counts["Entregador"]++;
           } else if (["Expedição", "Estoquista"].includes(r)) {
@@ -157,6 +161,20 @@ export default function PermissoesUsuario() {
       metrics: "Entregas do Dia, Rotas e Comprovantes",
     },
     {
+      id: "prestador-servicos",
+      title: "Dashboard - Prestador de Serviços",
+      path: "/admin/prestador-servicos",
+      configPath: "/admin/comercial/ordens-servico",
+      icon: Wrench,
+      color: "from-blue-600 to-sky-700",
+      lightBg: "bg-blue-50 text-blue-800 border-blue-200",
+      badge: "Módulo Prestador / Técnico",
+      description:
+        "Painel operacional de campo para execução pericial de ordens de serviço, fotos antes/depois, geolocalização e assinatura digital do cliente.",
+      allowedRoles: ["Admin", "Comercial", "Prestador de Serviços", "Técnico"],
+      metrics: "Ordens de Serviço, Cronologia, Fotos e Assinatura",
+    },
+    {
       id: "cliente",
       title: "Dashboard - Cliente",
       path: "/cliente",
@@ -178,7 +196,7 @@ export default function PermissoesUsuario() {
       desc: "Acesso irrestrito a todos os módulos, relatórios, configurações e dashboards.",
       count: userCounts.Admin,
       color: "bg-indigo-100 text-indigo-800 border-indigo-300",
-      access: ["Dashboard - Financeiro", "Dashboard - Comercial", "Dashboard - Comercial Externo", "Dashboard - Expedição", "Dashboard - Entrega de Mercadorias", "Dashboard - Cliente"],
+      access: ["Dashboard - Financeiro", "Dashboard - Comercial", "Dashboard - Comercial Externo", "Dashboard - Prestador de Serviços", "Dashboard - Expedição", "Dashboard - Entrega de Mercadorias", "Dashboard - Cliente"],
     },
     {
       role: "Financeiro",
@@ -192,7 +210,7 @@ export default function PermissoesUsuario() {
       desc: "Acesso a clientes, orçamentos, vendas, comissões, visitas e ordens de serviço.",
       count: userCounts.Comercial,
       color: "bg-blue-100 text-blue-800 border-blue-300",
-      access: ["Dashboard - Comercial", "Dashboard - Comercial Externo"],
+      access: ["Dashboard - Comercial", "Dashboard - Comercial Externo", "Dashboard - Prestador de Serviços"],
     },
     {
       role: "Comercial Externo",
@@ -200,6 +218,13 @@ export default function PermissoesUsuario() {
       count: userCounts["Comercial Externo"],
       color: "bg-cyan-100 text-cyan-800 border-cyan-300",
       access: ["Dashboard - Comercial Externo"],
+    },
+    {
+      role: "Prestador de Serviços / Técnico",
+      desc: "Acesso exclusivo de campo para execução pericial de ordens de serviço, carimbo Timemark e termo assinado.",
+      count: userCounts["Prestador de Serviços"] || 0,
+      color: "bg-sky-100 text-sky-800 border-sky-300",
+      access: ["Dashboard - Prestador de Serviços"],
     },
     {
       role: "Entregador",

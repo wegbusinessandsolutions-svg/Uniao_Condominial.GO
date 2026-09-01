@@ -49,6 +49,12 @@ export function isStaffRole(role?: string): boolean {
     "expedicao",
     "estoquista",
     "entregador",
+    "prestador",
+    "prestador de serviços",
+    "prestador de servicos",
+    "prestador de servico",
+    "técnico",
+    "tecnico",
   ].includes(r);
 }
 
@@ -84,6 +90,16 @@ export function getDefaultDashboardForRole(role?: string): string {
   if (r === "expedição" || r === "expedicao" || r === "estoquista") {
     return "/admin/expedicao";
   }
+  if (
+    r === "prestador" ||
+    r === "prestador de serviços" ||
+    r === "prestador de servicos" ||
+    r === "prestador de servico" ||
+    r === "técnico" ||
+    r === "tecnico"
+  ) {
+    return "/admin/prestador-servicos";
+  }
   
   return "/cliente";
 }
@@ -110,6 +126,16 @@ export function getRoleDashboardTitle(role?: string): string {
   }
   if (r === "expedição" || r === "expedicao" || r === "estoquista") {
     return "Dashboard - Expedição";
+  }
+  if (
+    r === "prestador" ||
+    r === "prestador de serviços" ||
+    r === "prestador de servicos" ||
+    r === "prestador de servico" ||
+    r === "técnico" ||
+    r === "tecnico"
+  ) {
+    return "Dashboard - Prestador de Serviços";
   }
   return "Portal do Cliente";
 }
@@ -170,6 +196,7 @@ export function getDefaultPermissionsMapForRole(role?: string): PermissionsMap {
           "Controle de Afiliados U.C.": true,
           "Dashboard - Comercial": true,
           "Dashboard - Comercial Externo": true,
+          "Dashboard - Prestador de Serviços": true,
           "Ordens de Serviço": true,
           "Produtos": true,
           "Serviços Condominiais Rotineiros": true,
@@ -228,6 +255,7 @@ export function getDefaultPermissionsMapForRole(role?: string): PermissionsMap {
           "Controle de Afiliados U.C.": true,
           "Dashboard - Comercial": true,
           "Dashboard - Comercial Externo": true,
+          "Dashboard - Prestador de Serviços": true,
           "Ordens de Serviço": true,
           "Produtos": true,
           "Serviços Condominiais Rotineiros": true,
@@ -283,6 +311,28 @@ export function getDefaultPermissionsMapForRole(role?: string): PermissionsMap {
           "Pedidos Online": true,
           "Ordens de Serviço": true,
           "Produtos": true,
+        },
+      },
+    };
+  }
+
+  if (
+    r === "prestador" ||
+    r === "prestador de serviços" ||
+    r === "prestador de servicos" ||
+    r === "prestador de servico" ||
+    r === "técnico" ||
+    r === "tecnico"
+  ) {
+    return {
+      Admin: {
+        visible: true,
+        submodules: {
+          "Franqueada - Empresa": true,
+          "Comercial": true,
+          "Dashboard - Prestador de Serviços": true,
+          "Ordens de Serviço": true,
+          "Serviços Condominiais Rotineiros": true,
         },
       },
     };
@@ -346,6 +396,18 @@ export function isUserAuthorizedForPath(pathname: string, role?: string, permiss
     return ["expedição", "expedicao", "estoquista"].includes(r);
   }
 
+  if (cleanPath === "/admin/prestador-servicos" || cleanPath === "/admin/execucao-servicos") {
+    return [
+      "prestador",
+      "prestador de serviços",
+      "prestador de servicos",
+      "prestador de servico",
+      "técnico",
+      "tecnico",
+      "comercial",
+    ].includes(r);
+  }
+
   if (cleanPath === "/admin/produtos") {
     return ["comercial", "expedição", "expedicao", "estoquista"].includes(r);
   }
@@ -370,10 +432,11 @@ function filterNavSubItems(
       }
 
       // Check if item is permitted
-      const isItemAllowed =
-        groupPerm.submodules && typeof groupPerm.submodules[item.name] !== "undefined"
-          ? groupPerm.submodules[item.name] === true
-          : defaultGroupPerm?.submodules?.[item.name] === true;
+      const isItemAllowed = isAdmin
+        ? (groupPerm.submodules && groupPerm.submodules[item.name] === false ? false : true)
+        : (groupPerm.submodules && typeof groupPerm.submodules[item.name] !== "undefined"
+            ? groupPerm.submodules[item.name] === true
+            : defaultGroupPerm?.submodules?.[item.name] === true);
 
       // Filter children recursively if present
       if (item.children && item.children.length > 0) {

@@ -30,6 +30,7 @@ import { DataTableToolbar } from "../../components/common/DataTableToolbar";
 import { StatMetricCard } from "../../components/common/StatMetricCard";
 import { EmptyState } from "../../components/common/EmptyState";
 import { Users, UserCheck, UserX, Briefcase } from "lucide-react";
+import { formatDateBR } from "../../lib/dateUtils";
 
 interface Empregado {
   id?: string;
@@ -386,7 +387,7 @@ export default function Empregados() {
       `"${emp.departamento || ""}"`,
       `"${emp.tipoContrato || ""}"`,
       `"${emp.salario || ""}"`,
-      `"${emp.admissao || ""}"`,
+      `"${formatDateBR(emp.admissao)}"`,
       `"${emp.telefone || ""}"`,
       `"${emp.email || ""}"`,
       `"${emp.ativo ? "Ativo" : "Inativo"}"`,
@@ -571,7 +572,7 @@ export default function Empregados() {
                         {item.tipoContrato || "-"}
                       </td>
                       <td className="px-6 py-4 text-slate-700">
-                        {item.admissao || "-"}
+                        {formatDateBR(item.admissao)}
                       </td>
                       <td className="px-6 py-4">
                         {item.ativo ? (
@@ -1204,12 +1205,7 @@ export default function Empregados() {
                   Data nascimento
                 </td>
                 <td className="px-3 py-2">
-                  {printingItem.nascimento
-                    ? new Date(printingItem.nascimento).toLocaleDateString(
-                        "pt-BR",
-                        { timeZone: "UTC" },
-                      )
-                    : "—"}
+                  {formatDateBR(printingItem.nascimento, "—")}
                 </td>
               </tr>
             </tbody>
@@ -1322,12 +1318,7 @@ export default function Empregados() {
                   Admissão
                 </td>
                 <td className="px-3 py-2">
-                  {printingItem.admissao
-                    ? new Date(printingItem.admissao).toLocaleDateString(
-                        "pt-BR",
-                        { timeZone: "UTC" },
-                      )
-                    : "—"}
+                  {formatDateBR(printingItem.admissao, "—")}
                 </td>
               </tr>
               <tr className="border-b border-slate-200">
@@ -1335,12 +1326,7 @@ export default function Empregados() {
                   Demissão
                 </td>
                 <td className="px-3 py-2">
-                  {printingItem.demissao
-                    ? new Date(printingItem.demissao).toLocaleDateString(
-                        "pt-BR",
-                        { timeZone: "UTC" },
-                      )
-                    : "—"}
+                  {formatDateBR(printingItem.demissao, "—")}
                 </td>
               </tr>
               <tr className="border-b border-slate-200">

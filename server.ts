@@ -592,30 +592,10 @@ Return a JSON object containing an array of "matchingIds" that best match the se
             servername: smtpHost.trim(),
             rejectUnauthorized: false,
           },
-          connectionTimeout: 20000,
-          greetingTimeout: 20000,
-          socketTimeout: 20000,
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 10000,
         });
-
-        // Test transport connection first to catch auth or connection issues immediately
-        try {
-          await transporter.verify();
-          console.log(`[SMTP] Autenticação e conexão com servidor ${smtpHost} confirmadas com sucesso.`);
-        } catch (verifyErr: any) {
-          console.error("[SMTP] Falha na verificação de autenticação:", verifyErr);
-          const errorMsg = verifyErr.message || String(verifyErr);
-          if (errorMsg.includes("Invalid login") || errorMsg.includes("535") || errorMsg.includes("authentication failed")) {
-            return res.status(400).json({ 
-              error: `Erro de Autenticação no Servidor SMTP: Usuário ou Senha incorretos para ${smtpUser.trim()}. Verifique os dados digitados.` 
-            });
-          }
-          if (errorMsg.includes("ETIMEDOUT") || errorMsg.includes("ECONNREFUSED") || errorMsg.includes("ENOTFOUND")) {
-            return res.status(400).json({ 
-              error: `Erro de Conexão com o Servidor ${smtpHost.trim()} na porta ${portNumber}: Servidor inacessível ou porta bloqueada. Verifique se o Host está correto e tente a porta 465 (com SSL) ou 587 (com TLS).` 
-            });
-          }
-          return res.status(400).json({ error: `Erro no servidor SMTP (${smtpHost}): ${errorMsg}` });
-        }
 
         // Clean text version and standard HTML markup for Gmail/Yahoo deliverability
         const finalHtml = wrapEmailHtml(html || "<p>Mensagem sem conteúdo</p>", subject);
@@ -648,8 +628,25 @@ Return a JSON object containing an array of "matchingIds" that best match the se
           }
         };
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`[SMTP] E-mail entregue com sucesso: MessageID=${info.messageId}, Response=${info.response}`);
+        let info;
+        try {
+          info = await transporter.sendMail(mailOptions);
+          console.log(`[SMTP] E-mail entregue com sucesso: MessageID=${info.messageId}, Response=${info.response}`);
+        } catch (sendErr: any) {
+          console.error("[SMTP] Falha no envio do e-mail:", sendErr);
+          const errorMsg = sendErr.message || String(sendErr);
+          if (errorMsg.includes("Invalid login") || errorMsg.includes("535") || errorMsg.includes("authentication failed")) {
+            return res.status(400).json({ 
+              error: `Erro de Autenticação no Servidor SMTP: Usuário ou Senha incorretos para ${smtpUser.trim()}. Verifique os dados digitados.` 
+            });
+          }
+          if (errorMsg.includes("ETIMEDOUT") || errorMsg.includes("ECONNREFUSED") || errorMsg.includes("ENOTFOUND")) {
+            return res.status(400).json({ 
+              error: `Erro de Conexão com o Servidor ${smtpHost.trim()} na porta ${portNumber}: Servidor inacessível ou porta bloqueada.` 
+            });
+          }
+          return res.status(400).json({ error: `Erro no servidor SMTP (${smtpHost}): ${errorMsg}` });
+        }
 
         return res.json({ 
           success: true, 

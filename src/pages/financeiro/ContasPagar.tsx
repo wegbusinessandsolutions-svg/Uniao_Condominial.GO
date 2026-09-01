@@ -27,6 +27,7 @@ import { logAction } from "../../lib/audit";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 import { useFranqueada } from "../../context/FranqueadaContext";
 import { exportTableToPdf } from "../../lib/pdfExport";
+import { formatDateBR } from "../../lib/dateUtils";
 
 export default function ContasPagar() {
   const { filterByFranqueada, injectFranqueada, canModify, isFranqueada, userUnidade } = useFranqueada();
@@ -522,14 +523,8 @@ export default function ContasPagar() {
     }
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "-";
-    try {
-      const [year, month, day] = dateString.split("-");
-      return `${day}/${month}/${year}`;
-    } catch {
-      return dateString;
-    }
+  const formatDate = (dateString?: any) => {
+    return formatDateBR(dateString, "-");
   };
 
   const formatCurrency = (value: string | number) => {

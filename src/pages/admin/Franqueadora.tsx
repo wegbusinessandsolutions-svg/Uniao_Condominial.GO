@@ -33,6 +33,7 @@ import {
   BarChart3,
   PieChart as LucidePieChart,
 } from "lucide-react";
+import { formatDateBR } from "../../lib/dateUtils";
 import {
   BarChart,
   Bar,
@@ -2048,7 +2049,7 @@ export default function Franqueadora() {
             </div>
             <div className="text-right">
               <span className="font-mono font-bold text-lg">{printingItem.codigoUnidade}</span>
-              <p className="text-xs text-slate-500">{new Date().toLocaleDateString("pt-BR")}</p>
+              <p className="text-xs text-slate-500">{formatDateBR(new Date())}</p>
             </div>
           </div>
 

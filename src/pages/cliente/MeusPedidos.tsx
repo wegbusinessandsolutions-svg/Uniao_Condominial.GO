@@ -15,6 +15,7 @@ import { useToast } from "../../context/ToastContext";
 import { CONFIG } from "../../lib/ecommerceFlow";
 import { getMercadoPagoConfig, MercadoPagoConfig } from "../../lib/mercadoPago";
 import { gerarPixCopiaECola } from "../../lib/documentValidators";
+import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
 
 // Helper para normalizar textos para comparações precisas de SKU, ID e Nomes de Produtos
 const normalizeCompare = (val: any): string => {
@@ -872,9 +873,9 @@ export default function MeusPedidos() {
           <div className="space-y-4 p-4 sm:p-6">
             {filteredPedidos.map((pedido) => {
               const isExpanded = expandedPedidoId === pedido.firebaseId;
+              const formattedDate = formatDateBR(pedido.dataHora);
               const dateObj = new Date(pedido.dataHora);
-              const formattedDate = dateObj.toLocaleDateString("pt-BR");
-              const formattedTime = dateObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+              const formattedTime = isNaN(dateObj.getTime()) ? "" : dateObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
               const freteVal = getFreteValor(pedido);
               const subtotalProd = getSubtotalProdutos(pedido, catalogProducts, profile?.level);
               const totalGeral = getTotalGeral(pedido, catalogProducts, profile?.level);
@@ -1221,7 +1222,7 @@ export default function MeusPedidos() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 font-normal">
-                    Realizado em {new Date(selectedPedidoModal.dataHora).toLocaleString("pt-BR")}
+                    Realizado em {formatDateTimeBR(selectedPedidoModal.dataHora)}
                   </p>
                 </div>
               </div>

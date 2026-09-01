@@ -5,6 +5,7 @@ import { initFirebase } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 import { useFranqueada } from "../../context/FranqueadaContext";
+import { formatDateBR } from "../../lib/dateUtils";
 
 export default function Bancos() {
   const { filterByFranqueada, injectFranqueada, canModify, isFranqueada } = useFranqueada();
@@ -576,7 +577,7 @@ export default function Bancos() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-slate-500">Mês atual</p>
-                    <p className="text-sm">Emissão: {new Date().toLocaleDateString('pt-BR')}</p>
+                    <p className="text-sm">Emissão: {formatDateBR(new Date())}</p>
                   </div>
                 </div>
 
@@ -607,7 +608,7 @@ export default function Bancos() {
                       <tbody className="divide-y divide-slate-100">
                         {extratoMovs.map((mov) => (
                           <tr key={mov.id} className="hover:bg-slate-50 transition-colors">
-                            <td className="py-3 px-4">{mov.data ? new Date(mov.data + "T12:00:00").toLocaleDateString('pt-BR') : "-"}</td>
+                            <td className="py-3 px-4">{formatDateBR(mov.data, "-")}</td>
                             <td className="py-3 px-4 text-slate-700">{mov.descricao}</td>
                             <td className={`py-3 px-4 text-right font-medium ${mov.tipo === "Despesa" ? "text-red-600" : "text-emerald-600"}`}>
                               {mov.tipo === "Despesa" ? "- " : "+ "}

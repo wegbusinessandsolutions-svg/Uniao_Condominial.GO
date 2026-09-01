@@ -1,5 +1,6 @@
 import React from "react";
 import { ReportColumnDef } from "./reportCatalog";
+import { formatDateBR } from "../../../lib/dateUtils";
 
 interface ReportTableProps {
   columns: ReportColumnDef[];
@@ -17,13 +18,7 @@ export default function ReportTable({ columns, data }: ReportTableProps) {
           ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
           : value;
       case "date":
-        try {
-          if (!value) return "-";
-          const date = new Date(value);
-          return date.toLocaleDateString('pt-BR');
-        } catch {
-          return value;
-        }
+        return formatDateBR(value, "-");
       case "percent":
         return typeof value === 'number' ? `${value.toFixed(2)}%` : value;
       case "badge":

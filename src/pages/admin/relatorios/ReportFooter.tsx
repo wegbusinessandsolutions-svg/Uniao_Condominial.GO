@@ -1,11 +1,12 @@
 import React from "react";
 import { useAuth } from "../../../context/AuthContext";
+import { formatDateBR } from "../../../lib/dateUtils";
 
 export default function ReportFooter() {
   const { profile } = useAuth();
   
   const now = new Date();
-  const dateStr = now.toLocaleDateString('pt-BR');
+  const dateStr = formatDateBR(now);
   const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   return (

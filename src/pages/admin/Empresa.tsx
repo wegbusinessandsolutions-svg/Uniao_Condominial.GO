@@ -28,6 +28,7 @@ import {
 import { Link } from "react-router-dom";
 import { useFranqueada } from "../../context/FranqueadaContext";
 import toast from "react-hot-toast";
+import { formatDateBR } from "../../lib/dateUtils";
 import { initFirebase } from "../../lib/firebase";
 import {
   collection,
@@ -1493,7 +1494,7 @@ export default function Empresa() {
                 <td className="bg-slate-100 font-semibold px-3 py-2">
                   Data de Início
                 </td>
-                <td className="px-3 py-2">{printingItem.dataInicio || "—"}</td>
+                <td className="px-3 py-2">{formatDateBR(printingItem.dataInicio, "—")}</td>
               </tr>
               <tr className="border-b border-slate-200">
                 <td className="bg-slate-100 font-semibold px-3 py-2">

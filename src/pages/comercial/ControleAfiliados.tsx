@@ -5,6 +5,7 @@ import { db } from "../../lib/firebase";
 import { sendEmailWithLog } from "../../lib/emailService";
 import { ensureSmtpReady, getSmtpStatus, subscribeSmtpStatus, SmtpRuntimeStatus } from "../../services/smtpInitializer";
 import { syncAfiliacaoContasReceber, getContasReceberAfiliado, processarCancelamentoAfiliacaoFinanceiro, SyncAfiliacaoResult, CENTRO_CUSTO_AFILIACAO, garantirCentroCustoAfiliacao, validarAfiliacaoAntesDePersistir, validarIntegridadeFinanceiraAfiliacao } from "../../services/afiliacaoFinanceiroService";
+import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
 
 export default function ControleAfiliados() {
   const [afiliados, setAfiliados] = useState<any[]>([]);
@@ -187,15 +188,7 @@ export default function ControleAfiliados() {
   const formatCancellationDateTime = (afiliado: any) => {
     const rawDate = getCancellationDateTime(afiliado);
     if (!rawDate) return null;
-    try {
-      const d = new Date(rawDate);
-      if (isNaN(d.getTime())) return null;
-      const dateFormatted = d.toLocaleDateString("pt-BR");
-      const timeFormatted = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-      return `${dateFormatted} às ${timeFormatted}`;
-    } catch {
-      return null;
-    }
+    return formatDateTimeBR(rawDate);
   };
 
   const handleImprimirAfiliado = (afiliado: any) => {
@@ -247,7 +240,7 @@ export default function ControleAfiliados() {
           ` : ''}
           <div class="data-row">
             <div class="data-label">Data de Ativação:</div>
-            <div class="data-value">${afiliado.dataAtivacao ? new Date(afiliado.dataAtivacao).toLocaleDateString("pt-BR") : "Pendente de Aceite"}</div>
+            <div class="data-value">${afiliado.dataAtivacao ? formatDateBR(afiliado.dataAtivacao) : "Pendente de Aceite"}</div>
           </div>
         </div>
 
@@ -1714,7 +1707,7 @@ Qualquer dúvida, estamos à inteira disposição!
                         <span>{formatCancellationDateTime(viewAfiliado) || "Cancelado"}</span>
                       </div>
                     ) : (
-                      viewAfiliado.dataAtivacao ? new Date(viewAfiliado.dataAtivacao).toLocaleDateString("pt-BR") : "Pendente"
+                      viewAfiliado.dataAtivacao ? formatDateBR(viewAfiliado.dataAtivacao) : "Pendente"
                     )}
                   </div>
                 </div>
@@ -1874,7 +1867,7 @@ Qualquer dúvida, estamos à inteira disposição!
                               {parc.titular || parc.clienteNome || viewAfiliado.nomeCondominio}
                             </td>
                             <td className="px-3 py-2 font-medium text-slate-800">
-                              {parc.vencimento ? new Date(parc.vencimento + "T00:00:00").toLocaleDateString("pt-BR") : "-"}
+                              {formatDateBR(parc.vencimento)}
                             </td>
                             <td className="px-3 py-2 font-bold text-emerald-700">
                               {formatCurrency(parc.valor)}

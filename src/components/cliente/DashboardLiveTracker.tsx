@@ -10,6 +10,7 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { CONFIG } from "../../lib/ecommerceFlow";
+import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
 
 interface DashboardLiveTrackerProps {
   isAfiliado?: boolean;
@@ -904,12 +905,12 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                           {os.dataConfirmada || os.dataAgendada ? (
                             <p className="text-sm text-emerald-700 flex items-center gap-1.5 mt-1 font-normal">
                               <Calendar size={14} className="text-emerald-600" />
-                              <span>Visita Confirmada: {os.dataConfirmada || os.dataAgendada} {os.turnoAgendado ? `(${os.turnoAgendado})` : ''}</span>
+                              <span>Visita Confirmada: {formatDateBR(os.dataConfirmada || os.dataAgendada)} {os.turnoAgendado ? `(${os.turnoAgendado})` : ''}</span>
                             </p>
                           ) : os.dataPreferencial ? (
                             <p className="text-sm text-slate-500 flex items-center gap-1.5 mt-1 font-normal">
                               <Calendar size={14} className="text-sky-600" />
-                              <span>Data preferencial: {os.dataPreferencial}</span>
+                              <span>Data preferencial: {formatDateBR(os.dataPreferencial)}</span>
                             </p>
                           ) : null}
                         </div>

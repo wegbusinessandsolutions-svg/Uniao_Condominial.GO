@@ -390,118 +390,119 @@ export default function CustomerDashboard() {
 
       <PartnersCarousel />
       {isSuggestionModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-2.5 sm:p-4 overflow-x-hidden overflow-y-auto">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 w-full max-w-[calc(100vw-1.25rem)] sm:max-w-xl shadow-2xl relative max-h-[90vh] overflow-y-auto overflow-x-hidden box-border">
             <button 
               onClick={() => setIsSuggestionModalOpen(false)}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
             
             {!isSuggestionSuccess ? (
-              <>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-sky-100 text-[#0071e3] rounded-xl flex items-center justify-center shrink-0">
+              <div className="w-full max-w-full">
+                <div className="flex items-center gap-3 mb-4 sm:mb-6 pr-8">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-sky-100 text-[#0071e3] rounded-xl flex items-center justify-center shrink-0">
                     <Lightbulb size={20} />
                   </div>
-                  <h3 className="text-2xl font-normal text-slate-900">
+                  <h3 className="text-base sm:text-xl font-medium text-slate-900 truncate">
                     Envie sua Sugestão
                   </h3>
                 </div>
 
-                <form onSubmit={handleSubmitSuggestion} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-normal text-slate-700">Nome do Condomínio</label>
-                  <input 
-                    type="text" 
-                    readOnly 
-                    disabled
-                    value={(profile as any)?.nomeEmpresa || (profile as any)?.condominio || profile?.displayName || (profile as any)?.nomeCompleto || ""}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-sm font-normal shadow-xs"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-normal text-slate-700">Nome do Síndico / Responsável</label>
-                  <input 
-                    type="text" 
-                    readOnly 
-                    disabled
-                    value={(profile as any)?.nomeResponsavel || (profile as any)?.sindico || (profile as any)?.nomeCompleto || profile?.displayName || ""}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-sm font-normal shadow-xs"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-normal text-slate-700">Telefone para contato</label>
-                  <input 
-                    type="text" 
-                    readOnly 
-                    disabled
-                    value={(profile as any)?.telefone || (profile as any)?.phone || ""}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-sm font-normal shadow-xs"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-normal text-slate-700">E-mail</label>
-                  <input 
-                    type="email" 
-                    readOnly 
-                    disabled
-                    value={profile?.email || user?.email || ""}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-sm font-normal shadow-xs"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-slate-700">Título</label>
-                <input 
-                  type="text" 
-                  readOnly 
-                  disabled
-                  value="Sugestão"
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 text-sm font-normal shadow-xs"
-                />
-              </div>
+                <form onSubmit={handleSubmitSuggestion} className="space-y-3 sm:space-y-4 w-full max-w-full">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 w-full max-w-full">
+                    <div className="space-y-1 w-full min-w-0">
+                      <label className="text-[11px] sm:text-xs font-bold text-slate-700 block">Nome do Condomínio</label>
+                      <input 
+                        type="text" 
+                        readOnly 
+                        disabled
+                        value={(profile as any)?.nomeEmpresa || (profile as any)?.condominio || profile?.displayName || (profile as any)?.nomeCompleto || ""}
+                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl bg-slate-50 text-slate-600 text-xs sm:text-sm font-normal shadow-xs box-border truncate"
+                      />
+                    </div>
+                    <div className="space-y-1 w-full min-w-0">
+                      <label className="text-[11px] sm:text-xs font-bold text-slate-700 block">Nome do Síndico / Responsável</label>
+                      <input 
+                        type="text" 
+                        readOnly 
+                        disabled
+                        value={(profile as any)?.nomeResponsavel || (profile as any)?.sindico || (profile as any)?.nomeCompleto || profile?.displayName || ""}
+                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl bg-slate-50 text-slate-600 text-xs sm:text-sm font-normal shadow-xs box-border truncate"
+                      />
+                    </div>
+                    <div className="space-y-1 w-full min-w-0">
+                      <label className="text-[11px] sm:text-xs font-bold text-slate-700 block">Telefone para contato</label>
+                      <input 
+                        type="text" 
+                        readOnly 
+                        disabled
+                        value={(profile as any)?.telefone || (profile as any)?.phone || ""}
+                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl bg-slate-50 text-slate-600 text-xs sm:text-sm font-normal shadow-xs box-border truncate"
+                      />
+                    </div>
+                    <div className="space-y-1 w-full min-w-0">
+                      <label className="text-[11px] sm:text-xs font-bold text-slate-700 block">E-mail</label>
+                      <input 
+                        type="email" 
+                        readOnly 
+                        disabled
+                        value={profile?.email || user?.email || ""}
+                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl bg-slate-50 text-slate-600 text-xs sm:text-sm font-normal shadow-xs box-border truncate"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1 w-full min-w-0">
+                    <label className="text-[11px] sm:text-xs font-bold text-slate-700 block">Título</label>
+                    <input 
+                      type="text" 
+                      readOnly 
+                      disabled
+                      value="Sugestão"
+                      className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl bg-slate-50 text-slate-600 text-xs sm:text-sm font-normal shadow-xs box-border truncate"
+                    />
+                  </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-slate-700">Descreva abaixo a sua sugestão</label>
-                <textarea 
-                  required
-                  rows={4}
-                  value={suggestionText}
-                  onChange={(e) => setSuggestionText(e.target.value)}
-                  placeholder="Descreva abaixo a sua sugestão, iremos analisar tudo, juntaremos com as demais, estudaremos tudo e sendo em benefício a classe e viável a todos, logo ela poderá ser implementada. Muito Obrigado."
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 text-slate-900 text-base shadow-xs focus:ring-2 focus:ring-[#0071e3]/20 transition-all resize-none font-normal"
-                ></textarea>
-              </div>
+                  <div className="space-y-1 w-full min-w-0">
+                    <label className="text-[11px] sm:text-xs font-bold text-slate-700 block">Descreva abaixo a sua sugestão</label>
+                    <textarea 
+                      required
+                      rows={4}
+                      value={suggestionText}
+                      onChange={(e) => setSuggestionText(e.target.value)}
+                      placeholder="Descreva abaixo a sua sugestão. Iremos analisar cuidadosamente para trazer melhorias para toda a rede."
+                      className="w-full min-w-0 max-w-full px-3 py-2 sm:py-2.5 rounded-xl bg-slate-50 text-slate-900 text-xs sm:text-sm shadow-xs focus:ring-2 focus:ring-[#0071e3]/20 transition-all resize-none font-normal box-border break-words"
+                    ></textarea>
+                  </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button 
-                  type="button"
-                  onClick={() => setIsSuggestionModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-normal hover:bg-slate-200 transition-colors cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  type="submit"
-                  disabled={isSubmittingSuggestion || !suggestionText.trim()}
-                  className="px-6 py-2.5 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-medium shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {isSubmittingSuggestion ? "Enviando..." : "Enviar"}
-                </button>
+                  <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-2 w-full">
+                    <button 
+                      type="button"
+                      onClick={() => setIsSuggestionModalOpen(false)}
+                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-normal hover:bg-slate-200 transition-colors cursor-pointer text-center text-xs sm:text-sm"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="submit"
+                      disabled={isSubmittingSuggestion || !suggestionText.trim()}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-medium shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-center text-xs sm:text-sm"
+                    >
+                      {isSubmittingSuggestion ? "Enviando..." : "Enviar"}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
-            </>
             ) : (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Lightbulb size={32} />
+              <div className="text-center py-5 sm:py-8 w-full max-w-full">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Lightbulb size={26} className="sm:hidden" />
+                  <Lightbulb size={32} className="hidden sm:block" />
                 </div>
-                <h3 className="text-2xl font-normal text-slate-900 mb-2">Sugestão Enviada!</h3>
-                <p className="text-slate-600 mb-8 max-w-sm mx-auto text-base font-normal">
+                <h3 className="text-lg sm:text-2xl font-normal text-slate-900 mb-2">Sugestão Enviada!</h3>
+                <p className="text-slate-600 mb-5 sm:mb-8 max-w-sm mx-auto text-xs sm:text-base font-normal leading-relaxed">
                   A sugestão foi enviada, e será criteriosamente analisada, agradecemos sua contribuição.
                 </p>
                 <button 
@@ -509,7 +510,7 @@ export default function CustomerDashboard() {
                     setIsSuggestionModalOpen(false);
                     setTimeout(() => setIsSuggestionSuccess(false), 300);
                   }}
-                  className="px-8 py-3 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-medium transition-colors cursor-pointer shadow-md"
+                  className="w-full sm:w-auto px-7 py-2.5 sm:py-3 rounded-xl bg-[#0071e3] hover:bg-[#005bb5] text-white font-medium transition-colors cursor-pointer shadow-md text-sm"
                 >
                   Fechar
                 </button>

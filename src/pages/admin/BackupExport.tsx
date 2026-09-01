@@ -61,6 +61,7 @@ import {
 import { logAction } from "../../lib/audit";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
+import { formatDateTimeBR } from "../../lib/dateUtils";
 import {
   BackupScheduleConfig,
   BackupLog,
@@ -533,18 +534,7 @@ export default function BackupExport() {
 
   // Helper para formatar data de Timestamp ou String
   const formatTimestamp = (ts: any) => {
-    if (!ts) return "—";
-    try {
-      if (typeof ts.toDate === "function") {
-        return ts.toDate().toLocaleString("pt-BR");
-      }
-      if (ts instanceof Date) {
-        return ts.toLocaleString("pt-BR");
-      }
-      return new Date(ts).toLocaleString("pt-BR");
-    } catch {
-      return "—";
-    }
+    return formatDateTimeBR(ts, "—");
   };
 
   const formatBytes = (bytes?: number) => {

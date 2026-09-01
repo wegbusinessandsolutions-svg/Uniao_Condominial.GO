@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
 import { parseServiceValue, formatCurrencyBR } from "./serviceUtils";
+import { formatDateBR, formatDateTimeBR } from "./dateUtils";
 
 export async function exportBeneficiosPdf(
   items: any[],
@@ -21,11 +22,7 @@ export async function exportBeneficiosPdf(
 
   const cardCondominioName = extraData?.condominioName || "Condomínio Residencial Beneficiado";
   
-  const dateStr = new Date().toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  const dateStr = formatDateBR(new Date());
 
   // Organização inteligente de páginas:
   // Página 1: Cabeçalho Completo + Caixa de Comunicado do Síndico + Barra de Título -> 3 benefícios
@@ -375,11 +372,7 @@ export async function exportServicosPdf(
     return;
   }
 
-  const dateStr = new Date().toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  const dateStr = formatDateBR(new Date());
 
   const condominio = extraData?.condominioName || "Condomínio";
 
@@ -576,11 +569,7 @@ export async function exportGenericPdf(
     return;
   }
 
-  const dateStr = new Date().toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  const dateStr = formatDateBR(new Date());
 
   const condominio = extraData?.condominioName || "Condomínio";
 
@@ -607,7 +596,14 @@ export async function exportGenericPdf(
       const cells = columns
         .map((c) => {
           let val = item[c.key];
-          if (val === undefined || val === null) val = "—";
+          if (val === undefined || val === null || val === "") {
+            val = "—";
+          } else {
+            const isDate = (c as any).format === "date" || /data|vencimento|nascimento|admissao|demissao/i.test(c.key) || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val));
+            if (isDate) {
+              val = formatDateBR(val);
+            }
+          }
           return `<td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-size: 12px; color: #1e293b; text-align: left;">${String(val)}</td>`;
         })
         .join("");
@@ -709,13 +705,7 @@ export function exportTableToPdf(
     return;
   }
   
-  const dateStr = new Date().toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
+  const dateStr = formatDateTimeBR(new Date());
 
   const pdf = new jsPDF("p", "pt", "a4");
   
@@ -737,11 +727,8 @@ export function exportTableToPdf(
       if (col.format === "currency") {
          return typeof val === "number" ? formatCurrencyBR(val) : val;
       }
-      if (col.format === "date" && val) {
-         if (typeof val === "string" && val.includes("-")) {
-           const [y, m, d] = val.split("-");
-           return `${d}/${m}/${y}`;
-         }
+      if ((col.format === "date" || /data|vencimento|nascimento|admissao|demissao/i.test(col.key)) && val) {
+        return formatDateBR(val);
       }
       if (col.format === "boolean") {
          return val ? "Sim" : "Não";
@@ -770,3 +757,333 @@ export function exportTableToPdf(
   const filename = `${customTitle.replace(/\s+/g, "_")}_${dateStr.replace(/[\/:]/g, "")}.pdf`;
   pdf.save(filename);
 }
+
+export async function exportOrdemServicoPdf(order: any) {
+  if (!order) {
+    alert("Ordem de serviço inválida para exportação em PDF.");
+    return;
+  }
+
+  const dateNow = new Date();
+  const dateStr = formatDateTimeBR(dateNow.toISOString());
+
+  // Duration calculation
+  let durationText = "—";
+  if (order.inicioTrabalhoEm && order.concluidoEm) {
+    try {
+      const start = new Date(order.inicioTrabalhoEm).getTime();
+      const end = new Date(order.concluidoEm).getTime();
+      const diffMs = end - start;
+      if (diffMs > 0) {
+        const totalMinutes = Math.floor(diffMs / (1000 * 60));
+        const hours = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        durationText = hours > 0 ? `${hours}h ${mins}min` : `${mins} minutos`;
+      }
+    } catch {
+      durationText = "—";
+    }
+  }
+
+  const wrapper = document.createElement("div");
+  wrapper.style.position = "absolute";
+  wrapper.style.left = "-9999px";
+  wrapper.style.top = "0";
+  wrapper.style.display = "flex";
+  wrapper.style.flexDirection = "column";
+  wrapper.style.backgroundColor = "#ffffff";
+
+  // PAGE 1: Informações Gerais, Cronologia, Parecer Técnico e Assinatura Digital
+  const page1 = document.createElement("div");
+  page1.className = "pdf-page-container";
+  page1.style.width = "800px";
+  page1.style.minHeight = "1131px";
+  page1.style.boxSizing = "border-box";
+  page1.style.padding = "36px 44px";
+  page1.style.display = "flex";
+  page1.style.flexDirection = "column";
+  page1.style.justifyContent = "space-between";
+  page1.style.backgroundColor = "#ffffff";
+  page1.style.color = "#0f172a";
+  page1.style.fontFamily = "'Helvetica Neue', Arial, sans-serif";
+
+  page1.innerHTML = `
+    <div style="flex: 1; display: flex; flex-direction: column;">
+      <!-- Header Oficial -->
+      <div style="border-bottom: 2px solid #0f172a; padding-bottom: 16px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-size: 10px; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 3px;">
+            UNIÃO CONDOMINIAL &nbsp;·&nbsp; RELATÓRIO TÉCNICO OFICIAL
+          </div>
+          <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: -0.5px;">
+            Comprovante de Execução de Serviço
+          </h1>
+          <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+            Atendimento Rotineiro Condominial &nbsp;•&nbsp; Autenticação Digital
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; display: inline-block; margin-bottom: 4px;">
+            ✓ SERVIÇO CONCLUÍDO
+          </div>
+          <div style="font-size: 13px; font-weight: 800; color: #0f172a;">
+            ${order.numeroOS || `OS #${order.id.slice(0, 8)}`}
+          </div>
+          <div style="font-size: 9.5px; color: #94a3b8; font-family: monospace;">
+            Emissão: ${dateStr}
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid Condomínio e Prestador -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+        <!-- Box Condomínio -->
+        <div style="border: 1px solid #e2e8f0; background-color: #f8fafc; border-radius: 8px; padding: 12px; font-size: 11px; line-height: 1.5;">
+          <div style="font-size: 10px; font-weight: 800; color: #0369a1; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+            🏢 Dados do Condomínio / Contratante
+          </div>
+          <p style="margin: 2px 0;"><strong>Condomínio:</strong> ${order.nomeCondominio || order.clienteNome || "Não informado"}</p>
+          <p style="margin: 2px 0;"><strong>Endereço:</strong> ${order.enderecoCondominio || "Conforme cadastro"}</p>
+          <p style="margin: 2px 0;"><strong>Telefone:</strong> ${order.telefoneContato || (order as any).clienteTelefone || "—"}</p>
+          <p style="margin: 2px 0;"><strong>E-mail:</strong> ${order.clienteEmail || "—"}</p>
+        </div>
+
+        <!-- Box Prestador -->
+        <div style="border: 1px solid #e2e8f0; background-color: #f8fafc; border-radius: 8px; padding: 12px; font-size: 11px; line-height: 1.5;">
+          <div style="font-size: 10px; font-weight: 800; color: #047857; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+            👷 Dados do Prestador / Atendimento
+          </div>
+          <p style="margin: 2px 0;"><strong>Técnico / Equipe:</strong> ${order.colaboradorNome || "Técnico Credenciado"}</p>
+          <p style="margin: 2px 0;"><strong>Serviço:</strong> ${order.servicoNome || "Serviço Rotineiro"}</p>
+          <p style="margin: 2px 0;"><strong>Prioridade:</strong> ${order.prioridade || "Normal"}</p>
+          <p style="margin: 2px 0;"><strong>E-mail Prestador:</strong> ${order.colaboradorEmail || "contato@uniaocondominial.com.br"}</p>
+        </div>
+      </div>
+
+      <!-- Cronologia Auditada -->
+      <div style="background-color: #0f172a; color: #ffffff; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+        <div style="font-size: 10px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
+          ⏱️ Cronologia de Atendimento e Marcos de Execução
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 10px;">
+          <div style="background-color: #1e293b; padding: 8px; border-radius: 6px; border: 1px solid #334155;">
+            <span style="color: #94a3b8; display: block; font-size: 9px; font-weight: bold; text-transform: uppercase;">1. Solicitação</span>
+            <span style="color: #f1f5f9; font-weight: bold; margin-top: 2px; display: block;">${formatDateTimeBR(order.createdAt as string)}</span>
+          </div>
+          <div style="background-color: #1e293b; padding: 8px; border-radius: 6px; border: 1px solid #334155;">
+            <span style="color: #94a3b8; display: block; font-size: 9px; font-weight: bold; text-transform: uppercase;">2. Deslocamento</span>
+            <span style="color: #f1f5f9; font-weight: bold; margin-top: 2px; display: block;">${formatDateTimeBR(order.deslocamentoInicioEm)}</span>
+          </div>
+          <div style="background-color: #1e293b; padding: 8px; border-radius: 6px; border: 1px solid #334155;">
+            <span style="color: #94a3b8; display: block; font-size: 9px; font-weight: bold; text-transform: uppercase;">3. Início dos Trabalhos</span>
+            <span style="color: #f1f5f9; font-weight: bold; margin-top: 2px; display: block;">${formatDateTimeBR(order.inicioTrabalhoEm)}</span>
+          </div>
+          <div style="background-color: #064e3b; padding: 8px; border-radius: 6px; border: 1px solid #059669;">
+            <span style="color: #6ee7b7; display: block; font-size: 9px; font-weight: bold; text-transform: uppercase;">4. Conclusão da O.S.</span>
+            <span style="color: #ecfdf5; font-weight: bold; margin-top: 2px; display: block;">${formatDateTimeBR(order.concluidoEm)}</span>
+          </div>
+        </div>
+        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; font-size: 10.5px;">
+          <span><strong>Duração Efetiva do Atendimento:</strong> ${durationText}</span>
+          <span style="color: #38bdf8; font-weight: bold;">Auditoria por Geolocalização & Timestamp</span>
+        </div>
+      </div>
+
+      <!-- Observações Técnicas & Materiais -->
+      <div style="display: grid; grid-template-columns: ${order.materiaisUtilizados ? '1fr 1fr' : '1fr'}; gap: 12px; margin-bottom: 16px;">
+        <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; background-color: #ffffff; font-size: 10.5px; line-height: 1.45;">
+          <strong style="color: #0f172a; font-size: 11px; display: block; margin-bottom: 4px;">🔧 Parecer Técnico e Observações:</strong>
+          <p style="margin: 0; color: #334155; white-space: pre-wrap;">${order.observacoesTecnicas || "Serviço executado em conformidade com as boas práticas técnicas e normas de segurança condominiais."}</p>
+        </div>
+        ${
+          order.materiaisUtilizados
+            ? `
+          <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; background-color: #ffffff; font-size: 10.5px; line-height: 1.45;">
+            <strong style="color: #0f172a; font-size: 11px; display: block; margin-bottom: 4px;">📦 Peças e Materiais Utilizados:</strong>
+            <p style="margin: 0; color: #334155; white-space: pre-wrap;">${order.materiaisUtilizados}</p>
+          </div>
+        `
+            : ""
+        }
+      </div>
+
+      <!-- Assinatura Digital e Termo de Ciência -->
+      <div style="border: 1.5px solid #0f172a; border-radius: 8px; padding: 14px; background-color: #f8fafc; margin-top: auto;">
+        <div style="font-size: 10px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+          🛡️ Termo de Encerramento e Assinatura Digital do Responsável
+        </div>
+        <p style="font-size: 9.5px; color: #475569; margin: 0 0 10px 0; line-height: 1.35; font-style: italic;">
+          "Declaro que acompanhei a execução do serviço discriminado nesta Ordem de Serviço, atestando a sua conclusão satisfatória, conformidade dos materiais e a veracidade das informações e fotografias registradas."
+        </p>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+          <div>
+            ${
+              order.assinaturaResponsavel?.assinaturaBase64
+                ? `<img src="${order.assinaturaResponsavel.assinaturaBase64}" alt="Assinatura" style="height: 50px; max-width: 220px; object-fit: contain; background-color: #ffffff; padding: 2px 6px; border: 1px solid #e2e8f0; border-radius: 4px; display: block; margin-bottom: 4px;" />`
+                : `<div style="height: 35px; border-bottom: 1px solid #0f172a; width: 200px; margin-bottom: 4px;"></div>`
+            }
+            <div style="font-size: 11px; font-weight: 800; color: #0f172a;">
+              ${order.assinaturaResponsavel?.nome || "Responsável pelo Condomínio"}
+            </div>
+            <div style="font-size: 9.5px; color: #64748b;">
+              ${order.assinaturaResponsavel?.cargoOuFuncao || "Síndico / Acompanhante Autorizado"}
+              ${order.assinaturaResponsavel?.documento ? ` · Doc: ${order.assinaturaResponsavel.documento}` : ""}
+            </div>
+          </div>
+
+          <div style="text-align: right; font-size: 9.5px; color: #64748b; background-color: #ffffff; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <div style="color: #047857; font-weight: 800; margin-bottom: 2px;">✓ Assinatura Digital Válida</div>
+            <div>Data: ${formatDateTimeBR(order.assinaturaResponsavel?.assinadoEm || order.concluidoEm)}</div>
+            <div style="font-family: monospace; font-size: 9px; color: #94a3b8;">Hash OS: OS-${order.id.slice(0, 10).toUpperCase()}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Página 1 -->
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #94a3b8; font-weight: 600;">
+      <div>União Condominial &nbsp;·&nbsp; www.uniaocondominial.com.br &nbsp;·&nbsp; Documento Oficial de Auditoria</div>
+      <div>Página 1</div>
+    </div>
+  `;
+
+  wrapper.appendChild(page1);
+
+  // PAGE 2: Evidências Fotográficas Carimbadas (Antes e Depois)
+  const fotosAntes = order.fotosAntes || [];
+  const fotosDepois = order.fotosDepois || [];
+
+  if (fotosAntes.length > 0 || fotosDepois.length > 0) {
+    const page2 = document.createElement("div");
+    page2.className = "pdf-page-container";
+    page2.style.width = "800px";
+    page2.style.minHeight = "1131px";
+    page2.style.boxSizing = "border-box";
+    page2.style.padding = "36px 44px";
+    page2.style.display = "flex";
+    page2.style.flexDirection = "column";
+    page2.style.justifyContent = "space-between";
+    page2.style.backgroundColor = "#ffffff";
+    page2.style.color = "#0f172a";
+    page2.style.fontFamily = "'Helvetica Neue', Arial, sans-serif";
+
+    const renderPhotosGrid = (photos: any[], label: string, colorBadge: string, bgBadge: string) => {
+      if (!photos || photos.length === 0) {
+        return `<p style="font-size: 10px; color: #94a3b8; font-style: italic; margin: 4px 0 12px 0;">Nenhum registro fotográfico nesta etapa.</p>`;
+      }
+
+      const photosHtml = photos
+        .map(
+          (p, idx) => `
+          <div style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background-color: #f8fafc;">
+            <div style="height: 140px; background-color: #0f172a; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <img
+                src="${p.carimbadaUrl || p.url}"
+                alt="Foto ${idx + 1}"
+                crossorigin="anonymous"
+                style="width: 100%; height: 100%; object-fit: cover;"
+              />
+            </div>
+            <div style="padding: 6px 8px; font-size: 9px; color: #475569; background-color: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+              <strong style="color: #0f172a;">Foto ${idx + 1}</strong>
+              <span>${formatDateTimeBR(p.timestamp || order.inicioTrabalhoEm)}</span>
+            </div>
+          </div>
+        `
+        )
+        .join("");
+
+      return `
+        <div style="margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="background-color: ${bgBadge}; color: ${colorBadge}; font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">
+              ${label}
+            </span>
+            <span style="font-size: 10px; color: #64748b;">(${photos.length} fotos arquivadas)</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            ${photosHtml}
+          </div>
+        </div>
+      `;
+    };
+
+    page2.innerHTML = `
+      <div style="flex: 1; display: flex; flex-direction: column;">
+        <!-- Topo Página 2 -->
+        <div style="border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <div style="font-size: 10px; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 1.5px;">
+              ANEXO FOTOGRÁFICO DE AUDITORIA PERICIAL (TIMEMARK)
+            </div>
+            <h2 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 2px 0 0 0;">
+              ${order.nomeCondominio || order.clienteNome} &nbsp;·&nbsp; ${order.numeroOS || `OS #${order.id.slice(0, 8)}`}
+            </h2>
+          </div>
+          <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">
+            Fotos Carimbadas com Data, Hora e Condomínio
+          </div>
+        </div>
+
+        <!-- Bloco Fotos Antes -->
+        ${renderPhotosGrid(fotosAntes, "1. Fotos Iniciais (Antes da Execução)", "#92400e", "#fef3c7")}
+
+        <!-- Bloco Fotos Depois -->
+        ${renderPhotosGrid(fotosDepois, "2. Fotos Finais (Trabalho Concluído)", "#065f46", "#d1fae5")}
+      </div>
+
+      <!-- Footer Página 2 -->
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #94a3b8; font-weight: 600;">
+        <div>União Condominial &nbsp;·&nbsp; Relatório Técnico Pericial de Entrega &nbsp;·&nbsp; OS #${order.numeroOS || order.id.slice(0, 8)}</div>
+        <div>Página 2</div>
+      </div>
+    `;
+
+    wrapper.appendChild(page2);
+  }
+
+  document.body.appendChild(wrapper);
+
+  try {
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    const pageContainers = wrapper.querySelectorAll(".pdf-page-container");
+
+    for (let p = 0; p < pageContainers.length; p++) {
+      const pageElement = pageContainers[p] as HTMLElement;
+
+      const canvas = await html2canvas(pageElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.98);
+
+      if (p > 0) {
+        pdf.addPage();
+      }
+
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+    }
+
+    const safeOS = (order.numeroOS || `OS_${order.id.slice(0, 8)}`).replace(/[^\w-]/g, "_");
+    const filename = `Relatorio_Execucao_${safeOS}_${formatDateBR(order.concluidoEm || new Date().toISOString()).replace(/\//g, "-")}.pdf`;
+    
+    pdf.save(filename);
+    return pdf;
+  } catch (error) {
+    console.error("Erro ao gerar PDF da Ordem de Serviço:", error);
+    alert("Não foi possível gerar o arquivo PDF. Tente imprimir pela tela.");
+    throw error;
+  } finally {
+    if (document.body.contains(wrapper)) {
+      document.body.removeChild(wrapper);
+    }
+  }
+}
+

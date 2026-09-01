@@ -7,6 +7,7 @@ import {
   AlertCircle, XCircle, X, Trash2, CheckCircle2, ChevronRight,
   Filter, Check, Sparkles, AlertTriangle, CalendarCheck
 } from "lucide-react";
+import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
 
 const parsePrice = (val: any): number => {
   if (val === undefined || val === null) return 0;
@@ -26,20 +27,6 @@ const parsePrice = (val: any): number => {
 
 const formatCurrency = (val: number): string => {
   return val.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
-
-const formatDateBR = (dateStr?: string) => {
-  if (!dateStr) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    const [year, month, day] = dateStr.split("-");
-    return `${day}/${month}/${year}`;
-  }
-  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
-    const ymd = dateStr.substring(0, 10);
-    const [year, month, day] = ymd.split("-");
-    return `${day}/${month}/${year}`;
-  }
-  return dateStr;
 };
 
 const getOrderDate = (createdAt: any): Date | null => {

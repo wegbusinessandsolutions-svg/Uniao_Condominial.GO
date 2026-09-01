@@ -95,6 +95,8 @@ const ExpedicaoPedidosOnline = lazy(() => import("./pages/expedicao/PedidosOnlin
 const ExpedicaoEstoque = lazy(() => import("./pages/expedicao/Estoque"));
 const LogisticaRoteirizacao = lazy(() => import("./pages/admin/LogisticaRoteirizacao"));
 const EntregadorDashboard = lazy(() => import("./pages/entregador/Dashboard"));
+const PrestadorDashboard = lazy(() => import("./pages/prestador/Dashboard"));
+const ExecucaoServicos = lazy(() => import("./pages/admin/ExecucaoServicos"));
 
 const FinanceiroFaturamento = lazy(() => import("./pages/financeiro/Faturamento"));
 import AceiteAfiliacao from "./pages/AceiteAfiliacao";
@@ -544,6 +546,8 @@ export default function App() {
             </Route>
 
             <Route path="entrega-mercadorias" element={<EntregadorDashboard />} />
+            <Route path="prestador-servicos" element={<PrestadorDashboard />} />
+            <Route path="execucao-servicos" element={<PrestadorDashboard />} />
             <Route path="logistica-roteirizacao" element={<LogisticaRoteirizacao />} />
             <Route path="expedicao">
               <Route index element={<ExpedicaoDashboard />} />
@@ -553,6 +557,23 @@ export default function App() {
               <Route path="logistica-roteirizacao" element={<LogisticaRoteirizacao />} />
             </Route>
           </Route>
+
+          <Route
+            path="/prestador"
+            element={
+              <Suspense fallback={<AdminContentSkeleton />}>
+                <PrestadorDashboard />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/prestador/dashboard"
+            element={
+              <Suspense fallback={<AdminContentSkeleton />}>
+                <PrestadorDashboard />
+              </Suspense>
+            }
+          />
             </Routes>
             <ScrollToTopButton />
             <A2HSPromptBanner />

@@ -27,6 +27,7 @@ import {
 import { initFirebase } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
 import { gerarPixCopiaECola } from "../../lib/documentValidators";
+import { formatDateBR } from "../../lib/dateUtils";
 import {
   collection,
   getDocs,
@@ -1115,11 +1116,11 @@ export default function IntegracaoPagamentos() {
               <div className="grid grid-cols-3 gap-2 border-b border-slate-200 pb-1.5">
                 <div>
                   <span className="text-slate-400 text-[8px] block leading-none uppercase font-bold">Data do Documento</span>
-                  <span className="font-medium text-slate-600 block">{today.toLocaleDateString("pt-BR")}</span>
+                  <span className="font-medium text-slate-600 block">{formatDateBR(today)}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 text-[8px] block leading-none uppercase font-bold">Vencimento</span>
-                  <span className="font-black text-[#0071e3] block">{boletoDueDateMock.toLocaleDateString("pt-BR")}</span>
+                  <span className="font-black text-[#0071e3] block">{formatDateBR(boletoDueDateMock)}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 text-[8px] block leading-none uppercase font-bold">Valor Cobrado</span>

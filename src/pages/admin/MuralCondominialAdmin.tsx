@@ -3,6 +3,7 @@ import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, serv
 import { db } from "../../lib/firebase";
 import { Megaphone, CheckCircle, XCircle, Trash2, Clock, Search, X, Edit3, HelpCircle } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
+import { formatDateBR } from "../../lib/dateUtils";
 
 interface Notice {
   id: string;
@@ -202,7 +203,7 @@ export default function MuralCondominialAdmin() {
                 {filteredNotices.map((notice) => (
                   <tr key={notice.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-4 text-sm text-slate-500 whitespace-nowrap">
-                      {notice.createdAt?.toDate ? notice.createdAt.toDate().toLocaleDateString("pt-BR") : "N/A"}
+                      {formatDateBR(notice.createdAt, "N/A")}
                       {notice.updatedAt && (
                         <div className="text-[10px] text-amber-600 font-semibold">(editado)</div>
                       )}

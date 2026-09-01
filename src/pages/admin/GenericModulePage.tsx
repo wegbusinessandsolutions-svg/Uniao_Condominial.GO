@@ -39,6 +39,7 @@ import {
 } from "recharts";
 import { initFirebase } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
+import { formatDateBR } from "../../lib/dateUtils";
 import {
   collection,
   getDocs,
@@ -1211,15 +1212,19 @@ export default function GenericModulePage({
                         ref={rowVirtualizer.measureElement}
                         className="hover:bg-slate-50/80 transition-colors border-b border-slate-100 last:border-0"
                       >
-                        {columns.map((col) => (
-                          <td key={col.key} className="px-4 py-3.5 text-slate-700">
-                            {col.render
-                              ? col.render(row[col.key], row)
-                              : row[col.key] !== undefined && row[col.key] !== null && row[col.key] !== ""
-                              ? String(row[col.key])
-                              : "—"}
-                          </td>
-                        ))}
+                        {columns.map((col) => {
+                          const val = row[col.key];
+                          const isDateKey = /data|vencimento|nascimento|admissao|demissao/i.test(col.key);
+                          return (
+                            <td key={col.key} className="px-4 py-3.5 text-slate-700">
+                              {col.render
+                                ? col.render(val, row)
+                                : val !== undefined && val !== null && val !== ""
+                                ? (isDateKey || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val)) ? formatDateBR(val) : String(val))
+                                : "—"}
+                            </td>
+                          );
+                        })}
                         {collectionName && (
                           <td className="px-4 py-3.5 print:hidden text-right">
                             <div className="flex items-center justify-end gap-2.5">
@@ -1274,15 +1279,19 @@ export default function GenericModulePage({
                     key={row.id || i}
                     className="hover:bg-slate-50/70 transition-colors"
                   >
-                    {columns.map((col) => (
-                      <td key={col.key} className="px-4 py-3.5 text-slate-700">
-                        {col.render
-                          ? col.render(row[col.key], row)
-                          : row[col.key] !== undefined && row[col.key] !== null && row[col.key] !== ""
-                          ? String(row[col.key])
-                          : "—"}
-                      </td>
-                    ))}
+                    {columns.map((col) => {
+                      const val = row[col.key];
+                      const isDateKey = /data|vencimento|nascimento|admissao|demissao/i.test(col.key);
+                      return (
+                        <td key={col.key} className="px-4 py-3.5 text-slate-700">
+                          {col.render
+                            ? col.render(val, row)
+                            : val !== undefined && val !== null && val !== ""
+                            ? (isDateKey || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val)) ? formatDateBR(val) : String(val))
+                            : "—"}
+                        </td>
+                      );
+                    })}
                     {collectionName && (
                       <td className="px-4 py-3.5 print:hidden text-right">
                         <div className="flex items-center justify-end gap-2.5">
@@ -1769,17 +1778,24 @@ export default function GenericModulePage({
                 </h2>
                 <table className="w-full border border-slate-200">
                   <tbody>
-                    {columns.map((col) => (
-                      <tr
-                        key={col.key}
-                        className="border-b border-slate-200 last:border-0"
-                      >
-                        <td className="bg-slate-50 font-semibold px-3 py-2 w-1/4 border-r border-slate-200">
-                          {col.label}
-                        </td>
-                        <td className="px-3 py-2">{item[col.key] || "—"}</td>
-                      </tr>
-                    ))}
+                    {columns.map((col) => {
+                      const val = item[col.key];
+                      const isDateKey = /data|vencimento|nascimento|admissao|demissao/i.test(col.key);
+                      const displayVal = val !== undefined && val !== null && val !== ""
+                        ? (isDateKey || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val)) ? formatDateBR(val) : String(val))
+                        : "—";
+                      return (
+                        <tr
+                          key={col.key}
+                          className="border-b border-slate-200 last:border-0"
+                        >
+                          <td className="bg-slate-50 font-semibold px-3 py-2 w-1/4 border-r border-slate-200">
+                            {col.label}
+                          </td>
+                          <td className="px-3 py-2">{displayVal}</td>
+                        </tr>
+                      );
+                    })}
                     {item.status && (
                       <tr className="border-b border-slate-200">
                         <td className="bg-slate-50 font-semibold px-3 py-2 w-1/4 border-r border-slate-200">
@@ -1800,7 +1816,7 @@ export default function GenericModulePage({
                       </td>
                       <td className="px-3 py-2">
                         {item.createdAt
-                          ? new Date(item.createdAt).toLocaleString("pt-BR")
+                          ? formatDateBR(item.createdAt)
                           : "—"}
                       </td>
                     </tr>
@@ -1810,7 +1826,7 @@ export default function GenericModulePage({
                       </td>
                       <td className="px-3 py-2">
                         {item.updatedAt
-                          ? new Date(item.updatedAt).toLocaleString("pt-BR")
+                          ? formatDateBR(item.updatedAt)
                           : "—"}
                       </td>
                     </tr>
@@ -1851,14 +1867,21 @@ export default function GenericModulePage({
                     key={item.id || idx}
                     className="border-b border-slate-200 last:border-0"
                   >
-                    {columns.map((col) => (
-                      <td
-                        key={col.key}
-                        className="px-3 py-2 border-r border-slate-200"
-                      >
-                        {item[col.key] || "—"}
-                      </td>
-                    ))}
+                    {columns.map((col) => {
+                      const val = item[col.key];
+                      const isDateKey = /data|vencimento|nascimento|admissao|demissao/i.test(col.key);
+                      const displayVal = val !== undefined && val !== null && val !== ""
+                        ? (isDateKey || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val)) ? formatDateBR(val) : String(val))
+                        : "—";
+                      return (
+                        <td
+                          key={col.key}
+                          className="px-3 py-2 border-r border-slate-200"
+                        >
+                          {displayVal}
+                        </td>
+                      );
+                    })}
                     <td className="px-3 py-2">{item.status || "—"}</td>
                   </tr>
                 ))}

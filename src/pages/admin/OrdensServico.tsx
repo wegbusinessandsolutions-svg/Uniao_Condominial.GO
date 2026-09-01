@@ -32,20 +32,7 @@ import { sendEmailWithLog } from "../../lib/emailService";
 import { DataTableToolbar } from "../../components/common/DataTableToolbar";
 import { StatMetricCard } from "../../components/common/StatMetricCard";
 import { EmptyState } from "../../components/common/EmptyState";
-
-const formatDateBR = (dateStr?: string) => {
-  if (!dateStr) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    const [year, month, day] = dateStr.split("-");
-    return `${day}/${month}/${year}`;
-  }
-  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
-    const ymd = dateStr.substring(0, 10);
-    const [year, month, day] = ymd.split("-");
-    return `${day}/${month}/${year}`;
-  }
-  return dateStr;
-};
+import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
 
 export default function OrdensServicoAdmin() {
   const [ordens, setOrdens] = useState<any[]>([]);
