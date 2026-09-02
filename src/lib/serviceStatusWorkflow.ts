@@ -97,6 +97,81 @@ export function normalizeOSStatus(rawStatus?: string): StandardOSStatus {
   const s = rawStatus.trim();
   const sLower = s.toLowerCase();
 
+  // Cancelled states
+  if (sLower.includes("cancelad") || sLower.includes("rejeitad")) {
+    return s.includes("Cliente") ? "Cancelada pelo Cliente" : "Cancelado";
+  }
+
+  // Concluded states
+  if (
+    s === "Serviço Concluído" ||
+    s === "Serviço concluído" ||
+    sLower.includes("concluído") ||
+    sLower.includes("concluido") ||
+    sLower.includes("finalizado") ||
+    sLower.includes("termo assinado")
+  ) {
+    return "Serviço Concluído";
+  }
+
+  // Active execution / onsite states
+  if (
+    s === "Em execução" ||
+    s === "Em Execução" ||
+    sLower.includes("execução") ||
+    sLower.includes("execucao") ||
+    sLower.includes("andamento") ||
+    sLower.includes("vistoria") ||
+    sLower.includes("no condomínio") ||
+    sLower.includes("no condominio") ||
+    sLower.includes("fotos antes") ||
+    sLower.includes("fotos depois") ||
+    sLower.includes("fotos_antes") ||
+    sLower.includes("fotos_depois") ||
+    sLower.includes("chegada") ||
+    sLower.includes("assinatura")
+  ) {
+    return "Em execução";
+  }
+
+  // In transit / displacement states
+  if (
+    s === "Técnico a caminho" ||
+    s === "Em Deslocamento" ||
+    sLower.includes("técnico a caminho") ||
+    sLower.includes("tecnico a caminho") ||
+    sLower.includes("deslocamento") ||
+    sLower.includes("a caminho") ||
+    sLower.includes("em rota") ||
+    sLower.includes("trânsito") ||
+    sLower.includes("transito")
+  ) {
+    return "Técnico a caminho";
+  }
+
+  // Execution day states
+  if (
+    s === "Dia de Execução Serviço" ||
+    sLower.includes("dia de execução") ||
+    sLower.includes("dia da execução") ||
+    sLower.includes("dia de execucao") ||
+    sLower.includes("dia do serviço")
+  ) {
+    return "Dia de Execução Serviço";
+  }
+
+  // Confirmed date / scheduled visit
+  if (
+    s === "Data confirmada" ||
+    sLower.includes("data confirmada") ||
+    sLower.includes("confirmada a visita") ||
+    sLower.includes("visita agendada") ||
+    sLower.includes("agendado") ||
+    sLower.includes("confirmado")
+  ) {
+    return "Data confirmada";
+  }
+
   if (
     s === "Confirmação de Data" ||
     sLower.includes("confirmação de data") ||
@@ -107,59 +182,6 @@ export function normalizeOSStatus(rawStatus?: string): StandardOSStatus {
     sLower === "novo"
   ) {
     return "Confirmação de Data";
-  }
-
-  if (
-    s === "Data confirmada" ||
-    sLower.includes("data confirmada") ||
-    sLower.includes("confirmada a visita") ||
-    sLower.includes("visita agendada") ||
-    sLower.includes("agendado")
-  ) {
-    return "Data confirmada";
-  }
-
-  if (
-    s === "Dia de Execução Serviço" ||
-    sLower.includes("dia de execução") ||
-    sLower.includes("dia da execução") ||
-    sLower.includes("dia de execucao")
-  ) {
-    return "Dia de Execução Serviço";
-  }
-
-  if (
-    s === "Técnico a caminho" ||
-    sLower.includes("técnico a caminho") ||
-    sLower.includes("tecnico a caminho") ||
-    sLower.includes("deslocamento") ||
-    sLower.includes("a caminho")
-  ) {
-    return "Técnico a caminho";
-  }
-
-  if (
-    s === "Em execução" ||
-    s === "Em Execução" ||
-    sLower.includes("execução") ||
-    sLower.includes("execucao") ||
-    sLower.includes("andamento")
-  ) {
-    return "Em execução";
-  }
-
-  if (
-    s === "Serviço Concluído" ||
-    s === "Serviço concluído" ||
-    sLower.includes("concluído") ||
-    sLower.includes("concluido") ||
-    sLower.includes("finalizado")
-  ) {
-    return "Serviço Concluído";
-  }
-
-  if (sLower.includes("cancelad")) {
-    return s.includes("Cliente") ? "Cancelada pelo Cliente" : "Cancelado";
   }
 
   return "Confirmação de Data";
@@ -186,14 +208,86 @@ export function isTodayOrPast(dateStr?: string): boolean {
  * Resolves the effective status taking into account whether today is the execution day
  */
 export function getEffectiveOSStatus(order: any): StandardOSStatus {
-  const normalized = normalizeOSStatus(order?.status);
+  if (!order) return "Confirmação de Data";
 
-  // If status is "Data confirmada", check if today has arrived
-  if (normalized === "Data confirmada") {
-    const targetDate = order?.dataConfirmada || order?.dataAgendada;
+  // 1. Cancellation check
+  if (
+    order.canceladoEm ||
+    order.status === "Cancelada pelo Cliente" ||
+    order.status === "Cancelado" ||
+    order.etapaExecucao === "cancelado"
+  ) {
+    return order.status === "Cancelada pelo Cliente" ? "Cancelada pelo Cliente" : "Cancelado";
+  }
+
+  // 2. Concluded check
+  if (
+    order.concluidoEm ||
+    order.assinaturaEm ||
+    order.termoAssinado ||
+    order.etapaExecucao === "concluido" ||
+    order.status === "Serviço Concluído" ||
+    order.status === "Serviço concluído" ||
+    normalizeOSStatus(order.status) === "Serviço Concluído"
+  ) {
+    return "Serviço Concluído";
+  }
+
+  // 3. In execution check (physical arrival, initial/final inspection photos, work in progress, waiting signature)
+  const etapa = order.etapaExecucao || "";
+  const inExecEtapas = ["fotos_antes", "em_execucao", "fotos_depois", "aguardando_assinatura"];
+  if (
+    inExecEtapas.includes(etapa) ||
+    order.inicioTrabalhoEm ||
+    order.fotosAntesEm ||
+    (Array.isArray(order.fotosAntes) && order.fotosAntes.length > 0) ||
+    order.chegadaEm
+  ) {
+    return "Em execução";
+  }
+
+  // 4. Technician on the way / displacement check
+  if (
+    etapa === "deslocamento" ||
+    order.deslocamentoInicioEm ||
+    order.status === "Em Deslocamento" ||
+    order.status === "Técnico a caminho"
+  ) {
+    return "Técnico a caminho";
+  }
+
+  // 5. Check latest entry in historicoStatus if available
+  if (Array.isArray(order.historicoStatus) && order.historicoStatus.length > 0) {
+    const lastEvent = order.historicoStatus[order.historicoStatus.length - 1];
+    if (lastEvent?.status) {
+      const normalizedLast = normalizeOSStatus(lastEvent.status);
+      if (
+        normalizedLast === "Em execução" ||
+        normalizedLast === "Técnico a caminho" ||
+        normalizedLast === "Serviço Concluído"
+      ) {
+        return normalizedLast;
+      }
+    }
+  }
+
+  // 6. Check order.status normalized
+  const normalized = normalizeOSStatus(order?.status);
+  if (
+    normalized === "Em execução" ||
+    normalized === "Técnico a caminho" ||
+    normalized === "Serviço Concluído"
+  ) {
+    return normalized;
+  }
+
+  // 7. Check if date confirmed or execution day has arrived
+  if (normalized === "Data confirmada" || order.dataConfirmada || order.dataAgendada) {
+    const targetDate = order.dataConfirmada || order.dataAgendada;
     if (targetDate && isTodayOrPast(targetDate)) {
       return "Dia de Execução Serviço";
     }
+    return "Data confirmada";
   }
 
   return normalized;

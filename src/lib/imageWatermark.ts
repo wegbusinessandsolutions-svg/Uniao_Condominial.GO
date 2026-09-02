@@ -119,6 +119,14 @@ export function dataURLtoFile(dataUrl: string, filename: string): File {
  */
 function loadImage(input: File | Blob | string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
+    let resolved = false;
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        reject(new Error("Timeout ao carregar imagem para marca d'água."));
+      }
+    }, 8000);
+
     const img = new Image();
 
     // Set crossOrigin only for external string URLs to avoid tainting canvas.
@@ -127,20 +135,47 @@ function loadImage(input: File | Blob | string): Promise<HTMLImageElement> {
       img.crossOrigin = "anonymous";
     }
 
-    img.onload = () => resolve(img);
-    img.onerror = (err) => reject(new Error(`Falha ao carregar imagem: ${err}`));
-
     if (typeof input === "string") {
+      img.onload = () => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          resolve(img);
+        }
+      };
+      img.onerror = (err) => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          reject(new Error(`Falha ao carregar imagem: ${err}`));
+        }
+      };
       img.src = input;
     } else if (input instanceof Blob) {
       const url = URL.createObjectURL(input);
       img.onload = () => {
-        URL.revokeObjectURL(url);
-        resolve(img);
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          URL.revokeObjectURL(url);
+          resolve(img);
+        }
+      };
+      img.onerror = (err) => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          URL.revokeObjectURL(url);
+          reject(new Error(`Falha ao decodificar imagem da câmera/arquivo: ${err}`));
+        }
       };
       img.src = url;
     } else {
-      reject(new Error("Formato de imagem inválido para processamento."));
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timer);
+        reject(new Error("Formato de imagem inválido para processamento."));
+      }
     }
   });
 }

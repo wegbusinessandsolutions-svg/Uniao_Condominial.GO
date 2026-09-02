@@ -27,15 +27,31 @@ const DB_VERSION = 1;
 const STORE_NAME = "pending_photos";
 const ORDER_CACHE_STORE = "cached_orders";
 
+let cachedDbPromise: Promise<IDBDatabase> | null = null;
+
 /**
- * Initializes and opens the IndexedDB database
+ * Initializes and opens the IndexedDB database with safety timeout and connection reuse
  */
 function openIndexedDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    if (typeof window === "undefined" || !window.indexedDB) {
-      reject(new Error("IndexedDB não suportado neste navegador."));
-      return;
-    }
+  if (typeof window === "undefined" || !window.indexedDB) {
+    return Promise.reject(new Error("IndexedDB não suportado neste navegador."));
+  }
+
+  if (cachedDbPromise) {
+    return cachedDbPromise;
+  }
+
+  cachedDbPromise = new Promise<IDBDatabase>((resolve, reject) => {
+    let resolved = false;
+
+    // Safety timeout to prevent hanging the entire app if IDB is blocked
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        cachedDbPromise = null;
+        reject(new Error("Timeout ao inicializar o banco IndexedDB local."));
+      }
+    }, 4000);
 
     try {
       const request = window.indexedDB.open(DB_NAME, DB_VERSION);
@@ -57,27 +73,121 @@ function openIndexedDB(): Promise<IDBDatabase> {
         }
       };
 
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          const db = request.result;
+          db.onversionchange = () => {
+            db.close();
+            cachedDbPromise = null;
+          };
+          db.onclose = () => {
+            cachedDbPromise = null;
+          };
+          resolve(db);
+        }
+      };
+
+      request.onerror = () => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          cachedDbPromise = null;
+          reject(request.error || new Error("Erro desconhecido ao abrir IndexedDB."));
+        }
+      };
+
+      request.onblocked = () => {
+        console.warn("Abertura do IndexedDB bloqueada por outra aba ou transação pendente.");
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          cachedDbPromise = null;
+          reject(new Error("IndexedDB bloqueado."));
+        }
+      };
     } catch (error) {
-      reject(error);
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timer);
+        cachedDbPromise = null;
+        reject(error);
+      }
     }
   });
+
+  return cachedDbPromise;
 }
 
 /**
- * Saves or updates a photo in the IndexedDB offline cache
+ * Saves or updates a photo in the IndexedDB offline cache.
+ * Designed to never hang the caller: incorporates safety timeouts and graceful fallbacks.
  */
 export async function savePhotoToIndexedDB(photo: CachedServicePhoto): Promise<void> {
-  const db = await openIndexedDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    const request = store.put(photo);
+  try {
+    const db = await openIndexedDB();
+    return new Promise((resolve) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          console.warn("Timeout de 3s ao salvar no cache IndexedDB, liberando fluxo.");
+          resolve();
+        }
+      }, 3000);
 
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+      try {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.put(photo);
+
+        tx.oncomplete = () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve();
+          }
+        };
+
+        tx.onerror = () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            console.warn("Erro na transação de foto IndexedDB:", tx.error);
+            resolve();
+          }
+        };
+
+        tx.onabort = () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            console.warn("Transação de foto IndexedDB abortada.");
+            resolve();
+          }
+        };
+
+        request.onerror = () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            console.warn("Erro no request store.put:", request.error);
+            resolve();
+          }
+        };
+      } catch (txErr) {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          console.warn("Falha ao iniciar transação no IndexedDB:", txErr);
+          resolve();
+        }
+      }
+    });
+  } catch (err) {
+    console.warn("savePhotoToIndexedDB aviso (cache offline não disponível):", err);
+  }
 }
 
 /**
@@ -87,42 +197,113 @@ export async function getPhotosFromIndexedDB(
   orderId: string,
   fase?: "antes" | "depois"
 ): Promise<CachedServicePhoto[]> {
-  const db = await openIndexedDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readonly");
-    const store = tx.objectStore(STORE_NAME);
-    const request = store.getAll();
+  try {
+    const db = await openIndexedDB();
+    return new Promise((resolve) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          resolve([]);
+        }
+      }, 3000);
 
-    request.onsuccess = () => {
-      let results: CachedServicePhoto[] = request.result || [];
-      if (orderId) {
-        results = results.filter((p) => p.orderId === orderId);
-      }
-      if (fase) {
-        results = results.filter((p) => p.fase === fase);
-      }
-      // Sort strictly by slotIndex (0, 1, 2...) to preserve chronological sequence
-      results.sort((a, b) => a.slotIndex - b.slotIndex);
-      resolve(results);
-    };
+      try {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.getAll();
 
-    request.onerror = () => reject(request.error);
-  });
+        request.onsuccess = () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            let results: CachedServicePhoto[] = request.result || [];
+            if (orderId) {
+              results = results.filter((p) => p.orderId === orderId);
+            }
+            if (fase) {
+              results = results.filter((p) => p.fase === fase);
+            }
+            // Sort strictly by slotIndex (0, 1, 2...) to preserve chronological sequence
+            results.sort((a, b) => a.slotIndex - b.slotIndex);
+            resolve(results);
+          }
+        };
+
+        request.onerror = () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve([]);
+          }
+        };
+      } catch {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          resolve([]);
+        }
+      }
+    });
+  } catch {
+    return [];
+  }
 }
 
 /**
  * Removes a photo from IndexedDB by its ID
  */
 export async function removePhotoFromIndexedDB(photoId: string): Promise<void> {
-  const db = await openIndexedDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    const request = store.delete(photoId);
+  try {
+    const db = await openIndexedDB();
+    return new Promise((resolve) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          resolve();
+        }
+      }, 3000);
 
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+      try {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.delete(photoId);
+
+        tx.oncomplete = () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve();
+          }
+        };
+
+        tx.onerror = () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve();
+          }
+        };
+
+        request.onerror = () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve();
+          }
+        };
+      } catch {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          resolve();
+        }
+      }
+    });
+  } catch {
+    // Ignora erro
+  }
 }
 
 /**

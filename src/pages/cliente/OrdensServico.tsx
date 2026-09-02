@@ -435,13 +435,13 @@ export default function MinhasOrdensServico() {
   if (!profile) return null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-6 overflow-x-hidden">
       {/* Header */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md">
+      <div className="bg-white rounded-3xl p-4 sm:p-8 shadow-md w-full overflow-hidden">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <div className="w-9 h-9 rounded-2xl bg-sky-50 text-sky-700 flex items-center justify-center font-medium text-sm shadow-xs">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <div className="w-9 h-9 rounded-2xl bg-sky-50 text-sky-700 flex items-center justify-center font-medium text-sm shadow-xs shrink-0">
                 <Wrench size={18} />
               </div>
               <h1 className="text-xl sm:text-2xl font-medium text-slate-900">Minhas Ordens de Serviço</h1>
@@ -451,7 +451,7 @@ export default function MinhasOrdensServico() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-50 px-4 py-2.5 rounded-2xl text-xs text-slate-600 font-medium self-stretch sm:self-auto justify-between sm:justify-start shadow-xs">
+          <div className="flex items-center gap-2 bg-slate-50 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs text-slate-600 font-medium self-stretch sm:self-auto justify-between sm:justify-start shadow-xs shrink-0">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               Sincronização em tempo real
@@ -463,7 +463,7 @@ export default function MinhasOrdensServico() {
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-5 mt-4 no-scrollbar">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 pt-4 mt-2 w-full max-w-full no-scrollbar">
           <button
             onClick={() => setStatusFilter("todos")}
             className={`px-4 py-2 rounded-2xl text-xs font-medium transition-all shrink-0 cursor-pointer ${
@@ -529,12 +529,12 @@ export default function MinhasOrdensServico() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-3xl shadow-md">
+        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-3xl shadow-md w-full">
           <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-[#0071e3] mb-3"></div>
           <p className="text-xs font-medium text-slate-500">Carregando ordens de serviço...</p>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-5 w-full min-w-0">
           {filteredOrdens.map((o) => {
             const cancelInfo = getCancelEligibility(o);
             const deleteInfo = getDeleteEligibility(o);
@@ -547,21 +547,21 @@ export default function MinhasOrdensServico() {
             return (
               <div
                 key={o.id}
-                className="bg-white p-6 sm:p-7 rounded-3xl shadow-md hover:shadow-lg transition-all flex flex-col space-y-4 relative overflow-hidden"
+                className="bg-white p-4 sm:p-7 rounded-3xl shadow-md hover:shadow-lg transition-all flex flex-col space-y-4 relative overflow-hidden w-full max-w-full min-w-0"
               >
                 {/* Top Bar: OS Number, Date and Status Badge */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2">
-                  <div className="space-y-1">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 w-full min-w-0">
+                  <div className="space-y-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono text-xs sm:text-sm font-medium text-slate-900 bg-slate-100 px-3 py-1 rounded-xl shadow-xs">
                         {osNumber}
                       </span>
                       <span className="text-xs text-slate-400">•</span>
-                      <span className="text-xs text-slate-500 font-normal">
+                      <span className="text-xs text-slate-500 font-normal truncate">
                         Solicitado em: {createdDate ? createdDate.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : '—'}
                       </span>
                     </div>
-                    <h3 className="font-medium text-base sm:text-lg text-slate-900 pt-0.5">
+                    <h3 className="font-medium text-base sm:text-lg text-slate-900 pt-0.5 break-words">
                       {o.servicoNome || o.itens?.[0]?.nome || "Serviço Condominial"}
                     </h3>
                   </div>
@@ -580,24 +580,24 @@ export default function MinhasOrdensServico() {
                 </div>
 
                 {/* Service Tracking Timeline Component */}
-                <div className="pt-1">
+                <div className="pt-1 w-full min-w-0">
                   <ServiceTrackingTimeline order={o} defaultExpanded={false} />
                 </div>
 
                 {/* Items Breakdown if present */}
                 {o.itens && Array.isArray(o.itens) && o.itens.length > 0 && (
-                  <div className="bg-slate-50 p-4 rounded-3xl space-y-2.5 shadow-xs">
+                  <div className="bg-slate-50 p-3 sm:p-4 rounded-3xl space-y-2.5 shadow-xs w-full overflow-hidden">
                     <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
                       Serviços Inclusos na O.S.
                     </span>
                     <div className="space-y-2">
                       {o.itens.map((item: any, idx: number) => (
-                        <div key={idx} className="p-2.5 bg-white rounded-2xl flex justify-between items-center text-xs shadow-xs">
-                          <span className="font-medium text-slate-800 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3]"></span>
-                            {item.quantidade}x {item.nome}
+                        <div key={idx} className="p-2.5 bg-white rounded-2xl flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 text-xs shadow-xs min-w-0">
+                          <span className="font-medium text-slate-800 flex items-center gap-1.5 break-words min-w-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0071e3] shrink-0"></span>
+                            <span>{item.quantidade}x {item.nome}</span>
                           </span>
-                          <span className="font-medium text-slate-700">
+                          <span className="font-medium text-slate-700 shrink-0 self-end sm:self-auto">
                             R$ {formatCurrency(parsePrice(item.subtotal || parsePrice(item.valorUnitario) * item.quantidade))}
                           </span>
                         </div>
@@ -661,8 +661,8 @@ export default function MinhasOrdensServico() {
                 </div>
 
                 {/* Footer with total price & cancel/delete buttons */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3">
-                  <div className="space-y-0.5">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 w-full min-w-0 border-t border-slate-100 mt-2">
+                  <div className="space-y-0.5 min-w-0">
                     {o.cashbackUsado && parsePrice(o.cashbackUsado) > 0 ? (
                       <>
                         <div className="text-[11px] text-slate-500 font-normal">
@@ -689,16 +689,16 @@ export default function MinhasOrdensServico() {
                   </div>
 
                   {/* Actions (Cancel / Delete if eligible) */}
-                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start sm:justify-end">
                     {cancelInfo.canCancel && (
-                      <div className="flex flex-col items-end gap-1 w-full sm:w-auto">
+                      <div className="flex flex-col items-stretch sm:items-end gap-1 w-full sm:w-auto">
                         <button
                           onClick={() => handleOpenCancelModal(o)}
                           className="w-full sm:w-auto px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium rounded-2xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
                         >
                           <XCircle size={15} /> Cancelar Ordem de Serviço
                         </button>
-                        <span className="text-[10px] text-slate-500 font-normal flex items-center gap-1">
+                        <span className="text-[10px] text-slate-500 font-normal flex items-center gap-1 justify-center sm:justify-end">
                           <Clock size={11} className={cancelInfo.is24hRule ? "text-red-500" : "text-amber-600"} /> 
                           {cancelInfo.badgeText || (cancelInfo.is24hRule ? "Sem alteração há +24h" : `Restam ${cancelInfo.timeLeftFormatted} para cancelar`)}
                         </span>
@@ -706,7 +706,7 @@ export default function MinhasOrdensServico() {
                     )}
 
                     {deleteInfo.canDelete && (
-                      <div className="flex flex-col items-end gap-1 w-full sm:w-auto">
+                      <div className="flex flex-col items-stretch sm:items-end gap-1 w-full sm:w-auto">
                         <button
                           onClick={() => {
                             setSelectedOrderToDelete(o);
@@ -716,7 +716,7 @@ export default function MinhasOrdensServico() {
                         >
                           <Trash2 size={15} /> Excluir Ordem de Serviço
                         </button>
-                        <span className="text-[10px] text-slate-500 font-normal flex items-center gap-1">
+                        <span className="text-[10px] text-slate-500 font-normal flex items-center gap-1 justify-center sm:justify-end">
                           <Clock size={11} className="text-slate-400" /> Sem alteração de status há +24h
                         </span>
                       </div>
@@ -745,10 +745,10 @@ export default function MinhasOrdensServico() {
 
       {/* Cancellation Modal */}
       {selectedOrderToCancel && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 my-auto">
             {/* Modal Header */}
-            <div className="px-6 py-5 bg-slate-50 flex justify-between items-center shadow-xs">
+            <div className="px-5 py-4 sm:px-6 sm:py-5 bg-slate-50 flex justify-between items-center shadow-xs">
               <div className="flex items-center gap-2 text-rose-700 font-medium text-base">
                 <AlertCircle size={20} />
                 <span>Cancelar Ordem de Serviço</span>
@@ -762,9 +762,9 @@ export default function MinhasOrdensServico() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-4">
-              <div className="bg-slate-50 rounded-2xl p-4 text-xs text-slate-700 space-y-1 shadow-xs">
-                <div className="flex justify-between items-center">
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="bg-slate-50 rounded-2xl p-3.5 sm:p-4 text-xs text-slate-700 space-y-1 shadow-xs">
+                <div className="flex justify-between items-center flex-wrap gap-1">
                   <span className="font-medium text-slate-900">OS Nº {selectedOrderToCancel.numeroOS || selectedOrderToCancel.id?.slice(0, 8)}</span>
                   <span className={`font-medium flex items-center gap-1 px-2.5 py-0.5 rounded-xl shadow-xs ${
                     getCancelEligibility(selectedOrderToCancel).is24hRule 
@@ -777,7 +777,7 @@ export default function MinhasOrdensServico() {
                       : `${getCancelEligibility(selectedOrderToCancel).timeLeftFormatted} restantes`}
                   </span>
                 </div>
-                <p className="font-medium text-slate-800">{selectedOrderToCancel.servicoNome}</p>
+                <p className="font-medium text-slate-800 break-words">{selectedOrderToCancel.servicoNome}</p>
                 <p className="text-slate-500 font-normal">
                   Valor: R$ {formatCurrency(parsePrice(selectedOrderToCancel.valor))}
                 </p>
@@ -808,12 +808,12 @@ export default function MinhasOrdensServico() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 bg-slate-50 flex flex-col sm:flex-row justify-end gap-2.5 shadow-xs">
+            <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-slate-50 flex flex-col-reverse sm:flex-row justify-end gap-2.5 shadow-xs">
               <button
                 type="button"
                 onClick={() => setSelectedOrderToCancel(null)}
                 disabled={isCancelling}
-                className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium rounded-2xl transition-colors shadow-xs cursor-pointer"
+                className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium rounded-2xl transition-colors shadow-xs cursor-pointer text-center"
               >
                 Manter Ordem de Serviço
               </button>
@@ -842,10 +842,10 @@ export default function MinhasOrdensServico() {
 
       {/* Deletion Modal */}
       {selectedOrderToDelete && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 my-auto">
             {/* Modal Header */}
-            <div className="px-6 py-5 bg-slate-50 flex justify-between items-center shadow-xs">
+            <div className="px-5 py-4 sm:px-6 sm:py-5 bg-slate-50 flex justify-between items-center shadow-xs">
               <div className="flex items-center gap-2 text-red-700 font-medium text-base">
                 <Trash2 size={20} />
                 <span>Excluir Ordem de Serviço</span>
@@ -859,22 +859,22 @@ export default function MinhasOrdensServico() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-4">
-              <div className="bg-slate-50 rounded-2xl p-4 text-xs text-slate-700 space-y-1 shadow-xs">
-                <div className="flex justify-between items-center">
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="bg-slate-50 rounded-2xl p-3.5 sm:p-4 text-xs text-slate-700 space-y-1 shadow-xs">
+                <div className="flex justify-between items-center flex-wrap gap-1">
                   <span className="font-medium text-slate-900">OS Nº {selectedOrderToDelete.numeroOS || selectedOrderToDelete.id?.slice(0, 8)}</span>
                   <span className="text-red-700 font-medium flex items-center gap-1 bg-red-50 px-2.5 py-0.5 rounded-xl shadow-xs">
                     <Clock size={12} />
                     Sem alteração há +24h
                   </span>
                 </div>
-                <p className="font-medium text-slate-800">{selectedOrderToDelete.servicoNome}</p>
+                <p className="font-medium text-slate-800 break-words">{selectedOrderToDelete.servicoNome}</p>
                 <p className="text-slate-500 font-normal">
                   Valor: R$ {formatCurrency(parsePrice(selectedOrderToDelete.valor))}
                 </p>
               </div>
 
-              <div className="bg-amber-50 rounded-2xl p-4 text-xs text-amber-900 space-y-1 shadow-xs">
+              <div className="bg-amber-50 rounded-2xl p-3.5 sm:p-4 text-xs text-amber-900 space-y-1 shadow-xs">
                 <p className="font-medium">Atenção:</p>
                 <p className="font-normal">
                   Esta solicitação permaneceu com o status <span className="font-medium">'Aguardando confirmação - Data'</span> por mais de 24 horas sem alteração de status. Ao confirmar, a ordem de serviço será permanentemente excluída do aplicativo.
@@ -890,12 +890,12 @@ export default function MinhasOrdensServico() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 bg-slate-50 flex flex-col sm:flex-row justify-end gap-2.5 shadow-xs">
+            <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-slate-50 flex flex-col-reverse sm:flex-row justify-end gap-2.5 shadow-xs">
               <button
                 type="button"
                 onClick={() => setSelectedOrderToDelete(null)}
                 disabled={isDeleting}
-                className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium rounded-2xl transition-colors shadow-xs cursor-pointer"
+                className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium rounded-2xl transition-colors shadow-xs cursor-pointer text-center"
               >
                 Cancelar
               </button>

@@ -140,7 +140,7 @@ export default function ServiceTrackingTimeline({
 
       {/* Linear Stepper Cards / Progression */}
       {!isCancelled && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full min-w-0">
           {STANDARD_OS_STEPS.map((step, idx) => {
             const { isCompleted, isCurrent, isPending } = getStepState(idx, step.key);
             const stepLog = getStepLog(step.key);
@@ -148,7 +148,7 @@ export default function ServiceTrackingTimeline({
             return (
               <div
                 key={step.key}
-                className={`p-3 rounded-2xl border transition-all flex flex-col justify-between ${
+                className={`p-2.5 sm:p-3 rounded-2xl border transition-all flex flex-col justify-between min-w-0 overflow-hidden ${
                   isCompleted
                     ? "bg-emerald-50/70 border-emerald-200 text-emerald-950"
                     : isCurrent
@@ -156,11 +156,11 @@ export default function ServiceTrackingTimeline({
                     : "bg-slate-50 border-slate-200 text-slate-400"
                 }`}
               >
-                <div>
+                <div className="min-w-0">
                   {/* Step Header with Icon and Number */}
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
+                  <div className="flex items-center justify-between gap-1 mb-1.5 flex-wrap">
                     <span
-                      className={`w-5 h-5 rounded-full text-[10px] font-extrabold flex items-center justify-center ${
+                      className={`w-5 h-5 rounded-full text-[10px] font-extrabold flex items-center justify-center shrink-0 ${
                         isCompleted
                           ? "bg-emerald-600 text-white"
                           : isCurrent
@@ -172,7 +172,7 @@ export default function ServiceTrackingTimeline({
                     </span>
 
                     <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                      className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md truncate ${
                         isCompleted
                           ? "bg-emerald-100 text-emerald-800"
                           : isCurrent
@@ -186,7 +186,7 @@ export default function ServiceTrackingTimeline({
 
                   {/* Title */}
                   <h4
-                    className={`text-xs font-bold leading-tight ${
+                    className={`text-xs font-bold leading-tight break-words ${
                       isCompleted ? "text-emerald-950" : isCurrent ? "text-blue-950" : "text-slate-500"
                     }`}
                   >
@@ -195,13 +195,13 @@ export default function ServiceTrackingTimeline({
                 </div>
 
                 {/* Recorded Timestamp */}
-                <div className="pt-2 mt-2 border-t border-slate-200/60 text-[10px]">
+                <div className="pt-2 mt-2 border-t border-slate-200/60 text-[10px] min-w-0">
                   {stepLog ? (
-                    <span className="font-semibold block text-slate-700">
+                    <span className="font-semibold block text-slate-700 truncate">
                       {formatDateTimeBR(stepLog.dataHora)}
                     </span>
                   ) : (
-                    <span className="text-slate-400 italic">Pendente</span>
+                    <span className="text-slate-400 italic block truncate">Pendente</span>
                   )}
                 </div>
               </div>

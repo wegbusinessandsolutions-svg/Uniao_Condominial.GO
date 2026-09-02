@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { 
   Plus, Edit2, Trash2, Send, X, Phone, User, Building2, 
   CheckCircle2, FileText, AlertCircle, Contact, BookUser
@@ -12,6 +13,7 @@ import { db } from "../../lib/firebase";
 
 export default function MeusContatos() {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [contatos, setContatos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -38,8 +40,10 @@ export default function MeusContatos() {
     "Encanador",
     "Jardineiro",
     "Outros",
+    "Pinturas",
     "Portão Eletrônico",
-  ].sort((a, b) => a.localeCompare(b));
+    "Reformas e Pequenos Reparos",
+  ].sort((a, b) => a.localeCompare(b, "pt-BR"));
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -142,37 +146,68 @@ export default function MeusContatos() {
     if (window.confirm("Deseja realmente excluir este contato?")) {
       try {
         await deleteDoc(doc(db, "cliente_contatos", id));
-      } catch (e) {
+        addToast({
+          title: "Contato excluído",
+          message: "O contato foi removido com sucesso.",
+          type: "info"
+        });
+      } catch (e: any) {
         console.error("Erro ao excluir contato", e);
-        alert("Erro ao excluir contato");
+        addToast({
+          title: "Erro ao excluir",
+          message: "Não foi possível excluir o contato: " + (e?.message || "Tente novamente"),
+          type: "error"
+        });
       }
     }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.uid) return;
+    if (!user?.uid) {
+      addToast({
+        title: "Sessão expirada",
+        message: "Faça login para salvar seus contatos.",
+        type: "error"
+      });
+      return;
+    }
     setSaving(true);
     
     try {
       const payload = {
         ...formData,
         clienteId: user.uid,
+        clienteEmail: user.email || "",
         updatedAt: serverTimestamp()
       };
 
       if (editingId) {
         await updateDoc(doc(db, "cliente_contatos", editingId), payload);
+        addToast({
+          title: "Contato atualizado",
+          message: "Contato atualizado com sucesso!",
+          type: "success"
+        });
       } else {
         await addDoc(collection(db, "cliente_contatos"), {
           ...payload,
           createdAt: serverTimestamp()
         });
+        addToast({
+          title: "Contato salvo",
+          message: "Novo contato cadastrado com sucesso!",
+          type: "success"
+        });
       }
       setShowModal(false);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Erro ao salvar:", e);
-      alert("Erro ao salvar o contato.");
+      addToast({
+        title: "Erro ao salvar contato",
+        message: e?.message || "Ocorreu um erro ao salvar o contato. Verifique sua conexão.",
+        type: "error"
+      });
     } finally {
       setSaving(false);
     }
@@ -201,20 +236,20 @@ ${contato.observacoes || "Nenhuma observação."}`;
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
-            <BookUser className="text-blue-600" size={32} />
-            Meus Contatos
+    <div className="w-full max-w-6xl mx-auto px-1 sm:px-4 lg:px-6 space-y-6 overflow-x-hidden min-w-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 min-w-0">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-2 sm:gap-3 break-words">
+            <BookUser className="text-blue-600 shrink-0" size={28} />
+            <span className="truncate">Meus Contatos</span>
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-sm sm:text-base text-slate-500 mt-1 font-normal break-words">
             Cadastre os contatos e prestadores de serviço do seu condomínio.
           </p>
         </div>
         <button
           onClick={openModalNew}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-sm"
+          className="w-full sm:w-auto justify-center bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-sm shrink-0"
         >
           <Plus size={20} />
           <span>Novo Contato</span>
@@ -226,60 +261,60 @@ ${contato.observacoes || "Nenhuma observação."}`;
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
       ) : contatos.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-slate-100 flex flex-col items-center">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-12 text-center shadow-sm border border-slate-100 flex flex-col items-center min-w-0">
           <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mb-4">
             <Contact size={32} />
           </div>
-          <h3 className="text-xl font-medium text-slate-900 mb-2">Nenhum contato cadastrado</h3>
-          <p className="text-slate-500 mb-6 max-w-md">
+          <h3 className="text-lg sm:text-xl font-medium text-slate-900 mb-2">Nenhum contato cadastrado</h3>
+          <p className="text-sm text-slate-500 mb-6 max-w-md font-normal">
             Mantenha a organização do seu condomínio centralizando todos os prestadores de serviço que você utiliza aqui.
           </p>
           <button
             onClick={openModalNew}
-            className="bg-blue-50 text-blue-700 hover:bg-blue-100 px-6 py-2 rounded-xl font-medium transition-colors flex items-center gap-2"
+            className="w-full sm:w-auto justify-center bg-blue-50 text-blue-700 hover:bg-blue-100 px-6 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2"
           >
             <Plus size={20} />
             Adicionar Primeiro Contato
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 min-w-0">
           {contatos.map(contato => (
-            <div key={contato.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all flex flex-col">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0">
-                    <Building2 size={24} />
+            <div key={contato.id} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all flex flex-col min-w-0 overflow-hidden break-words">
+              <div className="flex justify-between items-start mb-4 min-w-0">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-2xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0">
+                    <Building2 size={22} />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900 line-clamp-1" title={contato.nomeEmpresa}>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-slate-900 truncate text-base sm:text-lg" title={contato.nomeEmpresa}>
                       {contato.nomeEmpresa || "Empresa não informada"}
                     </h3>
-                    <div className="flex items-center gap-1.5 text-sm text-slate-500 mt-0.5">
-                      <User size={14} />
-                      <span className="line-clamp-1" title={contato.nomeContato}>{contato.nomeContato || "Sem nome de contato"}</span>
+                    <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-500 mt-0.5 min-w-0">
+                      <User size={14} className="shrink-0" />
+                      <span className="truncate" title={contato.nomeContato}>{contato.nomeContato || "Sem nome de contato"}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3 mb-6 flex-grow">
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Phone size={16} className="text-slate-400 shrink-0" />
-                  <span>{contato.telefone || "Sem telefone"}</span>
+              <div className="space-y-3 mb-6 flex-grow min-w-0">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 min-w-0">
+                  <Phone size={15} className="text-slate-400 shrink-0" />
+                  <span className="truncate break-all">{contato.telefone || "Sem telefone"}</span>
                 </div>
                 
                 {contato.especialidades && contato.especialidades.length > 0 && (
-                  <div className="pt-2">
-                    <p className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">Especialidades</p>
-                    <div className="flex flex-wrap gap-1.5">
+                  <div className="pt-2 min-w-0">
+                    <p className="text-[11px] sm:text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide">Especialidades</p>
+                    <div className="flex flex-wrap gap-1.5 min-w-0">
                       {contato.especialidades.slice(0, 3).map((esp: string) => (
-                        <span key={esp} className="bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-lg text-xs font-medium border border-blue-100">
+                        <span key={esp} className="bg-blue-50 text-blue-700 px-2 sm:px-2.5 py-0.5 rounded-lg text-xs font-medium border border-blue-100 truncate max-w-full">
                           {esp}
                         </span>
                       ))}
                       {contato.especialidades.length > 3 && (
-                        <span className="bg-slate-50 text-slate-600 px-2 py-0.5 rounded-lg text-xs font-medium border border-slate-200">
+                        <span className="bg-slate-50 text-slate-600 px-2 py-0.5 rounded-lg text-xs font-medium border border-slate-200 shrink-0">
                           +{contato.especialidades.length - 3}
                         </span>
                       )}
@@ -288,24 +323,24 @@ ${contato.observacoes || "Nenhuma observação."}`;
                 )}
               </div>
 
-              <div className="flex items-center gap-2 pt-4 border-t border-slate-100 mt-auto">
+              <div className="flex items-center gap-2 pt-4 border-t border-slate-100 mt-auto min-w-0">
                 <button
                   onClick={() => handleWhatsApp(contato)}
-                  className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 py-2 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-green-200/50"
+                  className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-2 border border-green-200/50 truncate min-w-0"
                 >
-                  <Send size={16} />
-                  WhatsApp
+                  <Send size={15} className="shrink-0" />
+                  <span className="truncate">WhatsApp</span>
                 </button>
                 <button
                   onClick={() => openModalEdit(contato)}
-                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border border-transparent hover:border-blue-100"
+                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border border-transparent hover:border-blue-100 shrink-0"
                   title="Editar Contato"
                 >
                   <Edit2 size={18} />
                 </button>
                 <button
                   onClick={() => handleDelete(contato.id)}
-                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100"
+                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100 shrink-0"
                   title="Excluir Contato"
                 >
                   <Trash2 size={18} />
@@ -318,25 +353,25 @@ ${contato.observacoes || "Nenhuma observação."}`;
 
       {/* Modal Include/Edit */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden my-8 relative flex flex-col max-h-[90vh]">
-            <div className="p-6 sm:p-8 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10 shrink-0">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto overflow-x-hidden">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden my-auto sm:my-8 relative flex flex-col max-h-[92vh] min-w-0">
+            <div className="p-4 sm:p-6 sm:p-8 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10 shrink-0 min-w-0">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 flex items-center gap-2 sm:gap-3 truncate">
                 {editingId ? "Editar Contato" : "Novo Contato"}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-2 rounded-full transition-colors"
+                className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-2 rounded-full transition-colors shrink-0"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-hidden">
-              <div className="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleSave} className="flex flex-col flex-1 overflow-hidden min-w-0">
+              <div className="p-4 sm:p-6 sm:p-8 space-y-4 sm:space-y-6 overflow-y-auto overflow-x-hidden flex-1 min-w-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
                       Nome da Empresa / M.E.I.
                     </label>
                     <input
@@ -346,11 +381,11 @@ ${contato.observacoes || "Nenhuma observação."}`;
                       onChange={handleChange}
                       required
                       placeholder="Ex: EletroGomes Serviços"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
                       C.N.P.J. ou C.P.F.
                     </label>
                     <input
@@ -359,14 +394,14 @@ ${contato.observacoes || "Nenhuma observação."}`;
                       value={formData.cnpjCpf}
                       onChange={handleChange}
                       placeholder="00.000.000/0000-00 ou 000.000.000-00"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
                       Nome do Contato
                     </label>
                     <input
@@ -376,11 +411,11 @@ ${contato.observacoes || "Nenhuma observação."}`;
                       onChange={handleChange}
                       required
                       placeholder="Ex: João Silva"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
                       Telefone (WhatsApp)
                     </label>
                     <input
@@ -390,16 +425,16 @@ ${contato.observacoes || "Nenhuma observação."}`;
                       onChange={handleChange}
                       required
                       placeholder="(00) 00000-0000"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2">
                     Atendimento de urgência ou fora de expediente?
                   </label>
-                  <div className="flex flex-wrap gap-4">
+                  <div className="flex flex-wrap gap-3 sm:gap-4">
                     {["Sim", "Não", "Não se Aplica"].map(opt => (
                       <label key={opt} className="flex items-center gap-2 cursor-pointer group">
                         <div className="relative flex items-center justify-center">
@@ -421,7 +456,7 @@ ${contato.observacoes || "Nenhuma observação."}`;
                             )}
                           </div>
                         </div>
-                        <span className={`text-sm ${formData.atendimentoUrgencia === opt ? 'font-medium text-slate-900' : 'text-slate-600'}`}>
+                        <span className={`text-xs sm:text-sm ${formData.atendimentoUrgencia === opt ? 'font-medium text-slate-900' : 'text-slate-600'}`}>
                           {opt}
                         </span>
                       </label>
@@ -430,22 +465,22 @@ ${contato.observacoes || "Nenhuma observação."}`;
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-3">
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-2.5">
                     Especialidades Atendidas
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
                     {especialidadesOpcoes.map(esp => {
                       const isChecked = formData.especialidades.includes(esp);
                       return (
                         <label 
                           key={esp}
-                          className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                          className={`flex items-start gap-2.5 p-2.5 sm:p-3 rounded-xl border cursor-pointer transition-colors ${
                             isChecked 
                               ? 'border-blue-600 bg-blue-50/50' 
                               : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                           }`}
                         >
-                          <div className="mt-0.5 relative flex items-center justify-center">
+                          <div className="mt-0.5 relative flex items-center justify-center shrink-0">
                             <input
                               type="checkbox"
                               checked={isChecked}
@@ -458,7 +493,7 @@ ${contato.observacoes || "Nenhuma observação."}`;
                               {isChecked && <CheckCircle2 size={14} className="text-white" />}
                             </div>
                           </div>
-                          <span className={`text-sm select-none ${isChecked ? 'font-medium text-slate-900' : 'text-slate-600'}`}>
+                          <span className={`text-xs sm:text-sm select-none break-words ${isChecked ? 'font-medium text-slate-900' : 'text-slate-600'}`}>
                             {esp}
                           </span>
                         </label>
@@ -468,7 +503,7 @@ ${contato.observacoes || "Nenhuma observação."}`;
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5">
                     Observações
                   </label>
                   <textarea
@@ -477,23 +512,23 @@ ${contato.observacoes || "Nenhuma observação."}`;
                     onChange={handleChange}
                     rows={4}
                     placeholder="Informações adicionais sobre o prestador..."
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors resize-none"
+                    className="w-full px-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors resize-none text-xs sm:text-sm"
                   />
                 </div>
               </div>
 
-              <div className="p-6 sm:p-8 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
+              <div className="p-4 sm:p-6 sm:p-8 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 shrink-0 min-w-0">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-6 py-2.5 text-slate-600 hover:bg-slate-200 font-medium rounded-xl transition-colors"
+                  className="w-full sm:w-auto px-6 py-2.5 text-slate-600 hover:bg-slate-200 font-medium rounded-xl transition-colors text-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-sm"
+                  className="w-full sm:w-auto justify-center bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-8 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-sm text-sm"
                 >
                   {saving ? (
                     <>
@@ -502,7 +537,7 @@ ${contato.observacoes || "Nenhuma observação."}`;
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 size={20} />
+                      <CheckCircle2 size={18} />
                       <span>Salvar Contato</span>
                     </>
                   )}

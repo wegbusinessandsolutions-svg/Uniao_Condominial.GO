@@ -356,9 +356,35 @@
         "uf": { "type": "string" }
       },
       "required": ["razaoSocial"]
+    },
+    "cliente_contatos": {
+      "title": "Contatos e Prestadores de Serviço do Cliente",
+      "description": "Lista de contatos, empresas e prestadores de serviços cadastrados pelo cliente/condomínio",
+      "type": "object",
+      "properties": {
+        "clienteId": { "type": "string" },
+        "clienteEmail": { "type": "string" },
+        "nomeEmpresa": { "type": "string" },
+        "cnpjCpf": { "type": "string" },
+        "nomeContato": { "type": "string" },
+        "telefone": { "type": "string" },
+        "atendimentoUrgencia": { "type": "string", "enum": ["Sim", "Não", "Não se Aplica"] },
+        "especialidades": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "observacoes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clienteId", "nomeContato", "telefone"]
     }
   },
   "firestore": {
+    "cliente_contatos/{contatoId}": {
+      "schema": "cliente_contatos",
+      "description": "Coleção de contatos e prestadores de serviços cadastrados por cada cliente ou condomínio"
+    },
     "config_empresa/{empresaId}": {
       "schema": "config_empresa",
       "description": "Coleção de configurações e cadastro das empresas franqueadas"

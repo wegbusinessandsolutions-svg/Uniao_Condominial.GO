@@ -237,6 +237,12 @@ service cloud.firestore {
     }
 
     // Bloqueia qualquer coleção não prevista explicitamente acima
+    match /cliente_contatos/{id} {
+      allow read: if isStaff() || (isSignedIn() && (resource == null || resource.data.get('clienteId', '') == request.auth.uid || (resource.data.get('clienteEmail', '') != '' && request.auth.token.email != null && resource.data.get('clienteEmail', '') == request.auth.token.email)));
+      allow create: if isSignedIn();
+      allow update, delete: if isStaff() || (isSignedIn() && (resource.data.get('clienteId', '') == request.auth.uid || (resource.data.get('clienteEmail', '') != '' && request.auth.token.email != null && resource.data.get('clienteEmail', '') == request.auth.token.email)));
+    }
+
     match /afiliados_uc/{id} { 
       allow read, update: if true; 
       allow create: if isSignedIn(); 

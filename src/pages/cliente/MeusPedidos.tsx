@@ -712,22 +712,22 @@ export default function MeusPedidos() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+    <div className="w-full max-w-5xl mx-auto px-1 sm:px-4 space-y-6 pb-12 overflow-x-hidden min-w-0">
       {/* Header */}
-      <div className="bg-white rounded-3xl shadow-md overflow-hidden">
-        <div className="p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-50 via-white to-sky-50/30">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#0071e3] text-white flex items-center justify-center shadow-md shrink-0">
-              <ShoppingBag className="w-6 h-6" />
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-md overflow-hidden min-w-0">
+        <div className="p-4 sm:p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-50 via-white to-sky-50/30 min-w-0">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-2xl bg-[#0071e3] text-white flex items-center justify-center shadow-md shrink-0">
+              <ShoppingBag className="w-5 sm:w-6 h-5 sm:h-6" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-normal text-slate-900 tracking-tight">Meus Pedidos</h1>
-                <span className="bg-blue-100 text-[#0071e3] text-xs font-medium px-2.5 py-0.5 rounded-full">
+                <h1 className="text-xl sm:text-2xl font-normal text-slate-900 tracking-tight truncate">Meus Pedidos</h1>
+                <span className="bg-blue-100 text-[#0071e3] text-xs font-medium px-2.5 py-0.5 rounded-full shrink-0">
                   {pedidos.length}
                 </span>
               </div>
-              <p className="text-sm text-slate-500 mt-1 font-normal">
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-normal break-words">
                 Consulte itens comprados, valores de frete, método de pagamento e histórico de entregas.
               </p>
             </div>
@@ -735,7 +735,7 @@ export default function MeusPedidos() {
 
           <Link 
             to="/produtos"
-            className="inline-flex items-center justify-center gap-2 bg-[#0071e3] hover:bg-[#005bb5] text-white text-xs sm:text-sm font-medium px-5 py-2.5 rounded-2xl shadow-md transition-all active:scale-95 shrink-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#0071e3] hover:bg-[#005bb5] text-white text-xs sm:text-sm font-medium px-5 py-2.5 rounded-2xl shadow-md transition-all active:scale-95 shrink-0"
           >
             <ShoppingBag size={15} />
             Novo Pedido
@@ -743,7 +743,7 @@ export default function MeusPedidos() {
         </div>
 
         {/* Real-time Order Notification Status & Live Simulator Bar */}
-        <div className="px-6 py-3.5 bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-emerald-50/60 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+        <div className="px-4 sm:px-6 py-3.5 bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-emerald-50/60 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs min-w-0 overflow-x-hidden">
           <div className="flex items-center gap-2.5 text-slate-700">
             <div className="w-7 h-7 rounded-xl bg-blue-600/10 text-[#0071e3] flex items-center justify-center shrink-0">
               <Bell size={15} className="animate-pulse" />
@@ -805,8 +805,8 @@ export default function MeusPedidos() {
         </div>
 
         {/* Search & Filter Bar */}
-        <div className="p-4 sm:p-6 bg-slate-50/60 flex flex-col md:flex-row gap-3">
-          <div className="relative flex-1">
+        <div className="p-3.5 sm:p-4 md:p-6 bg-slate-50/60 flex flex-col md:flex-row gap-3 min-w-0 overflow-x-hidden">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
@@ -825,7 +825,7 @@ export default function MeusPedidos() {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 md:pb-0 scrollbar-none max-w-full">
             {[
               { id: "todos", label: "Todos" },
               { id: "aguardando", label: "Aguardando" },
@@ -883,7 +883,7 @@ export default function MeusPedidos() {
               const totalQtdItens = itensList.reduce((acc: number, item: any) => acc + getItemQuantity(item), 0);
 
               return (
-                <div key={pedido.firebaseId} className="p-5 sm:p-6 rounded-3xl bg-white shadow-md hover:shadow-lg transition-all space-y-4">
+                <div key={pedido.firebaseId} className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white shadow-md hover:shadow-lg transition-all space-y-4 overflow-hidden min-w-0">
                   {/* Order Main Header */}
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     {/* Left: Identifier, Date, Status */}
@@ -1203,11 +1203,11 @@ export default function MeusPedidos() {
           DETAILED ORDER MODAL (Modal Completo de Detalhes do Pedido)
           ============================================================ */}
       {selectedPedidoModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-scale-up">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-2.5 sm:p-4 overflow-y-auto overflow-x-hidden animate-fadeIn">
+          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-scale-up min-w-0">
             
             {/* Modal Header */}
-            <div className="p-6 md:p-8 flex justify-between items-center bg-gradient-to-r from-slate-50 to-sky-50/40">
+            <div className="p-4 sm:p-6 md:p-8 flex justify-between items-center bg-gradient-to-r from-slate-50 to-sky-50/40 min-w-0">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-[#0071e3] text-white rounded-2xl shadow-md">
                   <FileText size={20} />
@@ -1245,7 +1245,7 @@ export default function MeusPedidos() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 md:p-8 overflow-y-auto space-y-6 text-slate-700">
+            <div className="p-4 sm:p-6 md:p-8 overflow-y-auto overflow-x-hidden space-y-6 text-slate-700 min-w-0">
               
               {/* Section 1: Itens Comprados */}
               <div className="space-y-3">
@@ -1574,7 +1574,7 @@ export default function MeusPedidos() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-5 md:p-6 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
+            <div className="p-4 sm:p-5 md:p-6 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50 min-w-0">
               <button
                 onClick={() => setSelectedPedidoModal(null)}
                 className="px-4 py-2.5 rounded-2xl bg-slate-100 text-xs font-medium text-slate-600 hover:bg-slate-200 transition-all cursor-pointer shadow-xs"

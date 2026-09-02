@@ -118,7 +118,7 @@ export default function CustomerLayout() {
   ].filter(item => menuConfig[item.key] !== false);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row relative">
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row relative w-full overflow-x-hidden">
       {/* Header móvel */}
       <header className="md:hidden bg-white shadow-sm h-16 flex items-center justify-between px-4 sticky top-0 z-40 w-full shrink-0">
         <button
@@ -291,8 +291,8 @@ export default function CustomerLayout() {
         </div>
       </aside>
 
-      <main ref={mainRef} className="flex-1 py-4 px-2 sm:px-4 md:px-6 flex flex-col justify-between min-w-0">
-        <div className="w-[98%] max-w-[98%] mx-auto flex-1">
+      <main ref={mainRef} className="flex-1 py-4 px-2 sm:px-4 md:px-6 flex flex-col justify-between min-w-0 w-full max-w-full overflow-x-hidden">
+        <div className="w-full max-w-full mx-auto flex-1 min-w-0 overflow-x-hidden">
           <ClientAfiliacaoAlert />
           <Outlet />
         </div>

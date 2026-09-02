@@ -159,18 +159,35 @@ export default function PhotoUploadStep({
     };
   }, [refreshCacheStatus, triggerSequentialSync]);
 
-  // Process image with permanent Timemark / Foto 100% Real watermark
+  // Process image with permanent Timemark / Foto 100% Real watermark with fallback
   const processImageFile = async (file: File, captureDate: Date = new Date()): Promise<string> => {
-    const result = await applyDateTimeWatermark(file, {
-      captureDate,
-      maxDimension: 1440,
-      quality: 0.88,
-      includeSeconds: false,
-      nomeCondominio,
-      enderecoCompleto,
-      style: "timemark_real",
-    });
-    return result.dataUrl;
+    try {
+      const watermarkPromise = applyDateTimeWatermark(file, {
+        captureDate,
+        maxDimension: 1440,
+        quality: 0.88,
+        includeSeconds: false,
+        nomeCondominio,
+        enderecoCompleto,
+        style: "timemark_real",
+      });
+
+      // 10s maximum processing budget
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout ao estampar marca d'água")), 10000)
+      );
+
+      const result = await Promise.race([watermarkPromise, timeoutPromise]);
+      return result.dataUrl;
+    } catch (wmErr) {
+      console.warn("Processamento de marca d'água demorou ou falhou, lendo arquivo diretamente:", wmErr);
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Falha ao ler arquivo de fotografia."));
+        reader.readAsDataURL(file);
+      });
+    }
   };
 
   const handleTriggerUpload = (slotIndex: number) => {
@@ -190,11 +207,11 @@ export default function PhotoUploadStep({
     try {
       const captureTime = new Date();
       const nowIso = captureTime.toISOString();
-      const watermarkedBase64 = await processImageFile(file, captureTime);
       const targetSlot = currentSlotIndex !== null ? currentSlotIndex : photos.length;
       const photoId = `photo_${Date.now()}_slot${targetSlot}_${Math.random().toString(36).substring(2, 7)}`;
 
-      const finalUrl = watermarkedBase64;
+      // Fast image processing
+      const finalUrl = await processImageFile(file, captureTime);
 
       const newPhoto: ServicePhoto = {
         id: photoId,
@@ -204,24 +221,7 @@ export default function PhotoUploadStep({
         legenda: `Foto ${targetSlot + 1} - ${fase === "antes" ? "Estado Inicial" : "Serviço Concluído"}`,
       };
 
-      // Guaranteed storage into IndexedDB Cache with exact sequence index
-      if (orderId) {
-        const cachedItem: CachedServicePhoto = {
-          id: photoId,
-          orderId,
-          fase,
-          slotIndex: targetSlot,
-          url: finalUrl,
-          legenda: newPhoto.legenda,
-          tiradaEm: nowIso,
-          status: "pending_upload",
-          createdAt: nowIso,
-        };
-        await savePhotoToIndexedDB(cachedItem);
-        setCachedPhotoIds((prev) => new Set([...prev, photoId]));
-      }
-
-      // Update React State maintaining exact slot positioning
+      // 1. Update React State maintaining exact slot positioning IMMEDIATELY
       const updated = [...photos];
       if (targetSlot < updated.length) {
         updated[targetSlot] = newPhoto;
@@ -234,13 +234,41 @@ export default function PhotoUploadStep({
 
       onChangePhotos(updated);
 
-      // Trigger background sequential sync asynchronously without blocking UI
+      // Stop image processing spinner immediately so technician sees the photo
+      setIsProcessingImage(false);
+
+      // 2. Guaranteed background storage into IndexedDB Cache (non-blocking)
+      if (orderId) {
+        const cachedItem: CachedServicePhoto = {
+          id: photoId,
+          orderId,
+          fase,
+          slotIndex: targetSlot,
+          url: finalUrl,
+          legenda: newPhoto.legenda,
+          tiradaEm: nowIso,
+          status: "pending_upload",
+          createdAt: nowIso,
+        };
+
+        savePhotoToIndexedDB(cachedItem)
+          .then(() => {
+            setCachedPhotoIds((prev) => new Set([...prev, photoId]));
+          })
+          .catch((idbErr) => {
+            console.warn("Aviso ao salvar no IndexedDB:", idbErr);
+          });
+      }
+
+      // 3. Trigger background sequential sync asynchronously without blocking UI
       if (isOnline && orderId) {
-        triggerSequentialSync();
+        setTimeout(() => {
+          triggerSequentialSync();
+        }, 100);
       }
     } catch (err) {
-      console.error("Erro ao processar imagem com marca d'água:", err);
-      alert("Não foi possível processar esta foto. Tente novamente.");
+      console.error("Erro ao processar imagem da câmera/upload:", err);
+      alert("Não foi possível carregar a imagem. Por favor, tente novamente.");
     } finally {
       setIsProcessingImage(false);
       setCurrentSlotIndex(null);
