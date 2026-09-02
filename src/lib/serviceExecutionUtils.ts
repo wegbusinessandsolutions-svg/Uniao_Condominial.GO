@@ -4,6 +4,9 @@
  */
 
 import { RoutineServiceOrder, ServiceExecutionStep } from "../types/serviceExecution";
+import { formatDateTimeBR } from "./dateUtils";
+
+export { formatDateTimeBR };
 
 /**
  * Formats minutes into human-readable duration (e.g., "1h 35min" or "45min")
@@ -25,47 +28,43 @@ export function formatMinutes(minutes?: number | null): string {
 }
 
 /**
- * Calculates duration in minutes between two ISO date strings
+ * Calculates duration in minutes between two ISO date strings or Timestamps
  */
-export function calculateMinutesBetween(startIso?: string, endIso?: string): number {
+export function calculateMinutesBetween(startIso?: any, endIso?: any): number {
   if (!startIso || !endIso) return 0;
-  const start = new Date(startIso).getTime();
-  const end = new Date(endIso).getTime();
-  if (isNaN(start) || isNaN(end) || end < start) return 0;
+  const getMs = (val: any) => {
+    if (typeof val === "object" && typeof val?.seconds === "number") return val.seconds * 1000;
+    if (typeof val === "object" && typeof val?.toDate === "function") return val.toDate().getTime();
+    if (val instanceof Date) return val.getTime();
+    const t = new Date(val).getTime();
+    return isNaN(t) ? 0 : t;
+  };
+  const start = getMs(startIso);
+  const end = getMs(endIso);
+  if (!start || !end || end < start) return 0;
   return Math.round((end - start) / (1000 * 60));
 }
 
 /**
  * Formats time from ISO string to HH:mm (e.g. "14:32")
  */
-export function formatTimeHM(isoString?: string): string {
+export function formatTimeHM(isoString?: any): string {
   if (!isoString) return "--:--";
   try {
-    const d = new Date(isoString);
+    let d: Date;
+    if (typeof isoString === "object" && typeof isoString?.seconds === "number") {
+      d = new Date(isoString.seconds * 1000);
+    } else if (typeof isoString === "object" && typeof isoString?.toDate === "function") {
+      d = isoString.toDate();
+    } else if (isoString instanceof Date) {
+      d = isoString;
+    } else {
+      d = new Date(isoString);
+    }
     if (isNaN(d.getTime())) return "--:--";
     return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   } catch {
     return "--:--";
-  }
-}
-
-/**
- * Formats datetime from ISO string to DD/MM/YYYY HH:mm
- */
-export function formatDateTimeBR(isoString?: string): string {
-  if (!isoString) return "—";
-  try {
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return "—";
-    return d.toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return "—";
   }
 }
 

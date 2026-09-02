@@ -89,6 +89,7 @@ const ComercialComissoes = lazy(() => import("./pages/comercial/Comissoes"));
 const ControleAfiliados = lazy(() => import("./pages/comercial/ControleAfiliados"));
 const ComercialCodigosIndicacao = lazy(() => import("./pages/comercial/CodigosIndicacao"));
 const ComercialCalculadora = lazy(() => import("./pages/comercial/CalculadoraPrecos"));
+const AgendaServicos = lazy(() => import("./pages/comercial/AgendaServicos"));
 const ExpedicaoDashboard = lazy(() => import("./pages/expedicao/Dashboard"));
 const Entregas = lazy(() => import("./pages/expedicao/Entregas"));
 const ExpedicaoPedidosOnline = lazy(() => import("./pages/expedicao/PedidosOnline"));
@@ -543,6 +544,8 @@ export default function App() {
               />
               <Route path="servicos" element={<ServicosEssenciaisAdmin />} />
               <Route path="ordens-servico" element={<OrdensServicoAdmin />} />
+              <Route path="agenda" element={<AgendaServicos />} />
+              <Route path="agenda-servicos" element={<AgendaServicos />} />
             </Route>
 
             <Route path="entrega-mercadorias" element={<EntregadorDashboard />} />

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+  const blob = new Blob(["abc"], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => console.log("loaded");
+  img.onerror = (e) => console.log("error", e);
+  img.src = url;
+</script>
+</body>
+</html>

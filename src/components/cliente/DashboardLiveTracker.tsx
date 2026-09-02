@@ -11,6 +11,7 @@ import { db } from "../../lib/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { CONFIG } from "../../lib/ecommerceFlow";
 import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
+import { getEffectiveOSStatus, STANDARD_OS_STEPS } from "../../lib/serviceStatusWorkflow";
 
 interface DashboardLiveTrackerProps {
   isAfiliado?: boolean;
@@ -254,65 +255,82 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
   };
 
   // Status mapping for service orders
-  const getOSStatusInfo = (rawStatus: string) => {
-    const sLower = (rawStatus || "").toLowerCase();
-    if (sLower.includes("aguardando") || sLower.includes("solicitado") || sLower.includes("pendente") || sLower === "novo") {
+  const getOSStatusInfo = (order: any) => {
+    const rawStatus = getEffectiveOSStatus(order);
+    
+    // Find index in STANDARD_OS_STEPS
+    const stepIndex = STANDARD_OS_STEPS.findIndex(s => s.key === rawStatus);
+    const step = stepIndex >= 0 ? stepIndex + 1 : 1;
+    
+    // Status visual customization
+    if (rawStatus === "Cancelada pelo Cliente" || rawStatus === "Cancelado") {
       return {
-        label: "Aguardando confirmação - Data",
-        step: 1,
-        badgeBg: "bg-amber-50 text-amber-900 shadow-2xs",
-        icon: <Clock size={14} className="text-amber-600 animate-pulse" />,
-        desc: "Solicitação recebida com data de preferência. Aguardando confirmação da data.",
+        label: "Cancelada",
+        step: 0,
+        badgeBg: "bg-rose-50 text-rose-700 shadow-2xs",
+        icon: <AlertCircle size={14} className="text-rose-600" />,
+        desc: "Ordem de serviço cancelada a pedido do condomínio.",
+      };
+    }
+    
+    if (rawStatus === "Serviço Concluído") {
+      return {
+        label: "Serviço Concluído",
+        step: 6,
+        badgeBg: "bg-emerald-50 text-emerald-800 shadow-2xs",
+        icon: <CheckCircle2 size={14} className="text-emerald-600" />,
+        desc: "Ordem de serviço finalizada com termo de entrega e garantia.",
+      };
+    }
+    
+    if (rawStatus === "Em execução") {
+      return {
+        label: "Em Execução",
+        step: 5,
+        badgeBg: "bg-amber-50 text-amber-800 shadow-2xs",
+        icon: <Wrench size={14} className="text-amber-600 animate-pulse" />,
+        desc: "Técnicos executando os serviços solicitados nas dependências.",
+      };
+    }
+    
+    if (rawStatus === "Técnico a caminho") {
+      return {
+        label: "Técnico a Caminho",
+        step: 4,
+        badgeBg: "bg-sky-50 text-sky-800 shadow-2xs",
+        icon: <Truck size={14} className="text-sky-600 animate-bounce" />,
+        desc: "Equipe técnica está a caminho do seu condomínio.",
       };
     }
 
-    switch (rawStatus) {
-      case "Confirmada a Visita":
-      case "Agendado":
-      case "Em Análise":
-        return {
-          label: "Visita Agendada",
-          step: 2,
-          badgeBg: "bg-sky-50 text-sky-700 shadow-2xs",
-          icon: <Calendar size={14} className="text-sky-600" />,
-          desc: "Data confirmada para visita técnica e execução no condomínio.",
-        };
-      case "Em Execução":
-      case "Em Andamento":
-        return {
-          label: "Em Execução",
-          step: 3,
-          badgeBg: "bg-amber-50 text-amber-800 shadow-2xs",
-          icon: <Wrench size={14} className="text-amber-600" />,
-          desc: "Técnicos executando os serviços solicitados nas dependências.",
-        };
-      case "Serviço Concluído":
-      case "Finalizado":
-        return {
-          label: "Serviço Concluído",
-          step: 4,
-          badgeBg: "bg-emerald-50 text-emerald-800 shadow-2xs",
-          icon: <CheckCircle2 size={14} className="text-emerald-600" />,
-          desc: "Ordem de serviço finalizada com termo de entrega e garantia.",
-        };
-      case "Cancelada pelo Cliente":
-      case "Cancelado":
-        return {
-          label: "Cancelada",
-          step: 0,
-          badgeBg: "bg-rose-50 text-rose-700 shadow-2xs",
-          icon: <AlertCircle size={14} className="text-rose-600" />,
-          desc: "Ordem de serviço cancelada a pedido do condomínio.",
-        };
-      default:
-        return {
-          label: rawStatus || "Em Análise",
-          step: 1,
-          badgeBg: "bg-slate-100 text-slate-700 shadow-2xs",
-          icon: <FileText size={14} />,
-          desc: "Em processamento com o departamento comercial.",
-        };
+    if (rawStatus === "Dia de Execução Serviço") {
+      return {
+        label: "Dia de Execução",
+        step: 3,
+        badgeBg: "bg-blue-50 text-blue-800 shadow-2xs",
+        icon: <Wrench size={14} className="text-blue-600" />,
+        desc: "O serviço está programado para ser executado hoje.",
+      };
     }
+    
+    if (rawStatus === "Data confirmada") {
+      return {
+        label: "Visita Agendada",
+        step: 2,
+        badgeBg: "bg-blue-50 text-blue-700 shadow-2xs",
+        icon: <Calendar size={14} className="text-blue-600" />,
+        desc: "Data confirmada para visita técnica e execução no condomínio.",
+      };
+    }
+
+    // Default: Confirmação de Data
+    return {
+      label: "Aguardando Confirmação",
+      step: 1,
+      badgeBg: "bg-amber-50 text-amber-900 shadow-2xs",
+      icon: <Clock size={14} className="text-amber-600 animate-pulse" />,
+      desc: "Solicitação recebida com data de preferência. Aguardando confirmação da equipe.",
+    };
   };
 
   // Helper robusto para converter qualquer formato de número ou moeda para number
@@ -922,18 +940,21 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                               Progresso do Atendimento:
                             </span>
                             <span className="text-xs font-normal text-sky-700">
-                              {statusInfo.step === 4 ? "Concluído" : `Etapa ${statusInfo.step} de 3`}
+                              {statusInfo.step === 6 ? "Concluído" : `Etapa ${statusInfo.step} de 6`}
                             </span>
                           </div>
 
-                          {/* 3-Step Progress Bar */}
-                          <div className="grid grid-cols-3 gap-1.5 mb-2">
+                          {/* 6-Step Progress Bar */}
+                          <div className="grid grid-cols-6 gap-1.5 mb-2">
                             {[
-                              { step: 1, label: "Solicitação" },
-                              { step: 2, label: "Agendamento" },
-                              { step: 3, label: "Execução" },
+                              { step: 1, label: "Conf. Data" },
+                              { step: 2, label: "Agendado" },
+                              { step: 3, label: "Dia Exec." },
+                              { step: 4, label: "A Caminho" },
+                              { step: 5, label: "Em Exec." },
+                              { step: 6, label: "Concluído" },
                             ].map((s) => {
-                              const isCompleted = statusInfo.step >= s.step || statusInfo.step === 4;
+                              const isCompleted = statusInfo.step >= s.step || statusInfo.step === 6;
                               const isCurrent = statusInfo.step === s.step;
 
                               return (
@@ -946,9 +967,10 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
                                     } ${isCurrent ? "animate-pulse" : ""}`}
                                   />
                                   <span
-                                    className={`text-[10px] font-normal block text-center truncate ${
+                                    className={`text-[9px] font-normal block text-center truncate ${
                                       isCompleted ? "text-slate-900" : "text-slate-400"
                                     }`}
+                                    title={s.label}
                                   >
                                     {s.label}
                                   </span>

@@ -120,7 +120,12 @@ export function dataURLtoFile(dataUrl: string, filename: string): File {
 function loadImage(input: File | Blob | string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+
+    // Set crossOrigin only for external string URLs to avoid tainting canvas.
+    // Setting it for Blob/File object URLs can cause loading to fail silently in some browsers (like Safari/iOS).
+    if (typeof input === "string" && (input.startsWith("http://") || input.startsWith("https://"))) {
+      img.crossOrigin = "anonymous";
+    }
 
     img.onload = () => resolve(img);
     img.onerror = (err) => reject(new Error(`Falha ao carregar imagem: ${err}`));

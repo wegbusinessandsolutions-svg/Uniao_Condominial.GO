@@ -25,7 +25,11 @@ import {
   Activity,
   UserCheck,
   Camera,
-  PenTool
+  PenTool,
+  ChevronDown,
+  ChevronUp,
+  History,
+  ArrowRight
 } from "lucide-react";
 import { parseServiceValue, formatCurrencyBR } from "../../lib/serviceUtils";
 import { sendEmailWithLog } from "../../lib/emailService";
@@ -33,12 +37,22 @@ import { DataTableToolbar } from "../../components/common/DataTableToolbar";
 import { StatMetricCard } from "../../components/common/StatMetricCard";
 import { EmptyState } from "../../components/common/EmptyState";
 import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
+import {
+  normalizeOSStatus,
+  getEffectiveOSStatus,
+  appendStatusHistory,
+  getOSStatusVisualInfo,
+  STANDARD_OS_STEPS,
+  isTodayOrPast
+} from "../../lib/serviceStatusWorkflow";
+import ServiceTrackingTimeline from "../../components/servicos/ServiceTrackingTimeline";
 
 export default function OrdensServicoAdmin() {
   const [ordens, setOrdens] = useState<any[]>([]);
   const [usersMap, setUsersMap] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const { profile } = useAuth();
+  const [expandedTimelineId, setExpandedTimelineId] = useState<string | null>(null);
 
   // Admin cancellation state
   const [orderToCancel, setOrderToCancel] = useState<any | null>(null);
@@ -107,7 +121,14 @@ export default function OrdensServicoAdmin() {
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
-      await updateDoc(doc(db, "ordens_servico", id), { status: newStatus });
+      const order = ordens.find(o => o.id === id);
+      const updateData = appendStatusHistory(
+        order,
+        newStatus,
+        `Status atualizado manualmente pelo administrador para "${newStatus}"`,
+        profile?.displayName || profile?.email || "Administrador"
+      );
+      await updateDoc(doc(db, "ordens_servico", id), updateData);
       fetchOrdens();
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
@@ -167,20 +188,9 @@ export default function OrdensServicoAdmin() {
       const docRef = doc(db, "ordens_servico", orderToSchedule.id);
       const isAltered = targetDate !== (orderToSchedule.dataPreferencial || "").substring(0, 10);
 
-      const updatePayload: any = {
-        status: "Confirmada a Visita",
-        dataConfirmada: targetDate,
-        dataAgendada: targetDate,
-        turnoAgendado: selectedTurno,
-        observacoesAgendamento: observacaoAgendamento.trim(),
-        dataAlteradaPorAdmin: isAltered,
-        agendamentoAtualizadoEm: new Date().toISOString(),
-        agendamentoConfirmadoPor: profile?.email || profile?.displayName || "Administrador",
-      };
-
       // Add to audit trail
       const currentLogs = Array.isArray(orderToSchedule.historicoAgendamento) ? orderToSchedule.historicoAgendamento : [];
-      updatePayload.historicoAgendamento = [
+      const updatedScheduleLogs = [
         ...currentLogs,
         {
           dataDefinida: targetDate,
@@ -191,6 +201,23 @@ export default function OrdensServicoAdmin() {
           dataHora: new Date().toISOString()
         }
       ];
+
+      const updatePayload = appendStatusHistory(
+        orderToSchedule,
+        "Data confirmada",
+        `Data confirmada para ${formatDateBR(targetDate)} (${selectedTurno}).${observacaoAgendamento ? ` Obs: ${observacaoAgendamento.trim()}` : ""}`,
+        profile?.displayName || profile?.email || "Administrador",
+        {
+          dataConfirmada: targetDate,
+          dataAgendada: targetDate,
+          turnoAgendado: selectedTurno,
+          observacoesAgendamento: observacaoAgendamento.trim(),
+          dataAlteradaPorAdmin: isAltered,
+          agendamentoAtualizadoEm: new Date().toISOString(),
+          agendamentoConfirmadoPor: profile?.email || profile?.displayName || "Administrador",
+          historicoAgendamento: updatedScheduleLogs
+        }
+      );
 
       await updateDoc(docRef, updatePayload);
 
@@ -311,12 +338,20 @@ export default function OrdensServicoAdmin() {
         }
       }
 
-      await updateDoc(docRef, {
-        status: "Cancelado",
-        motivoCancelamento: motivoCancelamento.trim(),
-        canceladoEm: new Date().toISOString(),
-        canceladoPor: profile?.email || profile?.displayName || "Administrador"
-      });
+      const updatePayload = appendStatusHistory(
+        orderToCancel,
+        "Cancelado",
+        `Cancelamento administrativo. Motivo: ${motivoCancelamento.trim()}`,
+        profile?.displayName || profile?.email || "Administrador",
+        {
+          motivoCancelamento: motivoCancelamento.trim(),
+          canceladoEm: new Date().toISOString(),
+          canceladoPor: profile?.email || profile?.displayName || "Administrador",
+          etapaExecucao: "cancelado"
+        }
+      );
+
+      await updateDoc(docRef, updatePayload);
 
       setOrderToCancel(null);
       setMotivoCancelamento("");
@@ -333,7 +368,8 @@ export default function OrdensServicoAdmin() {
   const scheduledOrdersByDate = useMemo(() => {
     const map: Record<string, any[]> = {};
     ordens.forEach(o => {
-      if (o.status === "Cancelado" || o.status === "Cancelada pelo Cliente") return;
+      const eff = getEffectiveOSStatus(o);
+      if (eff === "Cancelado" || eff === "Cancelada pelo Cliente") return;
       const targetDate = o.dataAgendada || o.dataConfirmada || o.dataPreferencial;
       if (targetDate && /^\d{4}-\d{2}-\d{2}/.test(targetDate)) {
         const key = targetDate.substring(0, 10);
@@ -439,26 +475,22 @@ export default function OrdensServicoAdmin() {
   const kpis = useMemo(() => {
     const total = ordens.length;
     const aguardando = ordens.filter(
-      (o) =>
-        o.status === "Solicitado o Serviço" ||
-        o.status === "Aguardando confirmação - Data" ||
-        o.status === "aguardando confirmação - Equipe União Condominial" ||
-        o.status === "Aguardando Confirmação - Equipe União Condominial" ||
-        o.status === "Pendente" ||
-        !o.status
+      (o) => getEffectiveOSStatus(o) === "Confirmação de Data"
     ).length;
-    const confirmadas = ordens.filter(
-      (o) =>
-        o.status === "Confirmada a Visita" ||
-        o.status === "Agendado" ||
-        o.status === "Visita Agendada" ||
-        o.status === "Em Execução" ||
-        o.status === "Em Andamento"
-    ).length;
-    const concluidas = ordens.filter((o) => o.status === "Serviço Concluído").length;
-    const canceladas = ordens.filter(
-      (o) => o.status === "Cancelada pelo Cliente" || o.status === "Cancelado"
-    ).length;
+    const confirmadas = ordens.filter((o) => {
+      const eff = getEffectiveOSStatus(o);
+      return (
+        eff === "Data confirmada" ||
+        eff === "Dia de Execução Serviço" ||
+        eff === "Técnico a caminho" ||
+        eff === "Em execução"
+      );
+    }).length;
+    const concluidas = ordens.filter((o) => getEffectiveOSStatus(o) === "Serviço Concluído").length;
+    const canceladas = ordens.filter((o) => {
+      const eff = getEffectiveOSStatus(o);
+      return eff === "Cancelado" || eff === "Cancelada pelo Cliente";
+    }).length;
 
     return { total, aguardando, confirmadas, concluidas, canceladas };
   }, [ordens]);
@@ -466,28 +498,22 @@ export default function OrdensServicoAdmin() {
   // Filtered orders list
   const filteredOrdens = useMemo(() => {
     return ordens.filter((o) => {
+      const eff = getEffectiveOSStatus(o);
+
       // Status filter
       if (activeStatusFilter === "aguardando") {
-        const isWaiting =
-          o.status === "Solicitado o Serviço" ||
-          o.status === "Aguardando confirmação - Data" ||
-          o.status === "aguardando confirmação - Equipe União Condominial" ||
-          o.status === "Aguardando Confirmação - Equipe União Condominial" ||
-          o.status === "Pendente" ||
-          !o.status;
-        if (!isWaiting) return false;
+        if (eff !== "Confirmação de Data") return false;
       } else if (activeStatusFilter === "confirmadas") {
-        const isConfirmed =
-          o.status === "Confirmada a Visita" ||
-          o.status === "Agendado" ||
-          o.status === "Visita Agendada" ||
-          o.status === "Em Execução" ||
-          o.status === "Em Andamento";
-        if (!isConfirmed) return false;
+        const isConfirmedOrActive =
+          eff === "Data confirmada" ||
+          eff === "Dia de Execução Serviço" ||
+          eff === "Técnico a caminho" ||
+          eff === "Em execução";
+        if (!isConfirmedOrActive) return false;
       } else if (activeStatusFilter === "concluidas") {
-        if (o.status !== "Serviço Concluído") return false;
+        if (eff !== "Serviço Concluído") return false;
       } else if (activeStatusFilter === "canceladas") {
-        if (o.status !== "Cancelada pelo Cliente" && o.status !== "Cancelado") return false;
+        if (eff !== "Cancelada pelo Cliente" && eff !== "Cancelado") return false;
       }
 
       // Search term filter
@@ -663,17 +689,16 @@ export default function OrdensServicoAdmin() {
       ) : (
         <div className="space-y-4">
           {filteredOrdens.map(o => {
-            const isWaitingSchedule = 
-              o.status === 'Solicitado o Serviço' || 
-              o.status === 'Aguardando confirmação - Data' || 
-              o.status === 'aguardando confirmação - Equipe União Condominial' || 
-              o.status === 'Aguardando Confirmação - Equipe União Condominial' || 
-              o.status === 'Pendente' || 
-              !o.status;
-            
-            const isConfirmed = o.status === 'Confirmada a Visita' || o.status === 'Agendado' || o.status === 'Visita Agendada';
-            const isDone = o.status === 'Serviço Concluído';
-            const isCancelled = o.status === 'Cancelada pelo Cliente' || o.status === 'Cancelado';
+            const effectiveStatus = getEffectiveOSStatus(o);
+            const visual = getOSStatusVisualInfo(effectiveStatus);
+            const isWaitingSchedule = effectiveStatus === "Confirmação de Data";
+            const isDateConfirmed = effectiveStatus === "Data confirmada";
+            const isExecutionDay = effectiveStatus === "Dia de Execução Serviço";
+            const isTechnicianEnRoute = effectiveStatus === "Técnico a caminho";
+            const isInExecution = effectiveStatus === "Em execução";
+            const isDone = effectiveStatus === "Serviço Concluído";
+            const isCancelled = effectiveStatus === "Cancelada pelo Cliente" || effectiveStatus === "Cancelado";
+            const isTimelineOpen = expandedTimelineId === o.id;
 
             return (
               <div
@@ -682,14 +707,10 @@ export default function OrdensServicoAdmin() {
               >
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 dark:border-slate-700 pb-3">
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
                       <span className="text-xs font-mono font-bold text-slate-400">OS Nº: {o.numeroOS || o.id}</span>
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                        isDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 
-                        isConfirmed ? 'bg-sky-100 text-sky-800 border border-sky-200' : 
-                        isCancelled ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-amber-100 text-amber-900 border border-amber-300'
-                      }`}>
-                        {o.status || 'Aguardando confirmação - Data'}
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${visual.badgeBg} ${visual.badgeText} ${visual.badgeBorder}`}>
+                        {effectiveStatus}
                       </span>
                     </div>
                     <h3 className="font-extrabold text-lg text-slate-900 dark:text-white">{o.servicoNome}</h3>
@@ -697,6 +718,21 @@ export default function OrdensServicoAdmin() {
 
                   {/* Status & Schedule action buttons */}
                   <div className="flex flex-wrap gap-2 shrink-0 items-center">
+                    {/* Botão de Histórico / Linha do tempo */}
+                    <button
+                      onClick={() => setExpandedTimelineId(isTimelineOpen ? null : o.id)}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border cursor-pointer ${
+                        isTimelineOpen
+                          ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900"
+                          : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-600"
+                      }`}
+                      title="Ver linha de acompanhamento e auditoria de status"
+                    >
+                      <History size={14} />
+                      <span>Linha do Tempo</span>
+                      {isTimelineOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+
                     {/* Botão Principal: Revisar data de agendamento na agenda */}
                     {isWaitingSchedule && (
                       <button
@@ -704,12 +740,12 @@ export default function OrdensServicoAdmin() {
                         className="bg-[#0071e3] hover:bg-[#0071e3]/90 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
                         title="Abrir agenda para confirmar ou alterar data sugerida pelo cliente"
                       >
-                        <CalendarCheck size={15} /> Revisar data de agendamento
+                        <CalendarCheck size={15} /> Confirmar / Agendar Data
                       </button>
                     )}
 
                     {/* Botão de Alterar Data a qualquer tempo (para OS já confirmada ou ativa) */}
-                    {(isConfirmed || o.status === 'Em Execução' || o.status === 'Em Andamento') && (
+                    {(isDateConfirmed || isExecutionDay) && (
                       <button
                         onClick={() => handleOpenScheduleModal(o)}
                         className="bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
@@ -719,7 +755,48 @@ export default function OrdensServicoAdmin() {
                       </button>
                     )}
 
-                    {isWaitingSchedule && (
+                    {/* Transições manuais de status para o administrador */}
+                    {isDateConfirmed && (
+                      <button
+                        onClick={() => handleStatusChange(o.id, "Dia de Execução Serviço")}
+                        className="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                        title="Avançar status para Dia de Execução de Serviço"
+                      >
+                        <ArrowRight size={14} /> Dia de Execução
+                      </button>
+                    )}
+
+                    {isExecutionDay && (
+                      <button
+                        onClick={() => handleStatusChange(o.id, "Técnico a caminho")}
+                        className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                        title="Sinalizar que técnico está em deslocamento"
+                      >
+                        <ArrowRight size={14} /> Técnico a caminho
+                      </button>
+                    )}
+
+                    {isTechnicianEnRoute && (
+                      <button
+                        onClick={() => handleStatusChange(o.id, "Em execução")}
+                        className="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                        title="Sinalizar que o atendimento começou no local"
+                      >
+                        <ArrowRight size={14} /> Em execução
+                      </button>
+                    )}
+
+                    {isInExecution && (
+                      <button
+                        onClick={() => handleStatusChange(o.id, "Serviço Concluído")}
+                        className="bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 hover:bg-emerald-700 transition-all shadow-xs cursor-pointer"
+                        title="Finalizar ordem e sinalizar conclusão"
+                      >
+                        <CheckCircle size={15} /> Serviço Concluído
+                      </button>
+                    )}
+
+                    {!isDone && !isCancelled && (
                       <button
                         onClick={() => {
                           setOrderToCancel(o);
@@ -732,27 +809,6 @@ export default function OrdensServicoAdmin() {
                       </button>
                     )}
 
-                    {isConfirmed && (
-                      <>
-                        <button
-                          onClick={() => handleStatusChange(o.id, 'Serviço Concluído')}
-                          className="bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 hover:bg-emerald-700 transition-all shadow-xs cursor-pointer"
-                        >
-                          <CheckCircle size={15} /> Sinalizar Serviço Concluído
-                        </button>
-                        <button
-                          onClick={() => {
-                            setOrderToCancel(o);
-                            setMotivoCancelamento("");
-                            setCancelError("");
-                          }}
-                          className="bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 hover:border-rose-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
-                        >
-                          <XCircle size={15} /> Cancelar OS
-                        </button>
-                      </>
-                    )}
-
                     {isDone && (
                       <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
                         <CheckCircle size={15} /> Concluído
@@ -761,7 +817,7 @@ export default function OrdensServicoAdmin() {
 
                     {isCancelled && (
                       <span className="text-xs font-bold text-slate-600 flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
-                        <XCircle size={15} /> {o.status === 'Cancelada pelo Cliente' ? 'Cancelado pelo Cliente' : 'Cancelado (Admin)'}
+                        <XCircle size={15} /> {effectiveStatus === 'Cancelada pelo Cliente' ? 'Cancelado pelo Cliente' : 'Cancelado (Admin)'}
                       </span>
                     )}
                   </div>
@@ -913,8 +969,15 @@ export default function OrdensServicoAdmin() {
                   </div>
                 </div>
 
+                {/* Linha do Tempo e Histórico de Acompanhamento */}
+                {isTimelineOpen && (
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-700/80">
+                    <ServiceTrackingTimeline order={o} />
+                  </div>
+                )}
+
                 <div className="text-[11px] text-slate-400">
-                  Solicitado em: {o.createdAt ? new Date(o.createdAt.seconds * 1000).toLocaleString() : ''}
+                  Solicitado em: {o.createdAt ? formatDateTimeBR(o.createdAt) : '—'}
                 </div>
               </div>
             );

@@ -283,10 +283,14 @@ export default function ServicosEssenciais() {
         return `${estado}${dia}${mes}${hora}${minuto}${numero}`;
       };
 
+      const nowIso = new Date().toISOString();
+      const initialStatus = "Confirmação de Data";
+      const clientName = (profile as any)?.displayName || (profile as any)?.nome || (profile as any)?.razaoSocial || (profile as any)?.nomeCondominio || (profile as any)?.name || profile?.email?.split('@')[0] || "Cliente";
+
       const orderPayload = {
         numeroOS: generateNumeroOS(profile?.endereco?.uf || "GO"),
         clienteId: profile.uid,
-        clienteNome: (profile as any)?.displayName || (profile as any)?.nome || (profile as any)?.razaoSocial || (profile as any)?.nomeCondominio || (profile as any)?.name || profile?.email?.split('@')[0] || "Cliente",
+        clienteNome: clientName,
         clienteEmail: profile.email || "",
         servicoNome: mainServiceName,
         valorOriginal: totalCartValue,
@@ -305,7 +309,18 @@ export default function ServicosEssenciais() {
         }),
         dataPreferencial: dataPreferencial || "A combinar com departamento comercial",
         observacoes: observacoes || "",
-        status: "Aguardando confirmação - Data",
+        status: initialStatus,
+        etapaExecucao: "pendente_atribuicao",
+        statusAtualizadoEm: nowIso,
+        historicoStatus: [
+          {
+            status: initialStatus,
+            dataHora: nowIso,
+            descricao: "Solicitação de serviço cadastrada pelo condomínio. Aguardando confirmação da data de agendamento.",
+            autor: clientName,
+            etapaExecucao: "pendente_atribuicao"
+          }
+        ],
         createdAt: new Date()
       };
 

@@ -30,7 +30,7 @@ import { DataTableToolbar } from "../../components/common/DataTableToolbar";
 import { StatMetricCard } from "../../components/common/StatMetricCard";
 import { EmptyState } from "../../components/common/EmptyState";
 import { Users, UserCheck, UserX, Briefcase } from "lucide-react";
-import { formatDateBR } from "../../lib/dateUtils";
+import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
 
 interface Empregado {
   id?: string;
@@ -1419,9 +1419,7 @@ export default function Empregados() {
                 </td>
                 <td className="px-3 py-2">
                   {(printingItem as any).createdAt
-                    ? new Date((printingItem as any).createdAt).toLocaleString(
-                        "pt-BR",
-                      )
+                    ? formatDateTimeBR((printingItem as any).createdAt)
                     : "—"}
                 </td>
               </tr>
@@ -1431,9 +1429,7 @@ export default function Empregados() {
                 </td>
                 <td className="px-3 py-2">
                   {(printingItem as any).updatedAt
-                    ? new Date((printingItem as any).updatedAt).toLocaleString(
-                        "pt-BR",
-                      )
+                    ? formatDateTimeBR((printingItem as any).updatedAt)
                     : "—"}
                 </td>
               </tr>

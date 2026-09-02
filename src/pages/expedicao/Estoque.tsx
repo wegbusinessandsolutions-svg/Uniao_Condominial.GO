@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { initFirebase } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
+import { formatDateTimeBR } from "../../lib/dateUtils";
 import {
   collection,
   getDocs,
@@ -794,7 +795,7 @@ export default function EstoqueControle() {
                     return (
                       <tr key={mov.id} className="hover:bg-slate-50/60 transition-colors">
                         <td className="px-4 py-3 text-xs text-slate-600">
-                          {mov.createdAt ? new Date(mov.createdAt).toLocaleString("pt-BR") : "—"}
+                          {formatDateTimeBR(mov.createdAt, "—")}
                         </td>
                         <td className="px-4 py-3 font-semibold text-slate-900">
                           {mov.produto}

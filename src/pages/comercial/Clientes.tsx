@@ -5,6 +5,7 @@ import { initFirebase } from "../../lib/firebase";
 import { logAction } from "../../lib/audit";
 import ConfirmDeleteModal from "../../components/ui/ConfirmDeleteModal";
 import { validarCPF, validarCNPJ, formatarCPF, formatarCNPJ, formatarCpfCnpj } from "../../lib/documentValidators";
+import { formatDateBR } from "../../lib/dateUtils";
 
 export default function Clientes() {
   const [data, setData] = useState<any[]>([]);
@@ -222,15 +223,8 @@ export default function Clientes() {
     }
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
-      return new Intl.DateTimeFormat('pt-BR').format(date);
-    } catch {
-      return dateString;
-    }
+  const formatDate = (dateString?: any) => {
+    return formatDateBR(dateString, "-");
   };
 
   const filteredData = data.filter(item => {

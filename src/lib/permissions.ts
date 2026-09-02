@@ -188,6 +188,7 @@ export function getDefaultPermissionsMapForRole(role?: string): PermissionsMap {
 
           // Comercial Submodules
           "Acompanhamento de Venda": true,
+          "Agenda de Serviços": true,
           "Calculadora de Preços": true,
           "Categorias de Produtos": true,
           "Clientes": true,
@@ -247,6 +248,7 @@ export function getDefaultPermissionsMapForRole(role?: string): PermissionsMap {
           "Franqueada - Empresa": true,
           "Comercial": true,
           "Acompanhamento de Venda": true,
+          "Agenda de Serviços": true,
           "Calculadora de Preços": true,
           "Categorias de Produtos": true,
           "Clientes": true,
@@ -273,6 +275,7 @@ export function getDefaultPermissionsMapForRole(role?: string): PermissionsMap {
           "Franqueada - Empresa": true,
           "Comercial": true,
           "Dashboard - Comercial Externo": true,
+          "Agenda de Serviços": true,
           "Visitas ao Cliente": true,
           "Clientes": true,
           "Ordens de Serviço": true,
@@ -331,6 +334,7 @@ export function getDefaultPermissionsMapForRole(role?: string): PermissionsMap {
           "Franqueada - Empresa": true,
           "Comercial": true,
           "Dashboard - Prestador de Serviços": true,
+          "Agenda de Serviços": true,
           "Ordens de Serviço": true,
           "Serviços Condominiais Rotineiros": true,
         },
@@ -373,12 +377,26 @@ export function isUserAuthorizedForPath(pathname: string, role?: string, permiss
   }
 
   if (cleanPath.startsWith("/admin/comercial")) {
+    if (cleanPath.includes("/agenda")) {
+      return [
+        "comercial",
+        "comercial externo",
+        "vendedor externo",
+        "prestador",
+        "prestador de serviços",
+        "prestador de servicos",
+        "prestador de servico",
+        "técnico",
+        "tecnico",
+      ].includes(r);
+    }
     if (r === "comercial externo" || r === "vendedor externo") {
-      // External sales can only access visitas, clientes, ordens-servico
+      // External sales can access visitas, clientes, ordens-servico, agenda
       return (
         cleanPath.includes("/visitas") ||
         cleanPath.includes("/clientes") ||
         cleanPath.includes("/ordens-servico") ||
+        cleanPath.includes("/agenda") ||
         cleanPath.includes("/externo")
       );
     }

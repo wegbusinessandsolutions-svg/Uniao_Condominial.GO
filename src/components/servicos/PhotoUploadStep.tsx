@@ -194,22 +194,7 @@ export default function PhotoUploadStep({
       const targetSlot = currentSlotIndex !== null ? currentSlotIndex : photos.length;
       const photoId = `photo_${Date.now()}_slot${targetSlot}_${Math.random().toString(36).substring(2, 7)}`;
 
-      let finalUrl = watermarkedBase64;
-
-      // 1. If online and orderId is available, upload directly to Firebase Storage
-      if (isOnline && orderId) {
-        try {
-          finalUrl = await uploadServicePhotoToStorage(
-            watermarkedBase64,
-            orderId,
-            fase,
-            targetSlot,
-            photoId
-          );
-        } catch (storageErr) {
-          console.warn("Upload direto para Firebase Storage falhou, usando cache local:", storageErr);
-        }
-      }
+      const finalUrl = watermarkedBase64;
 
       const newPhoto: ServicePhoto = {
         id: photoId,
@@ -219,7 +204,7 @@ export default function PhotoUploadStep({
         legenda: `Foto ${targetSlot + 1} - ${fase === "antes" ? "Estado Inicial" : "Serviço Concluído"}`,
       };
 
-      // 2. Guaranteed storage into IndexedDB Cache with exact sequence index
+      // Guaranteed storage into IndexedDB Cache with exact sequence index
       if (orderId) {
         const cachedItem: CachedServicePhoto = {
           id: photoId,
@@ -229,14 +214,14 @@ export default function PhotoUploadStep({
           url: finalUrl,
           legenda: newPhoto.legenda,
           tiradaEm: nowIso,
-          status: isOnline && finalUrl.startsWith("http") ? "synced" : "pending_upload",
+          status: "pending_upload",
           createdAt: nowIso,
         };
         await savePhotoToIndexedDB(cachedItem);
         setCachedPhotoIds((prev) => new Set([...prev, photoId]));
       }
 
-      // 3. Update React State maintaining exact slot positioning
+      // Update React State maintaining exact slot positioning
       const updated = [...photos];
       if (targetSlot < updated.length) {
         updated[targetSlot] = newPhoto;
@@ -249,8 +234,8 @@ export default function PhotoUploadStep({
 
       onChangePhotos(updated);
 
-      // If pending upload, trigger background sequential sync
-      if (isOnline && orderId && !finalUrl.startsWith("http")) {
+      // Trigger background sequential sync asynchronously without blocking UI
+      if (isOnline && orderId) {
         triggerSequentialSync();
       }
     } catch (err) {
@@ -259,6 +244,9 @@ export default function PhotoUploadStep({
     } finally {
       setIsProcessingImage(false);
       setCurrentSlotIndex(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 

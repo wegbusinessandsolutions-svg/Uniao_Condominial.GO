@@ -47,6 +47,8 @@ import {
   Eye,
   Lock,
   PenTool,
+  CalendarDays,
+  X,
 } from "lucide-react";
 import { exportOrdemServicoPdf } from "../../lib/pdfExport";
 import {
@@ -69,6 +71,16 @@ import SignatureCanvasField from "../../components/servicos/SignatureCanvasField
 import ServiceReportModal from "../../components/servicos/ServiceReportModal";
 import { logAction } from "../../lib/audit";
 import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
+import {
+  normalizeOSStatus,
+  getEffectiveOSStatus,
+  appendStatusHistory,
+  getOSStatusVisualInfo,
+  STANDARD_OS_STEPS,
+  isOSPendingInitialConfirmation,
+  isTodayOrPast,
+} from "../../lib/serviceStatusWorkflow";
+import ServiceTrackingTimeline from "../../components/servicos/ServiceTrackingTimeline";
 
 const getTimestampMs = (val: any): number => {
   if (!val) return 0;
@@ -106,9 +118,20 @@ export default function PrestadorDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [downloadingPdfId, setDownloadingPdfId] = useState<string | null>(null);
 
+  // Date Confirmation & Adjustment Modal
+  const [selectedOrderForDateModal, setSelectedOrderForDateModal] = useState<RoutineServiceOrder | null>(null);
+  const [modalTargetDate, setModalTargetDate] = useState<string>(
+    new Date().toISOString().substring(0, 10)
+  );
+  const [modalTargetTurno, setModalTargetTurno] = useState<string>("Manhã");
+  const [modalObservations, setModalObservations] = useState<string>("");
+
   // Filter & Search states
-  const [filterTab, setFilterTab] = useState<"todas" | "novas" | "deslocamento" | "execucao" | "concluidas">("todas");
+  const [filterTab, setFilterTab] = useState<
+    "todas" | "hoje" | "pendencias_anteriores" | "novas" | "deslocamento" | "execucao" | "concluidas"
+  >("todas");
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandedTimelineId, setExpandedTimelineId] = useState<string | null>(null);
 
   // Offline and Sync Status
   const [isOnline, setIsOnline] = useState<boolean>(
@@ -323,25 +346,55 @@ export default function PrestadorDashboard() {
     let result = myOrders;
 
     // Filter Tab
-    if (filterTab === "novas") {
-      result = result.filter(
-        (o) =>
+    const todayStr = new Date().toISOString().substring(0, 10);
+
+    if (filterTab === "hoje") {
+      result = result.filter((o) => {
+        const eff = getEffectiveOSStatus(o);
+        const d = (o.dataConfirmada || o.dataAgendada || "") as string;
+        const dNorm = d.includes("T") ? d.substring(0, 10) : d;
+        return (
+          dNorm === todayStr &&
+          eff !== "Serviço Concluído" &&
+          eff !== "Cancelada pelo Cliente" &&
+          eff !== "Cancelado"
+        );
+      });
+    } else if (filterTab === "pendencias_anteriores") {
+      result = result.filter((o) => {
+        const eff = getEffectiveOSStatus(o);
+        const d = (o.dataConfirmada || o.dataAgendada || "") as string;
+        const dNorm = d.includes("T") ? d.substring(0, 10) : d;
+        return (
+          dNorm !== "" &&
+          dNorm < todayStr &&
+          eff !== "Serviço Concluído" &&
+          eff !== "Cancelada pelo Cliente" &&
+          eff !== "Cancelado"
+        );
+      });
+    } else if (filterTab === "novas") {
+      result = result.filter((o) => {
+        const eff = getEffectiveOSStatus(o);
+        return ["Confirmação de Data", "Data confirmada", "Dia de Execução Serviço"].includes(eff) ||
           !o.etapaExecucao ||
-          ["pendente_atribuicao", "atribuido", "recebido"].includes(o.etapaExecucao)
-      );
+          ["pendente_atribuicao", "atribuido", "recebido"].includes(o.etapaExecucao);
+      });
     } else if (filterTab === "deslocamento") {
-      result = result.filter((o) => o.etapaExecucao === "deslocamento");
+      result = result.filter((o) => {
+        const eff = getEffectiveOSStatus(o);
+        return eff === "Técnico a caminho" || o.etapaExecucao === "deslocamento";
+      });
     } else if (filterTab === "execucao") {
-      result = result.filter(
-        (o) =>
-          ["fotos_antes", "em_execucao", "fotos_depois", "aguardando_assinatura"].includes(
-            o.etapaExecucao
-          ) && o.status !== "Serviço Concluído"
-      );
+      result = result.filter((o) => {
+        const eff = getEffectiveOSStatus(o);
+        return (eff === "Em execução" || ["fotos_antes", "em_execucao", "fotos_depois", "aguardando_assinatura"].includes(o.etapaExecucao)) && eff !== "Serviço Concluído";
+      });
     } else if (filterTab === "concluidas") {
-      result = result.filter(
-        (o) => o.etapaExecucao === "concluido" || o.status === "Serviço Concluído"
-      );
+      result = result.filter((o) => {
+        const eff = getEffectiveOSStatus(o);
+        return eff === "Serviço Concluído" || o.etapaExecucao === "concluido";
+      });
     }
 
     // Search Term
@@ -363,38 +416,92 @@ export default function PrestadorDashboard() {
   // Find if an order is currently active/in-progress
   const inProgressOrder = useMemo(() => {
     return (
-      myOrders.find(
-        (o) =>
-          o.etapaExecucao &&
-          !["concluido", "cancelado"].includes(o.etapaExecucao) &&
-          o.status !== "Serviço Concluído" &&
-          o.status !== "Cancelada pelo Cliente" &&
-          o.status !== "Cancelado"
-      ) || null
+      myOrders.find((o) => {
+        const eff = getEffectiveOSStatus(o);
+        return (
+          eff !== "Serviço Concluído" &&
+          eff !== "Cancelada pelo Cliente" &&
+          eff !== "Cancelado" &&
+          (eff === "Técnico a caminho" || eff === "Em execução" || (o.etapaExecucao && !["concluido", "cancelado"].includes(o.etapaExecucao)))
+        );
+      }) || null
     );
   }, [myOrders]);
 
   // Counts for KPI pills
   const kpiCounts = useMemo(() => {
-    const novas = myOrders.filter(
-      (o) =>
-        !o.etapaExecucao ||
-        ["pendente_atribuicao", "atribuido", "recebido"].includes(o.etapaExecucao)
-    ).length;
-    const emAndamento = myOrders.filter(
-      (o) =>
-        o.etapaExecucao &&
-        !["concluido", "cancelado", "pendente_atribuicao", "atribuido", "recebido"].includes(
-          o.etapaExecucao
-        ) &&
-        o.status !== "Serviço Concluído"
-    ).length;
-    const concluidas = myOrders.filter(
-      (o) => o.etapaExecucao === "concluido" || o.status === "Serviço Concluído"
-    ).length;
+    const todayStr = new Date().toISOString().substring(0, 10);
+    const hoje = myOrders.filter((o) => {
+      const eff = getEffectiveOSStatus(o);
+      const d = (o.dataConfirmada || o.dataAgendada || "") as string;
+      const dNorm = d.includes("T") ? d.substring(0, 10) : d;
+      return (
+        dNorm === todayStr &&
+        eff !== "Serviço Concluído" &&
+        eff !== "Cancelada pelo Cliente" &&
+        eff !== "Cancelado"
+      );
+    }).length;
 
-    return { total: myOrders.length, novas, emAndamento, concluidas };
+    const pendenciasAnteriores = myOrders.filter((o) => {
+      const eff = getEffectiveOSStatus(o);
+      const d = (o.dataConfirmada || o.dataAgendada || "") as string;
+      const dNorm = d.includes("T") ? d.substring(0, 10) : d;
+      return (
+        dNorm !== "" &&
+        dNorm < todayStr &&
+        eff !== "Serviço Concluído" &&
+        eff !== "Cancelada pelo Cliente" &&
+        eff !== "Cancelado"
+      );
+    }).length;
+
+    const novas = myOrders.filter((o) => {
+      const eff = getEffectiveOSStatus(o);
+      return ["Confirmação de Data", "Data confirmada", "Dia de Execução Serviço"].includes(eff) && !["Técnico a caminho", "Em execução", "Serviço Concluído", "Cancelado"].includes(eff);
+    }).length;
+    const emAndamento = myOrders.filter((o) => {
+      const eff = getEffectiveOSStatus(o);
+      return eff === "Técnico a caminho" || eff === "Em execução" || (o.etapaExecucao && ["deslocamento", "fotos_antes", "em_execucao", "fotos_depois", "aguardando_assinatura"].includes(o.etapaExecucao) && eff !== "Serviço Concluído");
+    }).length;
+    const concluidas = myOrders.filter((o) => {
+      const eff = getEffectiveOSStatus(o);
+      return eff === "Serviço Concluído" || o.etapaExecucao === "concluido";
+    }).length;
+
+    return { total: myOrders.length, hoje, pendenciasAnteriores, novas, emAndamento, concluidas };
   }, [myOrders]);
+
+  // Handler to Confirm or Adjust Service Execution Date
+  const handleConfirmarOuAjustarData = async (
+    orderId: string,
+    targetDate: string,
+    targetTurno?: string,
+    observacoes?: string
+  ) => {
+    const currentOrder = ordens.find((o) => o.id === orderId) || activeOrder;
+    if (!currentOrder) return;
+    const nowIso = new Date().toISOString();
+    const isToday = isTodayOrPast(targetDate);
+    const nextStatus = isToday ? "Dia de Execução Serviço" : "Data confirmada";
+
+    const updates: Partial<RoutineServiceOrder> = {
+      dataAgendada: targetDate,
+      dataConfirmada: targetDate,
+      turnoAgendado: (targetTurno as any) || currentOrder.turnoAgendado || "Manhã",
+      dataConfirmadaEm: nowIso,
+      agendamentoAtualizadoEm: nowIso,
+      agendamentoConfirmadoPor: profile?.displayName || "Colaborador Técnico",
+      etapaExecucao: isToday ? "recebido" : "atribuido",
+      status: nextStatus,
+      ...(observacoes ? { observacoesAgendamento: observacoes } : {}),
+    };
+
+    const desc = `Data ${isToday ? "confirmada para hoje" : `confirmada para ${formatDateBR(targetDate)}`}${targetTurno ? ` (${targetTurno})` : ""}${observacoes ? ` - Obs: ${observacoes}` : ""}.`;
+
+    await updateOrderInDb(orderId, updates, desc);
+    setSelectedOrderForDateModal(null);
+  };
 
   // Open order to execute
   const handleOpenOrder = (order: RoutineServiceOrder) => {
@@ -422,13 +529,27 @@ export default function PrestadorDashboard() {
   };
 
   // Helper to persist order changes
-  const updateOrderInDb = async (orderId: string, updates: Partial<RoutineServiceOrder>) => {
+  const updateOrderInDb = async (orderId: string, rawUpdates: Partial<RoutineServiceOrder>, auditDesc?: string) => {
     setIsSubmitting(true);
     try {
       const currentOrder = ordens.find((o) => o.id === orderId) || activeOrder || {};
+      const technicianName = profile?.displayName || profile?.email || (currentOrder as any).colaboradorNome || "Técnico";
+
+      // If status is being updated, append audit trail via appendStatusHistory
+      let updatesWithHistory: any = { ...rawUpdates };
+      if (rawUpdates.status && rawUpdates.status !== (currentOrder as any).status) {
+        updatesWithHistory = appendStatusHistory(
+          currentOrder,
+          rawUpdates.status,
+          auditDesc || `Status atualizado para "${rawUpdates.status}" pelo técnico`,
+          technicianName,
+          rawUpdates
+        );
+      }
+
       const combined: RoutineServiceOrder = {
         ...(currentOrder as RoutineServiceOrder),
-        ...updates,
+        ...updatesWithHistory,
         id: orderId,
         updatedAt: new Date().toISOString(),
       };
@@ -448,15 +569,15 @@ export default function PrestadorDashboard() {
         try {
           const docRef = doc(db, "ordens_servico", orderId);
           await updateDoc(docRef, {
-            ...updates,
+            ...updatesWithHistory,
             metricasInternas: metrics,
             updatedAt: new Date().toISOString(),
           });
 
           await logAction(
-            `Prestador OS #${orderId.slice(0, 6)}: etapa ${updates.etapaExecucao || updates.status}`,
+            `Prestador OS #${orderId.slice(0, 6)}: etapa ${rawUpdates.etapaExecucao || rawUpdates.status}`,
             "Comercial",
-            { orderId, updates }
+            { orderId, updates: updatesWithHistory }
           );
         } catch (dbErr) {
           console.warn("Atualização Firestore falhou, mantida em IndexedDB:", dbErr);
@@ -469,7 +590,7 @@ export default function PrestadorDashboard() {
     }
   };
 
-  // 1. Marco: Receber e Iniciar Deslocamento ("Se locomover até lá")
+  // 1. Marco: Receber e Iniciar Deslocamento ("Técnico a caminho")
   const handleIniciarDeslocamento = async () => {
     if (!activeOrder) return;
     const nowIso = new Date().toISOString();
@@ -484,10 +605,14 @@ export default function PrestadorDashboard() {
       aceitoEm: activeOrder.aceitoEm || nowIso,
       deslocamentoInicioEm: nowIso,
       etapaExecucao: "deslocamento",
-      status: "Em Deslocamento",
+      status: "Técnico a caminho",
     };
 
-    await updateOrderInDb(activeOrder.id, updates);
+    await updateOrderInDb(
+      activeOrder.id,
+      updates,
+      "Técnico a caminho - Deslocamento iniciado até o condomínio"
+    );
   };
 
   // Navigation Links for GPS
@@ -501,7 +626,7 @@ export default function PrestadorDashboard() {
     }
   };
 
-  // 2. Marco: Chegada no Local e Aceite de Início
+  // 2. Marco: Chegada no Local e Aceite de Início ("Em execução")
   const handleConfirmarChegada = async () => {
     if (!activeOrder) return;
     const nowIso = new Date().toISOString();
@@ -529,10 +654,14 @@ export default function PrestadorDashboard() {
       chegadaEm: nowIso,
       chegadaLocalizacao: localizacao,
       etapaExecucao: "fotos_antes",
-      status: "No Condomínio - Vistoria Inicial",
+      status: "Em execução",
     };
 
-    await updateOrderInDb(activeOrder.id, updates);
+    await updateOrderInDb(
+      activeOrder.id,
+      updates,
+      "Em execução - Técnico chegou ao condomínio e iniciou atendimento"
+    );
   };
 
   // 3. Marco: Confirmar Fotos Iniciais (Antes) e Iniciar Trabalho Físico
@@ -549,10 +678,14 @@ export default function PrestadorDashboard() {
       fotosAntesEm: nowIso,
       inicioTrabalhoEm: activeOrder.inicioTrabalhoEm || nowIso,
       etapaExecucao: "em_execucao",
-      status: "Em Execução",
+      status: "Em execução",
     };
 
-    await updateOrderInDb(activeOrder.id, updates);
+    await updateOrderInDb(
+      activeOrder.id,
+      updates,
+      "Em execução - Fotos iniciais registradas e execução dos serviços em andamento"
+    );
   };
 
   // 4. Marco: Finalizar Trabalho Físico e Ir para Fotos Finais
@@ -563,10 +696,14 @@ export default function PrestadorDashboard() {
       observacoesTecnicas: observacoesTecnicas.trim(),
       materiaisUtilizados: materiaisUtilizados.trim(),
       etapaExecucao: "fotos_depois",
-      status: "Trabalho Concluído - Vistoria Final",
+      status: "Em execução",
     };
 
-    await updateOrderInDb(activeOrder.id, updates);
+    await updateOrderInDb(
+      activeOrder.id,
+      updates,
+      "Em execução - Trabalho físico concluído, registrando fotos finais"
+    );
   };
 
   // 5. Marco: Confirmar Fotos Finais (Depois)
@@ -582,14 +719,18 @@ export default function PrestadorDashboard() {
       fotosDepois: localFotosDepois,
       fotosDepoisEm: nowIso,
       etapaExecucao: "aguardando_assinatura",
-      status: "Aguardando Assinatura",
+      status: "Em execução",
     };
 
-    await updateOrderInDb(activeOrder.id, updates);
+    await updateOrderInDb(
+      activeOrder.id,
+      updates,
+      "Em execução - Fotos finais registradas, aguardando assinatura do responsável"
+    );
     setIsSignatureModalOpen(true);
   };
 
-  // 6. Marco: Coleta da Assinatura Digital e Conclusão
+  // 6. Marco: Coleta da Assinatura Digital e Conclusão ("Serviço Concluído")
   const handleSalvarAssinatura = async (signature: ServiceSignature) => {
     if (!activeOrder) return;
     const nowIso = new Date().toISOString();
@@ -602,7 +743,11 @@ export default function PrestadorDashboard() {
       status: "Serviço Concluído",
     };
 
-    await updateOrderInDb(activeOrder.id, updates);
+    await updateOrderInDb(
+      activeOrder.id,
+      updates,
+      "Serviço Concluído - Finalizado com fotos antes/depois e assinatura do responsável"
+    );
     setIsSignatureModalOpen(false);
     setShowSuccessCompletionModal(true);
   };
@@ -693,13 +838,15 @@ export default function PrestadorDashboard() {
                     <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-mono font-bold">
                       {activeOrder.numeroOS || `OS #${activeOrder.id.slice(0, 8)}`}
                     </span>
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                        getExecutionStepInfo(activeOrder.etapaExecucao).badgeBg
-                      } ${getExecutionStepInfo(activeOrder.etapaExecucao).badgeText}`}
-                    >
-                      {getExecutionStepInfo(activeOrder.etapaExecucao).label}
-                    </span>
+                    {(() => {
+                      const eff = getEffectiveOSStatus(activeOrder);
+                      const visual = getOSStatusVisualInfo(eff);
+                      return (
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${visual.badgeBg} ${visual.badgeText}`}>
+                          {eff}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
                     {activeOrder.nomeCondominio || activeOrder.clienteNome || "Condomínio"}
@@ -718,6 +865,11 @@ export default function PrestadorDashboard() {
                 >
                   Voltar para Lista
                 </button>
+              </div>
+
+              {/* Service Tracking Timeline in Active Order */}
+              <div className="pt-1">
+                <ServiceTrackingTimeline order={activeOrder} defaultExpanded={false} />
               </div>
 
               {/* Condomínio Address & Direct GPS Buttons */}
@@ -792,31 +944,113 @@ export default function PrestadorDashboard() {
               </div>
             </div>
 
-            {/* STEP 1: DESLOCAMENTO (INICIAR ROTA) */}
+            {/* STEP 1: AJUSTAR / CONFIRMAR DATA & DESLOCAMENTO */}
             {(!activeOrder.etapaExecucao ||
               activeOrder.etapaExecucao === "pendente_atribuicao" ||
               activeOrder.etapaExecucao === "atribuido" ||
               activeOrder.etapaExecucao === "recebido") && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center space-y-4 shadow-sm">
-                <div className="w-16 h-16 bg-blue-50 text-blue-600 border border-blue-200 rounded-2xl flex items-center justify-center mx-auto">
-                  <Navigation size={32} />
-                </div>
-                <div className="max-w-md mx-auto space-y-1">
-                  <h3 className="text-lg font-bold text-slate-900">Pronto para Iniciar o Deslocamento?</h3>
-                  <p className="text-xs text-slate-500">
-                    Ao confirmar, o sistema registra a saída do prestador e notifica o condomínio que a equipe está a caminho.
+              <div className="space-y-4">
+                {/* CALENDAR DATE CONFIRMATION & ADJUSTMENT CARD */}
+                <div className="bg-white border border-blue-200 rounded-2xl p-5 sm:p-6 space-y-4 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2 text-blue-800 font-bold text-base">
+                      <CalendarDays size={20} className="text-blue-600 shrink-0" />
+                      <span>Data de Execução do Serviço</span>
+                    </div>
+                    {(() => {
+                      const eff = getEffectiveOSStatus(activeOrder);
+                      const isPending = isOSPendingInitialConfirmation(eff);
+                      return (
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                            isPending
+                              ? "bg-amber-50 text-amber-900 border-amber-300 animate-pulse"
+                              : "bg-emerald-50 text-emerald-800 border-emerald-300"
+                          }`}
+                        >
+                          {isPending ? "⚠️ Confirmação de Data Pendente" : "✓ Data Confirmada na Escala"}
+                        </span>
+                      );
+                    })()}
+                  </div>
+
+                  <p className="text-xs text-slate-600">
+                    Ajuste ou confirme a data e turno em que a equipe técnica executará o serviço no condomínio. Toda alteração registra dia, horário e histórico de acompanhamento.
                   </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Data de Execução
+                      </label>
+                      <input
+                        type="date"
+                        defaultValue={
+                          (activeOrder.dataConfirmada || activeOrder.dataAgendada || "").substring(0, 10) ||
+                          new Date().toISOString().substring(0, 10)
+                        }
+                        id="activeOrderTargetDateInput"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 shadow-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Turno de Atendimento
+                      </label>
+                      <select
+                        defaultValue={activeOrder.turnoAgendado || "Manhã"}
+                        id="activeOrderTargetTurnoSelect"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500 shadow-xs"
+                      >
+                        <option value="Manhã">Manhã (08h às 12h)</option>
+                        <option value="Tarde">Tarde (13h às 17h)</option>
+                        <option value="Noite">Noite (18h às 22h)</option>
+                        <option value="Integral">Horário Comercial / Integral</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const dateEl = document.getElementById("activeOrderTargetDateInput") as HTMLInputElement;
+                          const turnoEl = document.getElementById("activeOrderTargetTurnoSelect") as HTMLSelectElement;
+                          const targetDate = dateEl?.value || new Date().toISOString().substring(0, 10);
+                          const targetTurno = turnoEl?.value || "Manhã";
+                          handleConfirmarOuAjustarData(activeOrder.id, targetDate, targetTurno, "Confirmado pelo prestador no painel");
+                        }}
+                        disabled={isSubmitting}
+                        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all"
+                      >
+                        <Check size={14} /> Salvar & Confirmar Data
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={handleIniciarDeslocamento}
-                    disabled={isSubmitting}
-                    className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md flex items-center justify-center gap-2 mx-auto transition-all"
-                  >
-                    <Navigation size={18} /> Iniciar Deslocamento / A Caminho
-                  </button>
+                {/* READY FOR DISPLACEMENT (TÉCNICO A CAMINHO) */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center space-y-4 shadow-sm">
+                  <div className="w-16 h-16 bg-blue-50 text-blue-600 border border-blue-200 rounded-2xl flex items-center justify-center mx-auto">
+                    <Navigation size={32} />
+                  </div>
+                  <div className="max-w-md mx-auto space-y-1">
+                    <h3 className="text-lg font-bold text-slate-900">Iniciar Deslocamento até o Local</h3>
+                    <p className="text-xs text-slate-500">
+                      Ao clicar abaixo, o status é alterado para <strong>"Técnico a caminho"</strong> com registro de data/hora na linha de acompanhamento e o condomínio é notificado.
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={handleIniciarDeslocamento}
+                      disabled={isSubmitting}
+                      className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md flex items-center justify-center gap-2 mx-auto transition-all"
+                    >
+                      <Navigation size={18} /> Iniciar Deslocamento / Técnico a Caminho
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1172,11 +1406,13 @@ export default function PrestadorDashboard() {
                 {/* Tabs */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
                   {[
-                    { id: "todas", label: "Todas" },
-                    { id: "novas", label: "Novas / Aguardando" },
+                    { id: "todas", label: `Todas (${kpiCounts.total})` },
+                    { id: "hoje", label: `Hoje (${kpiCounts.hoje})`, highlight: kpiCounts.hoje > 0 },
+                    { id: "pendencias_anteriores", label: `Pendências Anteriores (${kpiCounts.pendenciasAnteriores})`, alert: kpiCounts.pendenciasAnteriores > 0 },
+                    { id: "novas", label: `Aguardando Data (${kpiCounts.novas})` },
                     { id: "deslocamento", label: "A Caminho" },
-                    { id: "execucao", label: "Em Execução" },
-                    { id: "concluidas", label: "Concluídas" },
+                    { id: "execucao", label: `Em Execução (${kpiCounts.emAndamento})` },
+                    { id: "concluidas", label: `Concluídas (${kpiCounts.concluidas})` },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -1185,6 +1421,10 @@ export default function PrestadorDashboard() {
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                         filterTab === tab.id
                           ? "bg-blue-600 text-white shadow-xs"
+                          : (tab as any).alert
+                          ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
+                          : (tab as any).highlight
+                          ? "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"
                           : "bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200"
                       }`}
                     >
@@ -1225,10 +1465,14 @@ export default function PrestadorDashboard() {
                     const isCompleted = order.etapaExecucao === "concluido" || order.status === "Serviço Concluído";
                     const isLocked = inProgressOrder && inProgressOrder.id !== order.id && !isCompleted;
 
+                    const eff = getEffectiveOSStatus(order);
+                    const visual = getOSStatusVisualInfo(eff);
+                    const isTimelineExpanded = expandedTimelineId === order.id;
+
                     return (
                       <div
                         key={order.id}
-                        className={`p-4 sm:p-5 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                        className={`p-4 sm:p-5 transition-colors flex flex-col gap-3 ${
                           isOrderInProgress
                             ? "bg-blue-50/70 border-l-4 border-blue-600"
                             : isLocked
@@ -1236,100 +1480,137 @@ export default function PrestadorDashboard() {
                             : "hover:bg-slate-50"
                         }`}
                       >
-                        <div className="space-y-1.5">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                              {order.numeroOS || `OS #${order.id.slice(0, 8)}`}
-                            </span>
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${
-                                getExecutionStepInfo(order.etapaExecucao).badgeBg
-                              } ${getExecutionStepInfo(order.etapaExecucao).badgeText}`}
-                            >
-                              {getExecutionStepInfo(order.etapaExecucao).label}
-                            </span>
-                            {order.prioridade === "Urgente" && (
-                              <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
-                                Urgente
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                                {order.numeroOS || `OS #${order.id.slice(0, 8)}`}
                               </span>
-                            )}
-                          </div>
-
-                          <h4 className="font-bold text-slate-900 text-base">
-                            {order.nomeCondominio || order.clienteNome || "Condomínio"}
-                          </h4>
-
-                          <p className="text-xs text-slate-500 flex items-center gap-1">
-                            <Wrench size={13} className="text-slate-400" />
-                            {order.servicoNome || "Serviço Rotineiro"} • {order.enderecoCondominio || "Endereço cadastrado"}
-                          </p>
-
-                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 pt-0.5">
-                            <span>Agendado: {formatDateBR(order.dataAgendada || (order.createdAt as string))}</span>
-                            {order.turnoAgendado && <span>Turno: {order.turnoAgendado}</span>}
-                            {(order.fotosAntes?.length || 0) > 0 && (
-                              <span className="text-blue-600 font-medium">
-                                📷 {order.fotosAntes?.length} fotos antes
-                              </span>
-                            )}
-                            {(order.fotosDepois?.length || 0) > 0 && (
-                              <span className="text-emerald-600 font-medium">
-                                ✓ {order.fotosDepois?.length} fotos depois
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                          {isCompleted && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={(e) => handleDirectDownloadPdf(order, e)}
-                                disabled={downloadingPdfId === order.id}
-                                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-xs"
-                                title="Baixar Relatório em PDF"
+                              <span
+                                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${visual.badgeBg} ${visual.badgeText}`}
                               >
-                                {downloadingPdfId === order.id ? (
-                                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                  <FileDown size={14} />
-                                )}
-                                <span className="hidden sm:inline">
-                                  {downloadingPdfId === order.id ? "Gerando..." : "Baixar PDF"}
+                                {eff}
+                              </span>
+                              {order.prioridade === "Urgente" && (
+                                <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
+                                  Urgente
                                 </span>
-                              </button>
+                              )}
+                            </div>
 
+                            <h4 className="font-bold text-slate-900 text-base">
+                              {order.nomeCondominio || order.clienteNome || "Condomínio"}
+                            </h4>
+
+                            <p className="text-xs text-slate-500 flex items-center gap-1">
+                              <Wrench size={13} className="text-slate-400" />
+                              {order.servicoNome || "Serviço Rotineiro"} • {order.enderecoCondominio || "Endereço cadastrado"}
+                            </p>
+
+                            <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 pt-0.5">
+                              <span>Agendado: {formatDateBR(order.dataAgendada || (order.createdAt as string))}</span>
+                              {order.turnoAgendado && <span>Turno: {order.turnoAgendado}</span>}
+                              {(order.fotosAntes?.length || 0) > 0 && (
+                                <span className="text-blue-600 font-medium">
+                                  📷 {order.fotosAntes?.length} fotos antes
+                                </span>
+                              )}
+                              {(order.fotosDepois?.length || 0) > 0 && (
+                                <span className="text-emerald-600 font-medium">
+                                  ✓ {order.fotosDepois?.length} fotos depois
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
+                            {!isCompleted && (
                               <button
                                 type="button"
-                                onClick={() => setSelectedOrderForReport(order)}
-                                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all border border-slate-200"
+                                onClick={() => {
+                                  setSelectedOrderForDateModal(order);
+                                  setModalTargetDate(
+                                    (order.dataConfirmada || order.dataAgendada || "").substring(0, 10) ||
+                                      new Date().toISOString().substring(0, 10)
+                                  );
+                                  setModalTargetTurno(order.turnoAgendado || "Manhã");
+                                  setModalObservations(order.observacoesAgendamento || "");
+                                }}
+                                className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all border border-amber-200"
+                                title="Ajustar ou Confirmar Data no Calendário"
                               >
-                                <FileText size={14} /> Ver Relatório
+                                <CalendarDays size={14} className="text-amber-600" />
+                                <span>Ajustar Data</span>
                               </button>
-                            </>
-                          )}
+                            )}
 
-                          {isLocked ? (
-                            <div className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-400 text-xs rounded-xl border border-slate-200">
-                              <Lock size={12} /> Em espera
-                            </div>
-                          ) : (
                             <button
                               type="button"
-                              onClick={() => handleOpenOrder(order)}
-                              className={`px-4 py-2 font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-all ${
-                                isCompleted
-                                  ? "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
-                                  : "bg-blue-600 hover:bg-blue-700 text-white"
-                              }`}
+                              onClick={() => setExpandedTimelineId(isTimelineExpanded ? null : order.id)}
+                              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all border border-slate-200"
+                              title="Ver Linha do Tempo e Histórico"
                             >
-                              {isCompleted ? "Revisar O.S." : "Executar Serviço"}{" "}
-                              <ChevronRight size={14} />
+                              <Clock size={14} className="text-blue-600" />
+                              <span>{isTimelineExpanded ? "Ocultar Histórico" : "Histórico"}</span>
                             </button>
-                          )}
+
+                            {isCompleted && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleDirectDownloadPdf(order, e)}
+                                  disabled={downloadingPdfId === order.id}
+                                  className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-xs"
+                                  title="Baixar Relatório em PDF"
+                                >
+                                  {downloadingPdfId === order.id ? (
+                                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  ) : (
+                                    <FileDown size={14} />
+                                  )}
+                                  <span className="hidden sm:inline">
+                                    {downloadingPdfId === order.id ? "Gerando..." : "Baixar PDF"}
+                                  </span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedOrderForReport(order)}
+                                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all border border-slate-200"
+                                >
+                                  <FileText size={14} /> Ver Relatório
+                                </button>
+                              </>
+                            )}
+
+                            {isLocked ? (
+                              <div className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-400 text-xs rounded-xl border border-slate-200">
+                                <Lock size={12} /> Em espera
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenOrder(order)}
+                                className={`px-4 py-2 font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-all ${
+                                  isCompleted
+                                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
+                                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                                }`}
+                              >
+                                {isCompleted ? "Revisar O.S." : "Executar Serviço"}{" "}
+                                <ChevronRight size={14} />
+                              </button>
+                            )}
+                          </div>
                         </div>
+
+                        {/* Collapsible Timeline */}
+                        {isTimelineExpanded && (
+                          <div className="pt-2 border-t border-slate-100">
+                            <ServiceTrackingTimeline order={order} defaultExpanded={true} />
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -1412,6 +1693,138 @@ export default function PrestadorDashboard() {
                 className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all border border-slate-200"
               >
                 Voltar ao Painel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Date Confirmation & Adjustment Modal */}
+      {selectedOrderForDateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white border border-slate-200 text-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-base">
+                <CalendarDays size={20} className="text-blue-600" />
+                <span>Ajustar / Confirmar Data no Calendário</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedOrderForDateModal(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+              <span className="text-xs font-mono font-bold text-blue-700">
+                {selectedOrderForDateModal.numeroOS || `OS #${selectedOrderForDateModal.id.slice(0, 8)}`}
+              </span>
+              <h4 className="font-bold text-slate-900 text-sm">
+                {selectedOrderForDateModal.nomeCondominio || selectedOrderForDateModal.clienteNome}
+              </h4>
+              <p className="text-xs text-slate-500">
+                {selectedOrderForDateModal.servicoNome} • Status atual: {getEffectiveOSStatus(selectedOrderForDateModal)}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Data de Execução Agendada
+                </label>
+                <input
+                  type="date"
+                  value={modalTargetDate}
+                  onChange={(e) => setModalTargetDate(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="flex items-center gap-2 mt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setModalTargetDate(new Date().toISOString().substring(0, 10))}
+                    className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold rounded-md transition-colors"
+                  >
+                    Hoje
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date();
+                      d.setDate(d.getDate() + 1);
+                      setModalTargetDate(d.toISOString().substring(0, 10));
+                    }}
+                    className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium rounded-md transition-colors"
+                  >
+                    Amanhã
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date();
+                      d.setDate(d.getDate() + 7);
+                      setModalTargetDate(d.toISOString().substring(0, 10));
+                    }}
+                    className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium rounded-md transition-colors"
+                  >
+                    +7 dias
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Turno
+                </label>
+                <select
+                  value={modalTargetTurno}
+                  onChange={(e) => setModalTargetTurno(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="Manhã">Manhã (08h às 12h)</option>
+                  <option value="Tarde">Tarde (13h às 17h)</option>
+                  <option value="Noite">Noite (18h às 22h)</option>
+                  <option value="Integral">Horário Comercial / Integral</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Observações do Agendamento (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={modalObservations}
+                  onChange={(e) => setModalObservations(e.target.value)}
+                  placeholder="Ex: Confirmado com o síndico por telefone..."
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setSelectedOrderForDateModal(null)}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleConfirmarOuAjustarData(
+                    selectedOrderForDateModal.id,
+                    modalTargetDate,
+                    modalTargetTurno,
+                    modalObservations
+                  )
+                }
+                disabled={isSubmitting}
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 transition-all"
+              >
+                <Check size={14} /> Salvar & Confirmar Data
               </button>
             </div>
           </div>

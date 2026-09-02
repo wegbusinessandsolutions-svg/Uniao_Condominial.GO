@@ -1220,7 +1220,7 @@ export default function GenericModulePage({
                               {col.render
                                 ? col.render(val, row)
                                 : val !== undefined && val !== null && val !== ""
-                                ? (isDateKey || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val)) ? formatDateBR(val) : String(val))
+                                ? ((isDateKey || (typeof val === "object" && typeof (val as any)?.seconds === "number") || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val))) ? formatDateBR(val) : (typeof val === "object" ? JSON.stringify(val) : String(val)))
                                 : "—"}
                             </td>
                           );
@@ -1287,7 +1287,7 @@ export default function GenericModulePage({
                           {col.render
                             ? col.render(val, row)
                             : val !== undefined && val !== null && val !== ""
-                            ? (isDateKey || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val)) ? formatDateBR(val) : String(val))
+                            ? ((isDateKey || (typeof val === "object" && typeof (val as any)?.seconds === "number") || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val))) ? formatDateBR(val) : (typeof val === "object" ? JSON.stringify(val) : String(val)))
                             : "—"}
                         </td>
                       );
@@ -1782,7 +1782,7 @@ export default function GenericModulePage({
                       const val = item[col.key];
                       const isDateKey = /data|vencimento|nascimento|admissao|demissao/i.test(col.key);
                       const displayVal = val !== undefined && val !== null && val !== ""
-                        ? (isDateKey || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val)) ? formatDateBR(val) : String(val))
+                        ? ((isDateKey || (typeof val === "object" && typeof (val as any)?.seconds === "number") || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val))) ? formatDateBR(val) : (typeof val === "object" ? JSON.stringify(val) : String(val)))
                         : "—";
                       return (
                         <tr
@@ -1871,7 +1871,7 @@ export default function GenericModulePage({
                       const val = item[col.key];
                       const isDateKey = /data|vencimento|nascimento|admissao|demissao/i.test(col.key);
                       const displayVal = val !== undefined && val !== null && val !== ""
-                        ? (isDateKey || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val)) ? formatDateBR(val) : String(val))
+                        ? ((isDateKey || (typeof val === "object" && typeof (val as any)?.seconds === "number") || (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val))) ? formatDateBR(val) : (typeof val === "object" ? JSON.stringify(val) : String(val)))
                         : "—";
                       return (
                         <td

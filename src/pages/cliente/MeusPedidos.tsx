@@ -905,7 +905,7 @@ export default function MeusPedidos() {
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 font-normal">
                         <span className="flex items-center gap-1">
                           <Calendar size={13} className="text-slate-400" />
-                          {formattedDate} às {formattedTime}
+                          {formatDateTimeBR(pedido.dataHora)}
                         </span>
                         <span className="flex items-center gap-1">
                           <Package size={13} className="text-slate-400" />
@@ -1433,7 +1433,7 @@ export default function MeusPedidos() {
                                 {evento.novoStatus || evento.status || evento.evento}
                               </span>
                               <span className="text-[10px] text-slate-400 font-normal">
-                                {new Date(evento.dataHora || evento.data).toLocaleString("pt-BR")}
+                                {formatDateTimeBR(evento.dataHora || evento.data)}
                               </span>
                             </div>
                             {(evento.observacao || evento.descricao) && (

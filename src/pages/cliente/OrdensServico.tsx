@@ -8,6 +8,14 @@ import {
   Filter, Check, Sparkles, AlertTriangle, CalendarCheck
 } from "lucide-react";
 import { formatDateBR, formatDateTimeBR } from "../../lib/dateUtils";
+import { 
+  appendStatusHistory, 
+  getEffectiveOSStatus, 
+  getOSStatusVisualInfo, 
+  isOSPendingInitialConfirmation,
+  RoutineServiceOrderStatus
+} from "../../lib/serviceStatusWorkflow";
+import { ServiceTrackingTimeline } from "../../components/servicos/ServiceTrackingTimeline";
 
 const parsePrice = (val: any): number => {
   if (val === undefined || val === null) return 0;
@@ -49,95 +57,6 @@ const isInitialPendingStatus = (status?: string) => {
   return s.includes("aguardando") || s.includes("solicitado") || s.includes("pendente") || s.includes("novo");
 };
 
-export const getOSStatusDetails = (rawStatus?: string) => {
-  const s = (rawStatus || "Aguardando confirmação - Data").trim();
-  const sLower = s.toLowerCase();
-
-  if (sLower.includes("aguardando") || sLower.includes("solicitado") || sLower.includes("pendente") || sLower === "novo") {
-    return {
-      label: "Aguardando confirmação - Data",
-      step: 1,
-      badgeClass: "bg-amber-100 text-amber-900",
-      badgeDot: "bg-amber-500",
-      icon: <Clock size={15} className="text-amber-600 animate-pulse shrink-0" />,
-      boxBg: "bg-amber-50 text-amber-950 shadow-xs",
-      desc: "Sua solicitação de serviço foi registrada com a data de preferência escolhida. A equipe está avaliando o agendamento e confirmará a visita técnica.",
-      highlightText: "Aguardando confirmação da data"
-    };
-  }
-
-  switch (s) {
-    case "Confirmada a Visita":
-    case "Agendado":
-    case "Visita Agendada":
-    case "Em Análise":
-      return {
-        label: "Confirmada a Visita",
-        step: 2,
-        badgeClass: "bg-sky-100 text-sky-800",
-        badgeDot: "bg-sky-500",
-        icon: <Calendar size={15} className="text-sky-600 shrink-0" />,
-        boxBg: "bg-sky-50 text-sky-900 shadow-xs",
-        desc: "A visita técnica foi confirmada. O prestador ou técnico credenciado comparecerá na data e turno acordados para a vistoria ou execução dos serviços.",
-        highlightText: "Visita técnica programada"
-      };
-
-    case "Em Execução":
-    case "Em Andamento":
-    case "Executando":
-      return {
-        label: "Em Execução",
-        step: 3,
-        badgeClass: "bg-blue-100 text-blue-800",
-        badgeDot: "bg-blue-500",
-        icon: <Wrench size={15} className="text-blue-600 shrink-0" />,
-        boxBg: "bg-blue-50 text-blue-900 shadow-xs",
-        desc: "Os serviços contratados estão sendo executados nas dependências do condomínio conforme o cronograma e escopo técnico aprovado.",
-        highlightText: "Serviço em andamento"
-      };
-
-    case "Serviço Concluído":
-    case "Concluído":
-    case "Finalizado":
-    case "Entregue":
-      return {
-        label: "Serviço Concluído",
-        step: 4,
-        badgeClass: "bg-emerald-100 text-emerald-800",
-        badgeDot: "bg-emerald-500",
-        icon: <CheckCircle2 size={15} className="text-emerald-600 shrink-0" />,
-        boxBg: "bg-emerald-50 text-emerald-900 shadow-xs",
-        desc: "Ordem de serviço finalizada com sucesso. A execução foi concluída e o termo de encerramento e garantia foram emitidos.",
-        highlightText: "Serviço finalizado com garantia"
-      };
-
-    case "Cancelada pelo Cliente":
-    case "Cancelado":
-    case "Cancelada":
-      return {
-        label: "Cancelada pelo Cliente",
-        step: 0,
-        badgeClass: "bg-rose-100 text-rose-800",
-        badgeDot: "bg-rose-500",
-        icon: <XCircle size={15} className="text-rose-600 shrink-0" />,
-        boxBg: "bg-rose-50 text-rose-900 shadow-xs",
-        desc: "Esta ordem de serviço foi cancelada e não haverá cobrança ou agendamento para este pedido.",
-        highlightText: "Solicitação cancelada"
-      };
-
-    default:
-      return {
-        label: s,
-        step: 1,
-        badgeClass: "bg-slate-100 text-slate-800",
-        badgeDot: "bg-slate-500",
-        icon: <FileText size={15} className="text-slate-600 shrink-0" />,
-        boxBg: "bg-slate-50 text-slate-800 shadow-xs",
-        desc: `Status atual: ${s}. Em processamento pelo departamento de atendimento.`,
-        highlightText: "Em atendimento"
-      };
-  }
-};
 
 const getCancelEligibility = (order: any) => {
   const isAlreadyCancelled = order.status === "Cancelada pelo Cliente" || order.status === "Cancelado";
@@ -374,8 +293,17 @@ export default function MinhasOrdensServico() {
         }
       }
 
+      const { status: newStatus, historicoStatus: newHistory, statusAtualizadoEm } = appendStatusHistory(
+        (currentData.historicoStatus as any) || [],
+        "Cancelada pelo Cliente",
+        profile?.nomeCompleto || profile?.displayName || profile?.email || "Cliente",
+        motivoJustificativa.trim()
+      );
+
       await updateDoc(docRef, {
-        status: "Cancelada pelo Cliente",
+        status: newStatus,
+        historicoStatus: newHistory,
+        statusAtualizadoEm,
         motivoCancelamento: motivoJustificativa.trim(),
         canceladoEm: new Date().toISOString(),
         canceladoPor: profile?.email || profile?.uid || "Cliente"
@@ -610,9 +538,10 @@ export default function MinhasOrdensServico() {
           {filteredOrdens.map((o) => {
             const cancelInfo = getCancelEligibility(o);
             const deleteInfo = getDeleteEligibility(o);
-            const isCancelled = o.status === "Cancelada pelo Cliente" || o.status === "Cancelado";
+            const effStatus = getEffectiveOSStatus(o);
+            const visualInfo = getOSStatusVisualInfo(effStatus);
+            const isCancelled = o.status === "Cancelada pelo Cliente" || o.status === "Cancelado" || effStatus === "Cancelada pelo Cliente";
             const createdDate = getOrderDate(o.createdAt);
-            const statusDetails = getOSStatusDetails(o.status);
             const osNumber = o.numeroOS || (o.id ? `OS-${o.id.slice(-6).toUpperCase()}` : "OS-PENDENTE");
 
             return (
@@ -621,7 +550,7 @@ export default function MinhasOrdensServico() {
                 className="bg-white p-6 sm:p-7 rounded-3xl shadow-md hover:shadow-lg transition-all flex flex-col space-y-4 relative overflow-hidden"
               >
                 {/* Top Bar: OS Number, Date and Status Badge */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono text-xs sm:text-sm font-medium text-slate-900 bg-slate-100 px-3 py-1 rounded-xl shadow-xs">
@@ -640,11 +569,9 @@ export default function MinhasOrdensServico() {
                   {/* Prominent Status Badge */}
                   <div className="flex flex-col sm:items-end gap-1 shrink-0 w-full sm:w-auto">
                     <div
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium self-start sm:self-auto shadow-xs ${statusDetails.badgeClass}`}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium self-start sm:self-auto shadow-xs border ${visualInfo.badgeBg} ${visualInfo.badgeText}`}
                     >
-                      <span className={`w-2 h-2 rounded-full ${statusDetails.badgeDot}`}></span>
-                      {statusDetails.icon}
-                      <span className="uppercase tracking-wide">{statusDetails.label}</span>
+                      <span className="uppercase tracking-wide">{effStatus}</span>
                     </div>
                     <span className="text-[10px] text-slate-400 font-normal hidden sm:block">
                       Status da Ordem de Serviço
@@ -652,87 +579,10 @@ export default function MinhasOrdensServico() {
                   </div>
                 </div>
 
-                {/* Visual Status Progression Tracker */}
-                {!isCancelled ? (
-                  <div className="bg-slate-50/90 p-5 rounded-3xl space-y-3.5 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-                        <Sparkles size={14} className="text-[#0071e3]" />
-                        Progresso do Atendimento:
-                      </span>
-                      <span className="text-xs font-medium text-[#0071e3]">
-                        {statusDetails.step === 4 ? "Finalizado e Concluído" : `Etapa ${statusDetails.step} de 3`}
-                      </span>
-                    </div>
-
-                    {/* Step indicators */}
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { stepNum: 1, title: "1. Solicitação", desc: "Registrado" },
-                        { stepNum: 2, title: "2. Agendamento", desc: "Visita Confirmada" },
-                        { stepNum: 3, title: "3. Execução / Conclusão", desc: "Serviço Concluído" },
-                      ].map((st) => {
-                        const isDone = statusDetails.step > st.stepNum || statusDetails.step === 4;
-                        const isCurrent = statusDetails.step === st.stepNum && statusDetails.step < 4;
-
-                        return (
-                          <div key={st.stepNum} className="space-y-1.5">
-                            <div className="relative">
-                              <div
-                                className={`h-2 rounded-full transition-all ${
-                                  isDone || isCurrent
-                                    ? "bg-[#0071e3]"
-                                    : "bg-slate-200"
-                                } ${isCurrent ? "animate-pulse" : ""}`}
-                              />
-                            </div>
-                            <div className="text-center sm:text-left">
-                              <span
-                                className={`text-[10px] sm:text-xs font-medium block leading-tight ${
-                                  isDone || isCurrent ? "text-slate-900" : "text-slate-400"
-                                }`}
-                              >
-                                {st.title}
-                              </span>
-                              <span
-                                className={`text-[9px] sm:text-[10px] hidden sm:block truncate font-normal ${
-                                  isDone ? "text-emerald-700 font-medium" : isCurrent ? "text-[#0071e3] font-medium" : "text-slate-400"
-                                }`}
-                              >
-                                {isDone ? "✓ Concluído" : isCurrent ? "● Em andamento" : "Aguardando"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Status Explanation Callout */}
-                    <div className={`p-4 rounded-2xl text-xs leading-relaxed flex items-start gap-2.5 ${statusDetails.boxBg}`}>
-                      {statusDetails.icon}
-                      <div>
-                        <span className="font-medium block">Status Atual: {statusDetails.label}</span>
-                        <p className="mt-0.5 opacity-90 font-normal">{statusDetails.desc}</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-rose-50 p-5 rounded-3xl text-xs text-rose-900 space-y-2 shadow-xs">
-                    <div className="flex items-center gap-2 font-medium text-rose-950">
-                      <XCircle size={16} className="text-rose-600" />
-                      <span>Ordem de Serviço Cancelada</span>
-                    </div>
-                    <p className="text-rose-800 leading-relaxed font-normal">
-                      Esta solicitação foi cancelada. Caso precise novamente do serviço, você pode realizar uma nova solicitação no catálogo de Serviços Essenciais.
-                    </p>
-                    {o.motivoCancelamento && (
-                      <div className="mt-2 pt-2 border-t border-rose-200/60">
-                        <span className="font-medium text-rose-950 block">Justificativa do Cancelamento:</span>
-                        <p className="italic text-rose-800 mt-0.5 font-normal">{o.motivoCancelamento}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* Service Tracking Timeline Component */}
+                <div className="pt-1">
+                  <ServiceTrackingTimeline order={o} defaultExpanded={false} />
+                </div>
 
                 {/* Items Breakdown if present */}
                 {o.itens && Array.isArray(o.itens) && o.itens.length > 0 && (

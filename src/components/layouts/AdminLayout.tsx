@@ -36,6 +36,7 @@ import { FileText,
   FileSpreadsheet,
   ShieldAlert,
   Wrench,
+  Calendar,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -92,6 +93,7 @@ export const navGroups: NavGroup[] = [
             icon: ShoppingCart,
             children: [
               { name: "Acompanhamento de Venda", path: "/admin/acompanhamento-venda", icon: ShieldCheck },
+              { name: "Agenda de Serviços", path: "/admin/comercial/agenda", icon: Calendar },
               { name: "Calculadora de Preços", path: "/admin/comercial/calculadora", icon: Calculator },
               { name: "Categorias de Produtos", path: "/admin/comercial/categorias", icon: FolderTree },
               { name: "Clientes", path: "/admin/comercial/clientes", icon: Users },

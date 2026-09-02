@@ -27,6 +27,7 @@ export interface ServiceSignature {
 export type ServiceExecutionStep = 
   | "pendente_atribuicao"   // Criada mas sem colaborador
   | "atribuido"             // Colaborador designado, aguardando aceite
+  | "recebido"              // Colaborador visualizou / data confirmada
   | "deslocamento"          // Colaborador aceitou e está a caminho
   | "chegou_local"          // Colaborador chegou no condomínio
   | "fotos_antes"           // Tirando as 3 fotos obrigatórias antes
@@ -62,7 +63,20 @@ export interface RoutineServiceOrder {
   // Agendamento
   dataAgendada?: string; // YYYY-MM-DD
   dataConfirmada?: string;
+  dataPreferencial?: string;
   turnoAgendado?: string; // "Manhã (08:00 às 12:00)", "Tarde (13:00 às 17:00)", etc.
+  observacoesAgendamento?: string;
+  dataAlteradaPorAdmin?: boolean;
+  agendamentoAtualizadoEm?: string;
+  agendamentoConfirmadoPor?: string;
+  historicoAgendamento?: Array<{
+    data: string;
+    turno?: string;
+    observacao?: string;
+    alterada?: boolean;
+    confirmadoPor?: string;
+    dataHora: string;
+  }>;
   prioridade?: "Normal" | "Urgente" | "Crítica";
   ordemFila?: number; // Ordem de execução do colaborador no dia (1, 2, 3...)
 
@@ -77,6 +91,20 @@ export interface RoutineServiceOrder {
   // Fluxo de Execução e Status
   status: string;
   etapaExecucao: ServiceExecutionStep;
+  statusAtualizadoEm?: string;
+  dataConfirmadaEm?: string;
+  historicoStatus?: Array<{
+    status: string;
+    dataHora: string;
+    dataHoraFormatada?: string;
+    descricao?: string;
+    autor?: string;
+    etapaExecucao?: string;
+    detalhesAdicionais?: Record<string, any>;
+  }>;
+  motivoCancelamento?: string;
+  canceladoEm?: string;
+  canceladoPor?: string;
 
   // Timestamps de Monitoria Interna (Recebimento, Aceite, Chegada, Início, Conclusão)
   createdAt?: any;

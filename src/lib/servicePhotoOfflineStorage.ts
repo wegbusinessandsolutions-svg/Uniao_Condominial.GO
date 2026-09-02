@@ -37,27 +37,31 @@ function openIndexedDB(): Promise<IDBDatabase> {
       return;
     }
 
-    const request = window.indexedDB.open(DB_NAME, DB_VERSION);
+    try {
+      const request = window.indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-      const db = (event.target as IDBOpenDBRequest).result;
+      request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+        const db = (event.target as IDBOpenDBRequest).result;
 
-      // Pending photos store with indexes for orderId, fase and slotIndex
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
-        store.createIndex("orderId", "orderId", { unique: false });
-        store.createIndex("orderId_fase", ["orderId", "fase"], { unique: false });
-        store.createIndex("status", "status", { unique: false });
-      }
+        // Pending photos store with indexes for orderId, fase and slotIndex
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+          store.createIndex("orderId", "orderId", { unique: false });
+          store.createIndex("orderId_fase", ["orderId", "fase"], { unique: false });
+          store.createIndex("status", "status", { unique: false });
+        }
 
-      // Cached orders store
-      if (!db.objectStoreNames.contains(ORDER_CACHE_STORE)) {
-        db.createObjectStore(ORDER_CACHE_STORE, { keyPath: "id" });
-      }
-    };
+        // Cached orders store
+        if (!db.objectStoreNames.contains(ORDER_CACHE_STORE)) {
+          db.createObjectStore(ORDER_CACHE_STORE, { keyPath: "id" });
+        }
+      };
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
