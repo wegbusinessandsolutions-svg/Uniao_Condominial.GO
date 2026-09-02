@@ -879,7 +879,7 @@ export const DashboardLiveTracker: React.FC<DashboardLiveTrackerProps> = ({ isAf
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {ordens.slice(0, 4).map((os) => {
-                  const statusInfo = getOSStatusInfo(os.status);
+                  const statusInfo = getOSStatusInfo(os);
                   const osNumber = `#OS-${os.id.slice(-6).toUpperCase()}`;
                   const isExpanded = expandedItemId === `os-${os.id}`;
 
