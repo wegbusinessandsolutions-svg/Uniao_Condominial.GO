@@ -384,7 +384,8 @@ export default function AceiteAfiliacao() {
                   <li>Manutenção de Portas, Portões Eletrônicos e Automatizadores;</li>
                   <li>Manutenção em Cercas Elétricas, Sensores e Cerca Concertina;</li>
                   <li>Manutenção de Portaria, Porteiros Eletrônicos e CFTV (Câmeras);</li>
-                  <li>Manutenção Preventiva e Corretiva em Sistemas de Alarme.</li>
+                  <li>Manutenção Preventiva e Corretiva em Sistemas de Alarme;</li>
+                  <li>Serviços de Pintura, Reformas e Pequenos Reparos Civis.</li>
                 </ul>
 
                 <p>

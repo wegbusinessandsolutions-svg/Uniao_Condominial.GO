@@ -347,7 +347,9 @@ export default function Home() {
                   { icon: ShieldCheck, text: "Recarga de Extintores" },
                   { icon: ShieldCheck, text: "Dedetização Predial" },
                   { icon: Wrench, text: "Manutenção nas Portas de Acesso (Vidro Temperado)" },
-                  { icon: Wrench, text: "Serviços de Manutenção em Motobombas" }
+                  { icon: Wrench, text: "Serviços de Manutenção em Motobombas" },
+                  { icon: Wrench, text: "Serviços de Pintura" },
+                  { icon: Wrench, text: "Reformas e Pequenos Reparos" }
                 ].map((service, idx) => (
                   <div key={idx} className="bg-white px-3.5 py-2 rounded-full border border-slate-200 text-slate-800 text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-xs hover:border-blue-300 transition-colors">
                     <service.icon size={15} className="text-[#0071e3]" />

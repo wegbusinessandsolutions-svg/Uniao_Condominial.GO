@@ -3,7 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { 
   Plus, Edit2, Trash2, Send, X, Phone, User, Building2, 
-  CheckCircle2, FileText, AlertCircle, Contact, BookUser
+  CheckCircle2, FileText, AlertCircle, Contact, BookUser, Clock
 } from "lucide-react";
 import { 
   collection, query, where, onSnapshot, addDoc, updateDoc, 
@@ -214,25 +214,69 @@ export default function MeusContatos() {
   };
 
   const handleWhatsApp = (contato: any) => {
-    const t = (contato.telefone || "").replace(/\D/g, "");
-    if (!t) {
-      alert("Telefone inválido.");
-      return;
+    const rawTel = (contato.telefone || "").replace(/\D/g, "");
+
+    // Formatação das Especialidades de forma sóbria e limpa
+    const especialidadesTexto = (contato.especialidades && contato.especialidades.length > 0)
+      ? contato.especialidades.map((e: string) => `  - ${e}`).join("\n")
+      : "  - Serviços sob consulta";
+
+    // Formatação de Urgência em texto sóbrio
+    let urgenciaTexto = "Não se aplica";
+    if (contato.atendimentoUrgencia === "Sim") {
+      urgenciaTexto = "Sim (atendimento fora de expediente / plantão)";
+    } else if (contato.atendimentoUrgencia === "Não") {
+      urgenciaTexto = "Não (apenas horário comercial)";
     }
 
-    const text = `Conforme solicitado, segue abaixo os dados do:
-${contato.nomeEmpresa ? contato.nomeEmpresa : ""} ${contato.nomeContato ? "- " + contato.nomeContato : ""}
+    // Apresentação sóbria, bem estruturada e sem formatação em negrito
+    const lines: string[] = [
+      "INDICAÇÃO DE CONTATO / PRESTADOR",
+      "----------------------------------------",
+      "Olá! Conforme solicitado, seguem os dados do contato cadastrado para atendimento no condomínio:",
+      "",
+      `▪ Empresa / Profissional: ${contato.nomeEmpresa || "Não informada"}`,
+      `▪ Contato: ${contato.nomeContato || "Não informado"}`,
+    ];
 
-*CNPJ/CPF:* ${contato.cnpjCpf || "Não informado"}
-*Contato:* ${contato.nomeContato || "Não informado"}
-*Telefone:* ${contato.telefone || "Não informado"}
-*Urgência/Fora de Expediente:* ${contato.atendimentoUrgencia || "Não se Aplica"}
-*Especialidades:* ${(contato.especialidades || []).join(", ") || "Nenhuma informada"}
+    if (contato.cnpjCpf) {
+      lines.push(`▪ CNPJ/CPF: ${contato.cnpjCpf}`);
+    }
 
-*Observações:*
-${contato.observacoes || "Nenhuma observação."}`;
+    if (contato.telefone) {
+      lines.push(`▪ Telefone: ${contato.telefone}`);
+      if (rawTel) {
+        lines.push(`▪ WhatsApp direto: https://wa.me/55${rawTel}`);
+      }
+    }
 
-    window.open(`https://wa.me/55${t}?text=${encodeURIComponent(text)}`, "_blank");
+    lines.push(`▪ Atendimento de urgência: ${urgenciaTexto}`);
+    lines.push("");
+    lines.push("▪ Especialidades atendidas:");
+    lines.push(especialidadesTexto);
+
+    if (contato.observacoes && contato.observacoes.trim()) {
+      lines.push("");
+      lines.push("▪ Observações:");
+      lines.push(contato.observacoes.trim());
+    }
+
+    lines.push("");
+    lines.push("----------------------------------------");
+    lines.push("Encaminhado pela Administração do Condomínio");
+
+    const text = lines.join("\n");
+
+    // Copia para a área de transferência
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+
+    addToast("Abrindo WhatsApp para enviar os dados do contato...", "success");
+
+    // Abre o compartilhamento do WhatsApp
+    const shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(shareUrl, "_blank");
   };
 
   return (
@@ -298,11 +342,25 @@ ${contato.observacoes || "Nenhuma observação."}`;
                 </div>
               </div>
 
-              <div className="space-y-3 mb-6 flex-grow min-w-0">
+              <div className="space-y-2.5 mb-6 flex-grow min-w-0">
                 <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 min-w-0">
                   <Phone size={15} className="text-slate-400 shrink-0" />
                   <span className="truncate break-all">{contato.telefone || "Sem telefone"}</span>
                 </div>
+
+                {contato.cnpjCpf && (
+                  <div className="flex items-center gap-2 text-xs text-slate-500 min-w-0">
+                    <FileText size={14} className="text-slate-400 shrink-0" />
+                    <span className="truncate font-mono">{contato.cnpjCpf}</span>
+                  </div>
+                )}
+
+                {contato.atendimentoUrgencia === "Sim" && (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-[11px] font-medium border border-slate-200 shadow-xs">
+                    <Clock size={12} className="text-slate-500 shrink-0" />
+                    <span>Atende Urgência / Plantão</span>
+                  </div>
+                )}
                 
                 {contato.especialidades && contato.especialidades.length > 0 && (
                   <div className="pt-2 min-w-0">
@@ -326,21 +384,22 @@ ${contato.observacoes || "Nenhuma observação."}`;
               <div className="flex items-center gap-2 pt-4 border-t border-slate-100 mt-auto min-w-0">
                 <button
                   onClick={() => handleWhatsApp(contato)}
-                  className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1.5 sm:gap-2 border border-green-200/50 truncate min-w-0"
+                  className="flex-1 bg-emerald-50 hover:bg-emerald-100 active:scale-[0.98] text-emerald-700 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 border border-emerald-200/70 shadow-xs cursor-pointer truncate min-w-0"
+                  title="Compartilhar dados deste contato via WhatsApp"
                 >
-                  <Send size={15} className="shrink-0" />
-                  <span className="truncate">WhatsApp</span>
+                  <Send size={15} className="shrink-0 text-emerald-600" />
+                  <span className="truncate">Enviar contato WhatsApp</span>
                 </button>
                 <button
                   onClick={() => openModalEdit(contato)}
-                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border border-transparent hover:border-blue-100 shrink-0"
+                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border border-transparent hover:border-blue-100 shrink-0 cursor-pointer"
                   title="Editar Contato"
                 >
                   <Edit2 size={18} />
                 </button>
                 <button
                   onClick={() => handleDelete(contato.id)}
-                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100 shrink-0"
+                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100 shrink-0 cursor-pointer"
                   title="Excluir Contato"
                 >
                   <Trash2 size={18} />
