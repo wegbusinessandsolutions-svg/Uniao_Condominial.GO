@@ -9,6 +9,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  setDoc,
   query,
   orderBy,
   onSnapshot,
@@ -49,6 +50,8 @@ import {
   PenTool,
   CalendarDays,
   X,
+  Edit3,
+  Save,
 } from "lucide-react";
 import { exportOrdemServicoPdf } from "../../lib/pdfExport";
 import {
@@ -59,6 +62,7 @@ import {
   getExecutionStepInfo,
   computeOrderInternalMetrics,
 } from "../../types/serviceExecution";
+import { getOrderEditTimeRemaining } from "../../lib/serviceExecutionUtils";
 import {
   cacheOrderInIndexedDB,
   getCachedOrdersFromIndexedDB,
@@ -667,8 +671,8 @@ export default function PrestadorDashboard() {
   // 3. Marco: Confirmar Fotos Iniciais (Antes) e Iniciar Trabalho Físico
   const handleConfirmarFotosAntes = async () => {
     if (!activeOrder) return;
-    if (localFotosAntes.length < 3) {
-      alert("É obrigatório tirar no mínimo 3 fotos do estado inicial do local antes de iniciar.");
+    if (localFotosAntes.length < 4) {
+      alert("É obrigatório tirar 4 fotos do estado inicial do local antes de iniciar.");
       return;
     }
 
@@ -709,8 +713,8 @@ export default function PrestadorDashboard() {
   // 5. Marco: Confirmar Fotos Finais (Depois)
   const handleConfirmarFotosDepois = async () => {
     if (!activeOrder) return;
-    if (localFotosDepois.length < 3) {
-      alert("É obrigatório tirar no mínimo 3 fotos comprovando a conclusão do serviço.");
+    if (localFotosDepois.length < 4) {
+      alert("É obrigatório tirar 4 fotos comprobatórias da conclusão do serviço.");
       return;
     }
 
@@ -1098,7 +1102,7 @@ export default function PrestadorDashboard() {
                     Etapa Obrigatória: Fotografias Iniciais (Antes do Serviço)
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    Tire no mínimo <strong>3 fotos nítidas</strong> do local do serviço. Cada foto receberá automaticamente o carimbo pericial <strong>Timemark Foto 100% Real</strong> com o nome do condomínio, endereço, data e horário exato gravados na imagem.
+                    Tire as <strong>4 fotos nítidas</strong> do local do serviço. Cada foto receberá automaticamente o carimbo pericial <strong>Timemark Foto 100% Real</strong> com o nome do condomínio, endereço, data e horário exato gravados na imagem.
                   </p>
                 </div>
 
@@ -1106,6 +1110,11 @@ export default function PrestadorDashboard() {
                   fase="antes"
                   photos={localFotosAntes}
                   onChangePhotos={setLocalFotosAntes}
+                  onAutoSave={(photos) => {
+                    if (activeOrder) {
+                      updateOrderInDb(activeOrder.id, { fotosAntes: photos }, null, true);
+                    }
+                  }}
                   orderId={activeOrder.id}
                   nomeCondominio={activeOrder.nomeCondominio || activeOrder.clienteNome || "Condomínio Residencial"}
                   enderecoCompleto={activeOrder.enderecoCondominio || ""}
@@ -1115,13 +1124,13 @@ export default function PrestadorDashboard() {
 
                 <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
                   <span className="text-xs text-slate-500 font-medium">
-                    {localFotosAntes.length}/3 fotos mínimas capturadas
+                    {localFotosAntes.length}/4 fotos mínimas capturadas
                   </span>
 
                   <button
                     type="button"
                     onClick={handleConfirmarFotosAntes}
-                    disabled={localFotosAntes.length < 3 || isSubmitting}
+                    disabled={localFotosAntes.length < 4 || isSubmitting}
                     className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-bold text-sm rounded-xl shadow-md flex items-center justify-center gap-2 transition-all"
                   >
                     <Play size={18} /> Aceitar Início & Começar Execução
@@ -1204,7 +1213,7 @@ export default function PrestadorDashboard() {
                     Etapa Obrigatória: Fotografias Finais (Serviço Concluído)
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    Anexe no mínimo <strong>3 fotos comprobatórias</strong> do serviço pronto e limpo. Elas também recebem o carimbo indelével <strong>Timemark Foto 100% Real</strong> com data, horário e nome do condomínio.
+                    Anexe as <strong>4 fotos comprobatórias</strong> do serviço pronto e limpo. Elas também recebem o carimbo indelével <strong>Timemark Foto 100% Real</strong> com data, horário e nome do condomínio.
                   </p>
                 </div>
 
@@ -1212,6 +1221,11 @@ export default function PrestadorDashboard() {
                   fase="depois"
                   photos={localFotosDepois}
                   onChangePhotos={setLocalFotosDepois}
+                  onAutoSave={(photos) => {
+                    if (activeOrder) {
+                      updateOrderInDb(activeOrder.id, { fotosDepois: photos }, null, true);
+                    }
+                  }}
                   orderId={activeOrder.id}
                   nomeCondominio={activeOrder.nomeCondominio || activeOrder.clienteNome || "Condomínio Residencial"}
                   enderecoCompleto={activeOrder.enderecoCondominio || ""}
@@ -1221,13 +1235,13 @@ export default function PrestadorDashboard() {
 
                 <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
                   <span className="text-xs text-slate-500 font-medium">
-                    {localFotosDepois.length}/3 fotos finais capturadas
+                    {localFotosDepois.length}/4 fotos finais capturadas
                   </span>
 
                   <button
                     type="button"
                     onClick={handleConfirmarFotosDepois}
-                    disabled={localFotosDepois.length < 3 || isSubmitting}
+                    disabled={localFotosDepois.length < 4 || isSubmitting}
                     className="w-full sm:w-auto px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-bold text-sm rounded-xl shadow-md flex items-center justify-center gap-2 transition-all"
                   >
                     <ShieldCheck size={18} /> Confirmar Fotos & Coletar Assinatura

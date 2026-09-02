@@ -378,9 +378,35 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["clienteId", "nomeContato", "telefone"]
+    },
+    "ordens_servico": {
+      "title": "Ordens de Serviço e Execução Técnica",
+      "description": "Ordens de serviço de rotina com registro fotográfico e assinatura digital",
+      "type": "object",
+      "properties": {
+        "numeroOS": { "type": "string" },
+        "clienteId": { "type": "string" },
+        "clienteNome": { "type": "string" },
+        "nomeCondominio": { "type": "string" },
+        "servicoNome": { "type": "string" },
+        "colaboradorId": { "type": "string" },
+        "colaboradorNome": { "type": "string" },
+        "status": { "type": "string" },
+        "etapaExecucao": { "type": "string" },
+        "fotosAntes": { "type": "array" },
+        "fotosDepois": { "type": "array" },
+        "assinaturaResponsavel": { "type": "object" },
+        "concluidoEm": { "type": "string", "format": "date-time" },
+        "editadoAposConclusaoEm": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clienteId", "status", "etapaExecucao"]
     }
   },
   "firestore": {
+    "ordens_servico/{id}": {
+      "schema": "ordens_servico",
+      "description": "Ordens de serviço com 4 fotos antes, 4 fotos depois, histórico de 8h e assinatura digital"
+    },
     "cliente_contatos/{contatoId}": {
       "schema": "cliente_contatos",
       "description": "Coleção de contatos e prestadores de serviços cadastrados por cada cliente ou condomínio"

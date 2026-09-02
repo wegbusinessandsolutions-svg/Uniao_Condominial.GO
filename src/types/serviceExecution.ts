@@ -120,18 +120,25 @@ export interface RoutineServiceOrder {
     longitude: number;
     precisaoMetros?: number;
   };
-  fotosAntesEm?: string; // ISO - Momento em que as 3 fotos iniciais são confirmadas
+  fotosAntesEm?: string; // ISO - Momento em que as 4 fotos iniciais são confirmadas
   inicioTrabalhoEm?: string; // ISO - Momento em que os trabalhos técnicos efetivamente começam
   pausaLogs?: Array<{
     pausadoEm: string;
     retomadoEm?: string;
     motivo: string;
   }>;
-  fotosDepoisEm?: string; // ISO - Momento em que as 3 fotos finais são confirmadas
+  fotosDepoisEm?: string; // ISO - Momento em que as 4 fotos finais são confirmadas
   assinaturaEm?: string; // ISO - Momento em que o responsável assina digitalmente
   concluidoEm?: string; // ISO - Momento em que a OS é 100% concluída e finalizada
+  editadoAposConclusaoEm?: string; // ISO - Momento da última edição dentro da janela de 8 horas pós-conclusão
+  historicoEdicoes?: Array<{
+    data: string;
+    autor: string;
+    motivo?: string;
+    camposAlterados?: string[];
+  }>;
 
-  // Evidências Fotográficas (Mínimo de 3 Obrigatório)
+  // Evidências Fotográficas (Mínimo de 4 Obrigatórias Antes e 4 Depois)
   fotosAntes: ServicePhoto[];
   fotosDepois: ServicePhoto[];
 
@@ -198,11 +205,11 @@ export function getExecutionStepInfo(etapa: ServiceExecutionStep): {
     case "chegou_local":
     case "fotos_antes":
       return {
-        label: "Vistoria Inicial (Fotos)",
+        label: "Vistoria Inicial (4 Fotos)",
         stepNumber: 3,
         badgeBg: "bg-yellow-500/20 border-yellow-500/30",
         badgeText: "text-yellow-400",
-        description: "Chegou ao local — registrando 3 fotos iniciais com marca d'água",
+        description: "Chegou ao local — registrando 4 fotos iniciais obrigatórias com carimbo",
       };
     case "em_execucao":
       return {
@@ -214,11 +221,11 @@ export function getExecutionStepInfo(etapa: ServiceExecutionStep): {
       };
     case "fotos_depois":
       return {
-        label: "Vistoria Final (Fotos)",
+        label: "Vistoria Final (4 Fotos)",
         stepNumber: 5,
         badgeBg: "bg-purple-500/20 border-purple-500/30",
         badgeText: "text-purple-400",
-        description: "Serviço concluído — registrando 3 fotos finais com marca d'água",
+        description: "Serviço concluído — registrando 4 fotos finais comprobatórias com carimbo",
       };
     case "aguardando_assinatura":
       return {

@@ -168,9 +168,9 @@ export function getExecutionStepInfo(step?: ServiceExecutionStep | string) {
     case "fotos_antes":
       return {
         stepNumber: 3,
-        title: "Chegou no Condomínio / Fotos Iniciais",
+        title: "Chegou no Condomínio / 4 Fotos Iniciais",
         badgeColor: "bg-amber-100 text-amber-800 border-amber-300",
-        description: "No local realizando vistoria preliminar e registrando as 3 fotos obrigatórias.",
+        description: "No local realizando vistoria preliminar e registrando as 4 fotos obrigatórias.",
       };
     case "em_execucao":
       return {
@@ -182,9 +182,9 @@ export function getExecutionStepInfo(step?: ServiceExecutionStep | string) {
     case "fotos_depois":
       return {
         stepNumber: 5,
-        title: "Vistoria Final / 3 Fotos Conclusão",
+        title: "Vistoria Final / 4 Fotos Conclusão",
         badgeColor: "bg-teal-100 text-teal-800 border-teal-300",
-        description: "Trabalho concluído. Registrando as 3 fotos obrigatórias de comprovação.",
+        description: "Trabalho concluído. Registrando as 4 fotos comprobatórias obrigatórias.",
       };
     case "aguardando_assinatura":
       return {
@@ -215,4 +215,82 @@ export function getExecutionStepInfo(step?: ServiceExecutionStep | string) {
         description: "Status em processamento.",
       };
   }
+}
+
+/**
+ * Calculates remaining time for the technician to edit a service order within 8 hours of completion
+ */
+export function getOrderEditTimeRemaining(order: RoutineServiceOrder): {
+  canEdit: boolean;
+  remainingMs: number;
+  remainingHours: number;
+  remainingMinutes: number;
+  formattedRemaining: string;
+  deadlineIso?: string;
+  conclusionDate?: string;
+} {
+  if (order.status !== "Serviço Concluído" && order.etapaExecucao !== "concluido") {
+    return {
+      canEdit: false,
+      remainingMs: 0,
+      remainingHours: 0,
+      remainingMinutes: 0,
+      formattedRemaining: "Serviço não finalizado",
+    };
+  }
+
+  const completionIso =
+    order.concluidoEm || order.assinaturaEm || (order as any).dataConclusao || order.updatedAt;
+
+  if (!completionIso) {
+    return {
+      canEdit: false,
+      remainingMs: 0,
+      remainingHours: 0,
+      remainingMinutes: 0,
+      formattedRemaining: "Data de conclusão não identificada",
+    };
+  }
+
+  const completionDate = new Date(completionIso);
+  const completionTimestamp = completionDate.getTime();
+  if (isNaN(completionTimestamp)) {
+    return {
+      canEdit: false,
+      remainingMs: 0,
+      remainingHours: 0,
+      remainingMinutes: 0,
+      formattedRemaining: "Data de conclusão inválida",
+    };
+  }
+
+  const deadlineTime = completionTimestamp + 8 * 60 * 60 * 1000;
+  const remainingMs = deadlineTime - Date.now();
+  const canEdit = remainingMs > 0;
+
+  if (!canEdit) {
+    return {
+      canEdit: false,
+      remainingMs: 0,
+      remainingHours: 0,
+      remainingMinutes: 0,
+      formattedRemaining: "Prazo de 8 horas expirado",
+      deadlineIso: new Date(deadlineTime).toISOString(),
+      conclusionDate: completionIso,
+    };
+  }
+
+  const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+  const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+  const formattedRemaining = `${remainingHours}h ${remainingMinutes.toString().padStart(2, "0")}min restantes`;
+
+  return {
+    canEdit: true,
+    remainingMs,
+    remainingHours,
+    remainingMinutes,
+    formattedRemaining,
+    deadlineIso: new Date(deadlineTime).toISOString(),
+    conclusionDate: completionIso,
+  };
 }

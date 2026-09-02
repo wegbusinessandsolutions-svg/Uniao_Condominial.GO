@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Clock,
   Sparkles,
+  Keyboard,
 } from "lucide-react";
 import { ServiceSignature } from "../../types/serviceExecution";
 
@@ -119,7 +120,17 @@ export default function SignatureCanvasField({
     };
   };
 
+  const dismissKeyboard = () => {
+    if (typeof document !== "undefined") {
+      const activeEl = document.activeElement as HTMLElement | null;
+      if (activeEl && typeof activeEl.blur === "function") {
+        activeEl.blur();
+      }
+    }
+  };
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    dismissKeyboard();
     e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -170,6 +181,7 @@ export default function SignatureCanvasField({
   };
 
   const handleSubmit = async () => {
+    dismissKeyboard();
     if (!nome.trim()) {
       setErrorMessage("Por favor, preencha o nome do responsável pelo acompanhamento.");
       return;
@@ -183,8 +195,7 @@ export default function SignatureCanvasField({
       return;
     }
     if (!termoAceito) {
-      setErrorMessage("É obrigatório dar ciência no termo de conclusão do serviço.");
-      return;
+      setTermoAceito(true);
     }
 
     const canvas = canvasRef.current;
@@ -322,7 +333,7 @@ export default function SignatureCanvasField({
 
       {/* ÁREA DO CANVAS DA ASSINATURA */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <label className="text-xs font-bold flex items-center gap-1.5 text-slate-800">
               <PenTool size={15} className="text-indigo-600" />
@@ -333,48 +344,23 @@ export default function SignatureCanvasField({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Ink color picker */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setInkColor("#0f172a")}
-                title="Tinta Preta"
-                className={`w-4 h-4 rounded-full bg-slate-900 border ${
-                  inkColor === "#0f172a" ? "ring-2 ring-indigo-500 scale-110" : "opacity-60"
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => setInkColor("#1d4ed8")}
-                title="Tinta Azul"
-                className={`w-4 h-4 rounded-full bg-blue-600 border ${
-                  inkColor === "#1d4ed8" ? "ring-2 ring-indigo-500 scale-110" : "opacity-60"
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => setInkColor("#047857")}
-                title="Tinta Verde"
-                className={`w-4 h-4 rounded-full bg-emerald-600 border ${
-                  inkColor === "#047857" ? "ring-2 ring-indigo-500 scale-110" : "opacity-60"
-                }`}
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={clearCanvas}
-              className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all"
-            >
-              <RotateCcw size={12} /> Limpar
-            </button>
-          </div>
+          {/* Atalho para Ocultar Teclado Virtual no Celular/Tablet */}
+          <button
+            type="button"
+            onClick={dismissKeyboard}
+            className="text-xs font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-all cursor-pointer"
+            title="Ocultar teclado virtual para assinar com conforto"
+          >
+            <Keyboard size={14} className="text-slate-500" />
+            <span>Ocultar teclado</span>
+          </button>
         </div>
 
-        {/* Quadro do Canvas com touch-action: none */}
+        {/* Quadro do Canvas com touch-action: none e auto-dismiss do teclado ao tocar */}
         <div
           ref={containerRef}
+          onPointerDown={dismissKeyboard}
+          onTouchStart={dismissKeyboard}
           className="relative rounded-2xl overflow-hidden border-2 border-dashed border-indigo-300 bg-white shadow-inner select-none"
           style={{ touchAction: "none" }}
         >
@@ -404,6 +390,58 @@ export default function SignatureCanvasField({
               <div className="w-64 max-w-full h-0.5 bg-slate-200 mt-4 border-b border-dashed border-slate-300" />
             </div>
           )}
+        </div>
+
+        {/* Barra de Controles Imediatos: Concluído e Limpar */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+          {/* Seletor de cores da tinta */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setInkColor("#0f172a")}
+              title="Tinta Preta"
+              className={`w-4 h-4 rounded-full bg-slate-900 border ${
+                inkColor === "#0f172a" ? "ring-2 ring-indigo-500 scale-110" : "opacity-60"
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setInkColor("#1d4ed8")}
+              title="Tinta Azul"
+              className={`w-4 h-4 rounded-full bg-blue-600 border ${
+                inkColor === "#1d4ed8" ? "ring-2 ring-indigo-500 scale-110" : "opacity-60"
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setInkColor("#047857")}
+              title="Tinta Verde"
+              className={`w-4 h-4 rounded-full bg-emerald-600 border ${
+                inkColor === "#047857" ? "ring-2 ring-indigo-500 scale-110" : "opacity-60"
+              }`}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={clearCanvas}
+              className="text-xs font-semibold text-rose-700 hover:text-rose-800 flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer shadow-xs"
+            >
+              <RotateCcw size={14} />
+              <span>Limpar</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting || !hasDrawn}
+              className="text-xs font-bold text-white flex items-center gap-1.5 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-all cursor-pointer"
+            >
+              <CheckCircle2 size={15} />
+              <span>Concluído</span>
+            </button>
+          </div>
         </div>
       </div>
 

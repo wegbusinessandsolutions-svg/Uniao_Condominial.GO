@@ -399,8 +399,8 @@ export default function ExecucaoServicos() {
   // 3. Marco: Fotos Antes -> 4. Marco: Início do Trabalho Técnico
   const handleConfirmarFotosAntes = async () => {
     if (!activeOrder) return;
-    if (localFotosAntes.length < 3) {
-      alert("É obrigatório tirar no mínimo 3 fotografias nítidas do local antes de iniciar o trabalho.");
+    if (localFotosAntes.length < 4) {
+      alert("É obrigatório tirar as 4 fotografias nítidas do local antes de iniciar o trabalho.");
       return;
     }
 
@@ -433,8 +433,8 @@ export default function ExecucaoServicos() {
   // 4. Marco: Fotos Finais -> Coletar Assinatura Digital
   const handleConfirmarFotosDepois = async () => {
     if (!activeOrder) return;
-    if (localFotosDepois.length < 3) {
-      alert("É obrigatório tirar no mínimo 3 fotografias comprovando o serviço finalizado antes da assinatura.");
+    if (localFotosDepois.length < 4) {
+      alert("É obrigatório tirar as 4 fotografias comprovando o serviço finalizado antes da assinatura.");
       return;
     }
 
@@ -825,13 +825,13 @@ export default function ExecucaoServicos() {
 
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
                   <div className="text-xs text-slate-500">
-                    {localFotosAntes.length >= 3 ? (
+                    {localFotosAntes.length >= 4 ? (
                       <span className="text-emerald-700 font-bold flex items-center gap-1.5">
-                        <CheckCircle2 size={16} /> 3 Fotos obrigatórias registradas. Você pode prosseguir.
+                        <CheckCircle2 size={16} /> 4 Fotos obrigatórias registradas. Você pode prosseguir.
                       </span>
                     ) : (
                       <span className="text-amber-700 font-bold flex items-center gap-1.5">
-                        <AlertTriangle size={16} /> Faltam {3 - localFotosAntes.length} fotos antes de liberar o início
+                        <AlertTriangle size={16} /> Faltam {4 - localFotosAntes.length} fotos antes de liberar o início
                         do trabalho.
                       </span>
                     )}
@@ -840,10 +840,10 @@ export default function ExecucaoServicos() {
                   <button
                     type="button"
                     onClick={handleConfirmarFotosAntes}
-                    disabled={localFotosAntes.length < 3 || isSubmitting}
+                    disabled={localFotosAntes.length < 4 || isSubmitting}
                     className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-sm rounded-xl shadow-md flex items-center justify-center gap-2 transition-all"
                   >
-                    <Wrench size={18} /> Confirmar 3 Fotos & Iniciar Trabalho
+                    <Wrench size={18} /> Confirmar 4 Fotos & Iniciar Trabalho
                   </button>
                 </div>
               </div>
@@ -933,13 +933,13 @@ export default function ExecucaoServicos() {
 
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
                   <div className="text-xs text-slate-500">
-                    {localFotosDepois.length >= 3 ? (
+                    {localFotosDepois.length >= 4 ? (
                       <span className="text-emerald-700 font-bold flex items-center gap-1.5">
-                        <CheckCircle2 size={16} /> 3 Fotos finais anexadas. Pronto para colher a assinatura.
+                        <CheckCircle2 size={16} /> 4 Fotos finais anexadas. Pronto para colher a assinatura.
                       </span>
                     ) : (
                       <span className="text-amber-700 font-bold flex items-center gap-1.5">
-                        <AlertTriangle size={16} /> Faltam {3 - localFotosDepois.length} fotos finais antes de liberar a
+                        <AlertTriangle size={16} /> Faltam {4 - localFotosDepois.length} fotos finais antes de liberar a
                         assinatura.
                       </span>
                     )}
@@ -948,10 +948,10 @@ export default function ExecucaoServicos() {
                   <button
                     type="button"
                     onClick={handleConfirmarFotosDepois}
-                    disabled={localFotosDepois.length < 3 || isSubmitting}
+                    disabled={localFotosDepois.length < 4 || isSubmitting}
                     className="w-full sm:w-auto px-6 py-3 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-sm rounded-xl shadow-md flex items-center justify-center gap-2 transition-all"
                   >
-                    <PenTool size={18} /> Confirmar 3 Fotos & Coletar Assinatura
+                    <PenTool size={18} /> Confirmar 4 Fotos & Coletar Assinatura
                   </button>
                 </div>
               </div>

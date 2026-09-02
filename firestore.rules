@@ -43,8 +43,11 @@ service cloud.firestore {
     function OLD_isExpedicao() {
       return isAdmin() || (isSignedIn() && getRole() in ['Estoquista', 'Entregador', 'Expedição']);
     }
+    function isPrestador() {
+      return isAdmin() || (isSignedIn() && getRole() in ['Prestador', 'Prestador de Serviços / Técnico', 'Técnico', 'Tecnico', 'Colaborador', 'Funcionario', 'Funcionário']);
+    }
     function isStaff() {
-      return isAdmin() || (isSignedIn() && getRole() in ['Administrador', 'admin', 'Admin', 'Comercial', 'Comercial Externo', 'Vendedor Externo', 'Financeiro', 'Estoquista', 'Entregador', 'Expedição']);
+      return isAdmin() || (isSignedIn() && getRole() in ['Administrador', 'admin', 'Admin', 'Comercial', 'Comercial Externo', 'Vendedor Externo', 'Financeiro', 'Estoquista', 'Entregador', 'Expedição', 'Prestador', 'Prestador de Serviços / Técnico', 'Técnico', 'Tecnico', 'Colaborador']);
     }
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
@@ -79,9 +82,19 @@ service cloud.firestore {
     }
     match /servicos_essenciais/{id}     { allow read: if true; allow write: if isStaff(); }
     match /ordens_servico/{id} {
-      allow read: if isStaff() || (isSignedIn() && (resource.data.clienteId == request.auth.uid || (resource.data.clienteEmail != null && request.auth.token.email != null && resource.data.clienteEmail == request.auth.token.email)));
+      allow read: if isStaff() || isPrestador() || (isSignedIn() && (
+        resource.data.colaboradorId == request.auth.uid || 
+        (resource.data.colaboradorEmail != null && request.auth.token.email != null && resource.data.colaboradorEmail == request.auth.token.email) ||
+        resource.data.clienteId == request.auth.uid || 
+        (resource.data.clienteEmail != null && request.auth.token.email != null && resource.data.clienteEmail == request.auth.token.email)
+      ));
       allow create: if isSignedIn();
-      allow update: if isStaff() || (isSignedIn() && (resource.data.clienteId == request.auth.uid || (resource.data.clienteEmail != null && request.auth.token.email != null && resource.data.clienteEmail == request.auth.token.email)));
+      allow update: if isStaff() || isPrestador() || (isSignedIn() && (
+        resource.data.colaboradorId == request.auth.uid || 
+        (resource.data.colaboradorEmail != null && request.auth.token.email != null && resource.data.colaboradorEmail == request.auth.token.email) ||
+        resource.data.clienteId == request.auth.uid || 
+        (resource.data.clienteEmail != null && request.auth.token.email != null && resource.data.clienteEmail == request.auth.token.email)
+      ));
       allow delete: if isStaff() || (
         isSignedIn() && 
         (resource.data.clienteId == request.auth.uid || (resource.data.clienteEmail != null && request.auth.token.email != null && resource.data.clienteEmail == request.auth.token.email)) && 

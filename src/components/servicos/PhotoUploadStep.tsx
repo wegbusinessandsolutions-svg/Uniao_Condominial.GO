@@ -36,6 +36,7 @@ interface PhotoUploadStepProps {
   fase: "antes" | "depois";
   photos: ServicePhoto[];
   onChangePhotos: (photos: ServicePhoto[]) => void;
+  onAutoSave?: (photos: ServicePhoto[]) => Promise<void> | void;
   orderId?: string;
   nomeCondominio?: string;
   enderecoCompleto?: string;
@@ -44,10 +45,48 @@ interface PhotoUploadStepProps {
   disabled?: boolean;
 }
 
+/**
+ * Ensures any image data URL is strictly resized and compressed to max 920px and 0.65 JPEG quality
+ * to guarantee that 8 photos (4 antes + 4 depois) comfortably stay well below the 1MB Firestore limit (~320KB total).
+ */
+function compressImageCanvas(dataUrl: string, maxDim = 920, quality = 0.65): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      } else {
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 export default function PhotoUploadStep({
   fase,
   photos,
   onChangePhotos,
+  onAutoSave,
   orderId,
   nomeCondominio,
   enderecoCompleto,
@@ -68,18 +107,18 @@ export default function PhotoUploadStep({
   const [syncProgressMessage, setSyncProgressMessage] = useState<string | null>(null);
   const [cachedPhotoIds, setCachedPhotoIds] = useState<Set<string>>(new Set());
 
-  const minPhotosRequired = 3;
+  const minPhotosRequired = 4;
   const isComplete = photos.length >= minPhotosRequired;
 
   const defaultTitle =
     fase === "antes"
-      ? "Registro Obrigatório de 3 Fotos ANTES da Execução"
-      : "Registro Obrigatório de 3 Fotos APÓS a Conclusão";
+      ? "Registro Obrigatório de 4 Fotos ANTES da Execução"
+      : "Registro Obrigatório de 4 Fotos APÓS a Conclusão";
 
   const defaultDescription =
     fase === "antes"
-      ? "Tire e anexe no mínimo 3 fotos nítidas do local antes de iniciar o trabalho. A data e o horário da captura são gravados automaticamente no canto inferior direito de cada foto."
-      : "Tire e anexe no mínimo 3 fotos comprovando o serviço finalizado. A data e o horário da captura são gravados automaticamente no canto inferior direito de cada foto.";
+      ? "Tire e anexe as 4 fotos nítidas do local antes de iniciar o trabalho. Todas as 4 fotos recebem o carimbo Timemark Foto 100% Real com condomínio, data e horário."
+      : "Tire e anexe as 4 fotos comprobatórias do serviço finalizado antes da assinatura. Todas as 4 fotos recebem o carimbo Timemark Foto 100% Real.";
 
   // Refresh IndexedDB cache states for this specific OS & phase
   const refreshCacheStatus = useCallback(async () => {
@@ -164,26 +203,33 @@ export default function PhotoUploadStep({
     try {
       const watermarkPromise = applyDateTimeWatermark(file, {
         captureDate,
-        maxDimension: 1440,
-        quality: 0.88,
+        maxDimension: 920,
+        quality: 0.65,
         includeSeconds: false,
         nomeCondominio,
         enderecoCompleto,
         style: "timemark_real",
       });
 
-      // 10s maximum processing budget
+      // 8s maximum processing budget
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout ao estampar marca d'água")), 10000)
+        setTimeout(() => reject(new Error("Timeout ao estampar marca d'água")), 8000)
       );
 
       const result = await Promise.race([watermarkPromise, timeoutPromise]);
-      return result.dataUrl;
+      return await compressImageCanvas(result.dataUrl, 920, 0.65);
     } catch (wmErr) {
-      console.warn("Processamento de marca d'água demorou ou falhou, lendo arquivo diretamente:", wmErr);
+      console.warn("Processamento de marca d'água demorou ou falhou, comprimindo via canvas:", wmErr);
       return new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
+        reader.onload = async () => {
+          try {
+            const compressed = await compressImageCanvas(reader.result as string, 920, 0.65);
+            resolve(compressed);
+          } catch {
+            resolve(reader.result as string);
+          }
+        };
         reader.onerror = () => reject(new Error("Falha ao ler arquivo de fotografia."));
         reader.readAsDataURL(file);
       });
@@ -210,7 +256,7 @@ export default function PhotoUploadStep({
       const targetSlot = currentSlotIndex !== null ? currentSlotIndex : photos.length;
       const photoId = `photo_${Date.now()}_slot${targetSlot}_${Math.random().toString(36).substring(2, 7)}`;
 
-      // Fast image processing
+      // Fast image processing & guaranteed compression
       const finalUrl = await processImageFile(file, captureTime);
 
       const newPhoto: ServicePhoto = {
@@ -218,21 +264,20 @@ export default function PhotoUploadStep({
         url: finalUrl,
         tiradaEm: nowIso,
         fase,
-        legenda: `Foto ${targetSlot + 1} - ${fase === "antes" ? "Estado Inicial" : "Serviço Concluído"}`,
+        legenda: `Foto ${targetSlot + 1} de 4 - ${fase === "antes" ? "Estado Inicial" : "Comprovação Final"}`,
       };
 
-      // 1. Update React State maintaining exact slot positioning IMMEDIATELY
+      // 1. Update React State maintaining exact slot positioning
       const updated = [...photos];
       if (targetSlot < updated.length) {
         updated[targetSlot] = newPhoto;
       } else {
-        while (updated.length < targetSlot) {
-          updated.push(newPhoto);
-        }
         updated[targetSlot] = newPhoto;
       }
+      const filtered = updated.filter(Boolean);
 
-      onChangePhotos(updated);
+      onChangePhotos(filtered);
+      onAutoSave?.(filtered);
 
       // Stop image processing spinner immediately so technician sees the photo
       setIsProcessingImage(false);
@@ -296,6 +341,7 @@ export default function PhotoUploadStep({
 
     const updated = photos.filter((_, idx) => idx !== indexToRemove);
     onChangePhotos(updated);
+    onAutoSave?.(updated);
   };
 
   const handleUpdateLegenda = async (index: number, newLegenda: string) => {
@@ -303,6 +349,7 @@ export default function PhotoUploadStep({
     if (updated[index]) {
       updated[index] = { ...updated[index], legenda: newLegenda };
       onChangePhotos(updated);
+      onAutoSave?.(updated);
 
       if (orderId) {
         try {
@@ -325,12 +372,11 @@ export default function PhotoUploadStep({
     }
   };
 
-  // Build slots array (strictly at least 3 slots visible, keeping sequence)
-  const slotCount = Math.max(3, photos.length + (photos.length < 6 ? 1 : 0));
-  const slots = Array.from({ length: slotCount }, (_, i) => ({
+  // Build slots array - strictly 4 required slots (1, 2, 3, 4)
+  const slots = Array.from({ length: 4 }, (_, i) => ({
     index: i,
     photo: photos[i] || null,
-    isRequired: i < 3,
+    isRequired: true,
   }));
 
   return (
@@ -398,13 +444,13 @@ export default function PhotoUploadStep({
             {isComplete ? (
               <>
                 <CheckCircle2 size={14} className="text-emerald-600" />
-                <span>{photos.length}/3 Fotos (Completo)</span>
+                <span>{photos.length}/4 Fotos (Completo)</span>
               </>
             ) : (
               <>
                 <AlertCircle size={14} className="text-amber-600 animate-pulse" />
                 <span>
-                  {photos.length}/3 Fotos Obrigatórias ({3 - photos.length} restantes)
+                  {photos.length}/4 Fotos Obrigatórias ({4 - photos.length} restantes)
                 </span>
               </>
             )}
@@ -452,7 +498,7 @@ export default function PhotoUploadStep({
               <p className="opacity-90 text-[11px]">
                 {syncProgressMessage ||
                   (!isOnline
-                    ? "Suas 3 fotos são salvas instantaneamente no cache local do dispositivo. Assim que a internet retornar, o envio sequencial será feito na ordem exata."
+                    ? "Suas 4 fotos são salvas instantaneamente no cache local do dispositivo. Assim que a internet retornar, o envio sequencial será feito na ordem exata."
                     : "Conexão estabelecida. Fotos pendentes prontas para envio ordenado.")}
               </p>
             </div>
@@ -477,8 +523,8 @@ export default function PhotoUploadStep({
         </div>
       )}
 
-      {/* Grid of 3 Photo Slots - Strict Sequence 1, 2, 3 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Grid of 4 Photo Slots - Strict Sequence 1, 2, 3, 4 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {slots.map((slot) => {
           const photo = slot.photo;
           const isCachedLocally = photo && cachedPhotoIds.has(photo.id);
@@ -508,7 +554,7 @@ export default function PhotoUploadStep({
                     <div className="absolute top-2 left-2 flex items-center gap-1.5">
                       <div className="bg-slate-900/85 backdrop-blur-sm text-white text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
                         <Layers size={11} className="text-blue-400" />
-                        <span>Foto {slot.index + 1} de 3 {slot.isRequired ? "(Obrigatória)" : "(Extra)"}</span>
+                        <span>Foto {slot.index + 1} de 4 (Obrigatória)</span>
                       </div>
                     </div>
 
@@ -595,9 +641,7 @@ export default function PhotoUploadStep({
                     <Camera size={24} />
                   </div>
                   <span className="font-bold text-xs text-slate-800">
-                    {slot.isRequired
-                      ? `Tirar Foto ${slot.index + 1} de 3 (Obrigatória)`
-                      : `Adicionar Foto Extra ${slot.index + 1}`}
+                    Tirar Foto {slot.index + 1} de 4 (Obrigatória)
                   </span>
                   <span className="text-[11px] text-slate-400 mt-1">
                     Toque para abrir câmera ou galeria
