@@ -1112,7 +1112,7 @@ export default function PrestadorDashboard() {
                   onChangePhotos={setLocalFotosAntes}
                   onAutoSave={(photos) => {
                     if (activeOrder) {
-                      updateOrderInDb(activeOrder.id, { fotosAntes: photos }, null, true);
+                      updateOrderInDb(activeOrder.id, { fotosAntes: photos });
                     }
                   }}
                   orderId={activeOrder.id}
@@ -1223,7 +1223,7 @@ export default function PrestadorDashboard() {
                   onChangePhotos={setLocalFotosDepois}
                   onAutoSave={(photos) => {
                     if (activeOrder) {
-                      updateOrderInDb(activeOrder.id, { fotosDepois: photos }, null, true);
+                      updateOrderInDb(activeOrder.id, { fotosDepois: photos });
                     }
                   }}
                   orderId={activeOrder.id}

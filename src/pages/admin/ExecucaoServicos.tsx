@@ -816,7 +816,7 @@ export default function ExecucaoServicos() {
                   </p>
                 </div>
 
-                <PhotoUploadStep
+                <PhotoUploadStep onAutoSave={(photos) => { if(activeOrder) { updateOrderInDb(activeOrder.id, { fotosAntes: photos }); } }}
                   fase="antes"
                   orderId={activeOrder.id}
                   photos={localFotosAntes}
@@ -924,7 +924,7 @@ export default function ExecucaoServicos() {
                   </p>
                 </div>
 
-                <PhotoUploadStep
+                <PhotoUploadStep onAutoSave={(photos) => { if(activeOrder) { updateOrderInDb(activeOrder.id, { fotosDepois: photos }); } }}
                   fase="depois"
                   orderId={activeOrder.id}
                   photos={localFotosDepois}
