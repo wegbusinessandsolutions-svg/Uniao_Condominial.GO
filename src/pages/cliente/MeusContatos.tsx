@@ -322,10 +322,11 @@ export default function MeusContatos() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 min-w-0">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 min-w-0">
           {contatos.map(contato => (
-            <div key={contato.id} className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all flex flex-col min-w-0 overflow-hidden break-words">
-              <div className="flex justify-between items-start mb-4 min-w-0">
+            <div key={contato.id} className="bg-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-all flex flex-col lg:flex-row lg:items-center min-w-0 overflow-hidden break-words gap-4 lg:gap-6">
+              
+              <div className="flex justify-between items-start lg:items-center min-w-0 lg:w-4/12 shrink-0">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-2xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0">
                     <Building2 size={22} />
@@ -342,19 +343,17 @@ export default function MeusContatos() {
                 </div>
               </div>
 
-              <div className="space-y-2.5 mb-6 flex-grow min-w-0">
+              <div className="space-y-2.5 flex-grow min-w-0 lg:px-4 lg:border-l lg:border-slate-100">
                 <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 min-w-0">
                   <Phone size={15} className="text-slate-400 shrink-0" />
                   <span className="truncate break-all">{contato.telefone || "Sem telefone"}</span>
                 </div>
-
                 {contato.cnpjCpf && (
                   <div className="flex items-center gap-2 text-xs text-slate-500 min-w-0">
                     <FileText size={14} className="text-slate-400 shrink-0" />
                     <span className="truncate font-mono">{contato.cnpjCpf}</span>
                   </div>
                 )}
-
                 {contato.atendimentoUrgencia === "Sim" && (
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-[11px] font-medium border border-slate-200 shadow-xs">
                     <Clock size={12} className="text-slate-500 shrink-0" />
@@ -363,16 +362,15 @@ export default function MeusContatos() {
                 )}
                 
                 {contato.especialidades && contato.especialidades.length > 0 && (
-                  <div className="pt-2 min-w-0">
-                    <p className="text-[11px] sm:text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide">Especialidades</p>
+                  <div className="pt-1 min-w-0">
                     <div className="flex flex-wrap gap-1.5 min-w-0">
                       {contato.especialidades.slice(0, 3).map((esp: string) => (
-                        <span key={esp} className="bg-blue-50 text-blue-700 px-2 sm:px-2.5 py-0.5 rounded-lg text-xs font-medium border border-blue-100 truncate max-w-full">
+                        <span key={esp} className="bg-blue-50 text-blue-700 px-2 sm:px-2.5 py-0.5 rounded-lg text-[11px] font-medium border border-blue-100 truncate max-w-full">
                           {esp}
                         </span>
                       ))}
                       {contato.especialidades.length > 3 && (
-                        <span className="bg-slate-50 text-slate-600 px-2 py-0.5 rounded-lg text-xs font-medium border border-slate-200 shrink-0">
+                        <span className="bg-slate-50 text-slate-600 px-2 py-0.5 rounded-lg text-[11px] font-medium border border-slate-200 shrink-0">
                           +{contato.especialidades.length - 3}
                         </span>
                       )}
@@ -381,25 +379,25 @@ export default function MeusContatos() {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 pt-4 border-t border-slate-100 mt-auto min-w-0">
+              <div className="flex items-center gap-2 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100 mt-auto lg:mt-0 min-w-0 lg:min-w-[200px] lg:max-w-[260px] shrink-0 lg:justify-end">
                 <button
                   onClick={() => handleWhatsApp(contato)}
-                  className="flex-1 bg-emerald-50 hover:bg-emerald-100 active:scale-[0.98] text-emerald-700 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 border border-emerald-200/70 shadow-xs cursor-pointer truncate min-w-0"
-                  title="Compartilhar dados deste contato via WhatsApp"
+                  className="flex-1 lg:flex-none lg:w-auto bg-emerald-50 hover:bg-emerald-100 active:scale-[0.98] text-emerald-700 py-2 sm:py-2.5 px-3 rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 sm:gap-2 border border-emerald-200/70 shadow-xs cursor-pointer truncate min-w-0"
+                  title="Compartilhar dados via WhatsApp"
                 >
                   <Send size={15} className="shrink-0 text-emerald-600" />
-                  <span className="truncate">Enviar contato WhatsApp</span>
+                  <span className="truncate">Enviar</span>
                 </button>
                 <button
                   onClick={() => openModalEdit(contato)}
-                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border border-transparent hover:border-blue-100 shrink-0 cursor-pointer"
+                  className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border border-transparent hover:border-blue-100 shrink-0 cursor-pointer"
                   title="Editar Contato"
                 >
                   <Edit2 size={18} />
                 </button>
                 <button
                   onClick={() => handleDelete(contato.id)}
-                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100 shrink-0 cursor-pointer"
+                  className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100 shrink-0 cursor-pointer"
                   title="Excluir Contato"
                 >
                   <Trash2 size={18} />

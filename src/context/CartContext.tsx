@@ -129,10 +129,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Fetch current Firestore items
         const q = query(cartRef);
         const snapshot = await getDocs(q);
-        const firestoreItems: CartItem[] = [];
+        let firestoreItems: CartItem[] = [];
+        
+        let newestUpdate = 0;
+        
         snapshot.forEach((docSnap) => {
-          firestoreItems.push(docSnap.data() as CartItem);
+          const data = docSnap.data();
+          firestoreItems.push(data as CartItem);
+          if (data.updatedAt) {
+            const time = new Date(data.updatedAt).getTime();
+            if (time > newestUpdate) newestUpdate = time;
+          }
         });
+
+        // Check for 7 days expiration (7 * 24 * 60 * 60 * 1000 = 604800000 ms)
+        const SEVEN_DAYS = 604800000;
+        if (newestUpdate > 0 && Date.now() - newestUpdate > SEVEN_DAYS) {
+          // Expire cart
+          const batchDeletes = snapshot.docs.map((docSnap) => deleteDoc(docSnap.ref));
+          await Promise.all(batchDeletes);
+          firestoreItems = [];
+        }
 
         // Check if we have guest items to merge
         const guestStored = localStorage.getItem("cart_guest");

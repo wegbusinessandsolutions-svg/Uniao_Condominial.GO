@@ -262,7 +262,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-[#f5f5f7] rounded-3xl p-6 sm:p-10 md:p-12 border border-slate-200 shadow-xs">
+        <div className="bg-[#f5f5f7] rounded-3xl p-6 sm:p-10 md:p-12 shadow-xs">
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
             {/* Left Content Side */}
             <div className="flex-1">
@@ -331,7 +331,7 @@ export default function Home() {
                 { icon: ShieldCheck, text: "Manutenção em Sistema de Alarme" },
                 { icon: Zap, text: "Manutenção em Porteiros Eletrônicos" }
               ].map((service, idx) => (
-                <div key={idx} className="bg-white px-3.5 py-2 rounded-full border border-slate-200 text-slate-800 text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-xs hover:border-blue-300 transition-colors">
+                <div key={idx} className="bg-white px-3.5 py-2 rounded-full text-slate-800 text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-xs hover:border-blue-300 transition-colors">
                   <service.icon size={15} className="text-[#0071e3]" />
                   {service.text}
                 </div>
@@ -351,7 +351,7 @@ export default function Home() {
                   { icon: Wrench, text: "Serviços de Pintura" },
                   { icon: Wrench, text: "Reformas e Pequenos Reparos" }
                 ].map((service, idx) => (
-                  <div key={idx} className="bg-white px-3.5 py-2 rounded-full border border-slate-200 text-slate-800 text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-xs hover:border-blue-300 transition-colors">
+                  <div key={idx} className="bg-white px-3.5 py-2 rounded-full text-slate-800 text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-xs hover:border-blue-300 transition-colors">
                     <service.icon size={15} className="text-[#0071e3]" />
                     {service.text}
                   </div>
@@ -412,7 +412,7 @@ export default function Home() {
               <Link
                 key={cat.id}
                 to={`/produtos?categoria=${cat.nome}`}
-                className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full"
+                className="group flex flex-col bg-[#ffffff] rounded-2xl overflow-hidden transition-all duration-300 w-full max-w-full"
               >
                 <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full">
                   <OptimizedImage
@@ -422,7 +422,7 @@ export default function Home() {
                     className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-cover"
                   />
                 </div>
-                <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
+                <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-[#ffffff]">
                   <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">
                     {cat.nome}
                   </span>
@@ -557,7 +557,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 w-full">
               <button 
                 onClick={() => setIsAuthPromptOpen(false)}
-                className="w-full sm:w-auto flex-1 px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors cursor-pointer text-center text-sm"
+                className="w-full sm:w-auto flex-1 px-4 py-2.5 sm:py-3 rounded-xl text-slate-700 font-bold hover:bg-slate-50 transition-colors cursor-pointer text-center text-sm"
               >
                 Cancelar
               </button>
@@ -607,7 +607,7 @@ export default function Home() {
                         readOnly 
                         disabled
                         value={(profile as any)?.nomeEmpresa || (profile as any)?.condominio || profile?.displayName || (profile as any)?.nomeCompleto || ""}
-                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-xs sm:text-sm font-medium box-border truncate"
+                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl bg-slate-50 text-slate-500 text-xs sm:text-sm font-medium box-border truncate"
                       />
                     </div>
                     <div className="space-y-1 w-full min-w-0">
@@ -617,7 +617,7 @@ export default function Home() {
                         readOnly 
                         disabled
                         value={(profile as any)?.nomeResponsavel || (profile as any)?.sindico || (profile as any)?.nomeCompleto || profile?.displayName || ""}
-                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-xs sm:text-sm font-medium box-border truncate"
+                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl bg-slate-50 text-slate-500 text-xs sm:text-sm font-medium box-border truncate"
                       />
                     </div>
                     <div className="space-y-1 w-full min-w-0">
@@ -627,7 +627,7 @@ export default function Home() {
                         readOnly 
                         disabled
                         value={(profile as any)?.telefone || (profile as any)?.phone || ""}
-                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-xs sm:text-sm font-medium box-border truncate"
+                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl bg-slate-50 text-slate-500 text-xs sm:text-sm font-medium box-border truncate"
                       />
                     </div>
                     <div className="space-y-1 w-full min-w-0">
@@ -637,7 +637,7 @@ export default function Home() {
                         readOnly 
                         disabled
                         value={profile?.email || user?.email || ""}
-                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-xs sm:text-sm font-medium box-border truncate"
+                        className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl bg-slate-50 text-slate-500 text-xs sm:text-sm font-medium box-border truncate"
                       />
                     </div>
                   </div>
@@ -649,7 +649,7 @@ export default function Home() {
                       readOnly 
                       disabled
                       value="Sugestão"
-                      className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-xs sm:text-sm font-medium box-border truncate"
+                      className="w-full min-w-0 max-w-full px-3 py-2 rounded-xl bg-slate-50 text-slate-500 text-xs sm:text-sm font-medium box-border truncate"
                     />
                   </div>
 
@@ -669,7 +669,7 @@ export default function Home() {
                     <button 
                       type="button"
                       onClick={() => setIsSuggestionModalOpen(false)}
-                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-colors cursor-pointer text-center text-xs sm:text-sm"
+                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-slate-700 font-bold hover:bg-slate-50 transition-colors cursor-pointer text-center text-xs sm:text-sm"
                     >
                       Cancelar
                     </button>

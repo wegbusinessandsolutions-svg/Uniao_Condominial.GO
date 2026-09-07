@@ -369,10 +369,11 @@ export default function AdminLayout() {
       <header className="md:hidden bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sticky top-0 z-40 w-full shrink-0 print:hidden">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 -ml-2 text-slate-600 hover:text-slate-900 focus:outline-none transition-colors"
+          className="p-2 -ml-2 text-slate-600 hover:text-slate-900 focus:outline-none transition-colors relative group cursor-pointer"
           aria-label="Toggle Menu"
         >
-          <Menu size={24} />
+          <div className="absolute inset-0 rounded-full border border-dashed border-[#0071e3] animate-[spin_3s_linear_infinite] opacity-60 scale-[1.15]"></div>
+          <Menu size={24} className="relative z-10" />
         </button>
         <div className="text-center flex-1 pr-6 pt-1">
           <span className="font-bold text-slate-800 text-[17px] block leading-none notranslate" translate="no">

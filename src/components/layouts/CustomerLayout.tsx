@@ -4,7 +4,8 @@ import { ClientAfiliacaoAlert } from "../cliente/ClientAfiliacaoAlert";
 import { DespesasAlertModal } from "../cliente/DespesasAlertModal";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import { Home, FileText, User, ShoppingBag, MapPin, Package, Tag, Heart, CreditCard, LogOut, Book, Menu, Sun, Moon, Coins, MessageSquare, Headphones, Megaphone, Building2, BookUser, Calendar } from "lucide-react";
+import { Home, FileText, User, ShoppingBag, ShoppingCart, MapPin, Package, Tag, Heart, CreditCard, LogOut, Book, Menu, Sun, Moon, Coins, MessageSquare, Headphones, Megaphone, Building2, BookUser, Calendar } from "lucide-react";
+import { useCart } from "../../context/CartContext";
 import { getAuth } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -19,6 +20,7 @@ export default function CustomerLayout() {
   const mainRef = useRef<HTMLElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [menuConfig, setMenuConfig] = useState<any>({});
+  const { totalItems } = useCart();
 
   useEffect(() => {
     // Scroll smoothly to top on route change, ensuring user starts at the beginning of the view
@@ -125,10 +127,11 @@ export default function CustomerLayout() {
       <header className="md:hidden bg-white shadow-sm h-16 flex items-center justify-between px-4 sticky top-0 z-40 w-full shrink-0">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 -ml-2 text-slate-600 hover:text-slate-900 focus:outline-none transition-colors"
+          className="p-2 -ml-2 text-slate-600 hover:text-slate-900 focus:outline-none transition-colors relative group cursor-pointer"
           aria-label="Toggle Menu"
         >
-          <Menu size={24} />
+          <div className="absolute inset-0 rounded-full border border-dashed border-[#0071e3] animate-[spin_3s_linear_infinite] opacity-60 scale-[1.15]"></div>
+          <Menu size={24} className="relative z-10" />
         </button>
         <div className="text-center flex-1 pt-1 px-2">
           <span className="font-medium text-slate-800 text-lg block leading-none notranslate" translate="no">
@@ -136,7 +139,20 @@ export default function CustomerLayout() {
           </span>
           <span className="text-sm text-[#0071e3] font-normal mt-1 block leading-none">Área do Cliente</span>
         </div>
-        <div className="w-10"></div>
+        <div className="w-12 flex items-center justify-end">
+          {totalItems > 0 && (
+            <button
+              onClick={() => navigate("/carrinho")}
+              className="relative p-2 text-[#0071e3] hover:bg-slate-50 rounded-full transition-colors cursor-pointer"
+              title="Ir para o carrinho"
+            >
+              <ShoppingCart size={22} />
+              <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-white">
+                {totalItems}
+              </span>
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Backdrop para mobile drawer */}
@@ -299,6 +315,23 @@ export default function CustomerLayout() {
           <DespesasAlertModal />
           <Outlet />
         </div>
+
+
+        {/* Floating Cart Indicator (Desktop) */}
+        {totalItems > 0 && (
+          <div className="hidden md:block fixed top-6 right-6 z-50">
+            <button
+              onClick={() => navigate("/carrinho")}
+              className="bg-[#0071e3] hover:bg-[#005bb5] text-white p-3.5 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center relative cursor-pointer"
+              title="Ir para o carrinho"
+            >
+              <ShoppingCart size={24} />
+              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm border border-white">
+                {totalItems}
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* Abrir Menu (visible only on mobile) */}
         <div className="md:hidden mt-12 pt-6 flex justify-center">
