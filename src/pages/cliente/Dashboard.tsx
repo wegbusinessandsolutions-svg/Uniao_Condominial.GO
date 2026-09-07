@@ -9,7 +9,7 @@ import MuralCondominial from "../../components/cliente/MuralCondominial";
 import WeatherWidget from "../../components/cliente/WeatherWidget";
 import { DashboardLiveTracker } from "../../components/cliente/DashboardLiveTracker";
 import imgProdutosLimpeza from "../../assets/images/produtos_limpeza_comercio_1788746019076.jpg";
-import imgServicos from "../../assets/images/servicos_condominiais_novo_1788745740694.jpg";
+import imgServicos from "../../assets/images/servicos_condominiais_caixa_gordura_1788784803708.jpg";
 import imgCompras from "../../assets/images/compras_realizadas_1788745073011.jpg";
 import imgOrdens from "../../assets/images/ordens_servico_1788745087344.jpg";
 import imgContatos from "../../assets/images/contatos_condominio_1788745101754.jpg";
@@ -270,49 +270,49 @@ export default function CustomerDashboard() {
 
       {/* Navigation Grid (Based on requested layout) */}
       <div className="grid grid-cols-2 gap-3 sm:gap-5 w-[90%] mx-auto sm:w-full">
-        <Link to="/cliente/produtos" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
-          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
-            <img src={imgProdutosLimpeza} alt="Produtos de Limpeza" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
+        <Link to="/cliente/produtos" className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full">
+            <img src={imgProdutosLimpeza} alt="Produtos de Limpeza" className="group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover" />
           </div>
           <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
             <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Produtos de Limpeza</span>
           </div>
         </Link>
-        <Link to="/cliente/servicos" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
-          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
-            <img src={imgServicos} alt="Serviços Condominiais" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
+        <Link to="/cliente/servicos" className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full">
+            <img src={imgServicos} alt="Serviços Condominiais" className="group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover" />
           </div>
           <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
             <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Serviços Condominiais</span>
           </div>
         </Link>
-        <Link to="/cliente/pedidos" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
-          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
-            <img src={imgCompras} alt="Compras Realizadas" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
+        <Link to="/cliente/pedidos" className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full">
+            <img src={imgCompras} alt="Compras Realizadas" className="group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover" />
           </div>
           <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
             <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Compras Realizadas</span>
           </div>
         </Link>
-        <Link to="/cliente/ordens-servico" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
-          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
-            <img src={imgOrdens} alt="Ordens de Serviço" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
+        <Link to="/cliente/ordens-servico" className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full">
+            <img src={imgOrdens} alt="Ordens de Serviço" className="group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover" />
           </div>
           <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
             <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Ordens de Serviço</span>
           </div>
         </Link>
-        <Link to="/cliente/meus-contatos" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
-          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
-            <img src={imgContatos} alt="Contatos Condomínio" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
+        <Link to="/cliente/meus-contatos" className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full">
+            <img src={imgContatos} alt="Contatos Condomínio" className="group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover" />
           </div>
           <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
             <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Contatos Condomínio</span>
           </div>
         </Link>
-        <Link to="/cliente/despesas-mensais" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
-          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
-            <img src={imgDespesas} alt="Despesas Mensais" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
+        <Link to="/cliente/despesas-mensais" className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full">
+            <img src={imgDespesas} alt="Despesas Mensais" className="group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover" />
           </div>
           <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
             <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Despesas Mensais</span>
@@ -616,16 +616,6 @@ export default function CustomerDashboard() {
             >
               {/* Efeito sutil de iluminação decorativa no topo */}
               <div className={`absolute top-0 inset-x-0 h-32 bg-gradient-to-b ${bgGradient} pointer-events-none`} />
-
-              {/* Botão Fechar no canto superior direito */}
-              <button 
-                type="button"
-                onClick={() => setIsClassificationModalOpen(false)}
-                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer z-10"
-                title="Fechar janela"
-              >
-                <X size={20} />
-              </button>
 
               {/* Título do Condomínio e Classificação */}
               <div className="relative z-10 mb-4">

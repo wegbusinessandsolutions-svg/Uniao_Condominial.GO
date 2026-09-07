@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, setPersistence, browserSessionPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import firebaseConfig from "../../firebase-applet-config.json";
@@ -16,6 +16,10 @@ try {
     app = getApps()[0];
   }
   auth = getAuth(app);
+  
+  // Set persistence to session (logout when tab/browser is closed)
+  setPersistence(auth, browserSessionPersistence).catch(console.error);
+
   db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
   storage = getStorage(app);
 } catch (error) {
@@ -31,6 +35,7 @@ export async function initFirebase() {
         app = getApps()[0];
       }
       auth = getAuth(app);
+      setPersistence(auth, browserSessionPersistence).catch(console.error);
       db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
       storage = getStorage(app);
     } catch (error) {

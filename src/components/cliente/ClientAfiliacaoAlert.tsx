@@ -9,7 +9,14 @@ export const ClientAfiliacaoAlert: React.FC = () => {
   const { user } = useAuth();
   const [overdueDocs, setOverdueDocs] = useState<any[]>([]);
   const [upcomingDocs, setUpcomingDocs] = useState<any[]>([]);
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(() => {
+    return sessionStorage.getItem("afiliacaoAlertDismissed") !== "true";
+  });
+
+  const handleDismiss = () => {
+    sessionStorage.setItem("afiliacaoAlertDismissed", "true");
+    setVisible(false);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -101,14 +108,21 @@ export const ClientAfiliacaoAlert: React.FC = () => {
                 <br />
                 <span className="font-medium">Aviso:</span> O boleto bancário leva até dois dias úteis para ser compensado. Caso já tenha realizado o pagamento neste período, por favor, desconsidere esta mensagem.
               </p>
-              <div className="mt-3">
+              <div className="mt-3 flex items-center gap-4">
                 <Link to="/cliente/suporte" className="text-base text-red-800 hover:text-red-950 font-normal hover:underline">
                   Falar com o Suporte →
                 </Link>
+                <button
+                  type="button"
+                  onClick={handleDismiss}
+                  className="text-base text-red-600 hover:text-red-800 font-medium hover:underline"
+                >
+                  Estou ciente
+                </button>
               </div>
             </div>
             <button 
-              onClick={() => setVisible(false)}
+              onClick={handleDismiss}
               className="absolute top-4 right-4 text-red-400 hover:text-red-600 hover:bg-red-100 p-1.5 rounded-full transition-colors"
               title="Fechar alerta"
             >
@@ -139,9 +153,18 @@ export const ClientAfiliacaoAlert: React.FC = () => {
                   </p>
                 );
               })}
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={handleDismiss}
+                  className="text-base text-amber-700 hover:text-amber-900 font-medium hover:underline"
+                >
+                  Estou ciente
+                </button>
+              </div>
             </div>
             <button 
-              onClick={() => setVisible(false)}
+              onClick={handleDismiss}
               className="absolute top-4 right-4 text-amber-400 hover:text-amber-600 hover:bg-amber-100 p-1.5 rounded-full transition-colors"
               title="Fechar alerta"
             >
