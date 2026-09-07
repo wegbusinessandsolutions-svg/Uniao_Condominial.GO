@@ -14,6 +14,7 @@ import badgePrata from "../../assets/images/badge_prata_1787100145745.jpg";
 import badgeOuro from "../../assets/images/badge_ouro_1787100156882.jpg";
 import badgeDiamante from "../../assets/images/badge_diamante_1787100168869.jpg";
 import { Lightbulb, X } from "lucide-react";
+import { DespesasAlertModal } from "../../components/cliente/DespesasAlertModal";
 
 export default function CustomerDashboard() {
   const { profile, user } = useAuth();
@@ -261,6 +262,58 @@ export default function CustomerDashboard() {
         </div>
       </div>
 
+      {/* Navigation Grid (Based on requested layout) */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 w-full">
+        <Link to="/cliente/produtos" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
+          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
+            <img src="/src/assets/images/produtos_limpeza_comercio_1788746019076.jpg" alt="Produtos de Limpeza" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div className="p-3 w-full text-center">
+            <span className="text-sm font-medium text-slate-800">Produtos de Limpeza</span>
+          </div>
+        </Link>
+        <Link to="/cliente/servicos" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
+          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
+            <img src="/src/assets/images/servicos_condominiais_novo_1788745740694.jpg" alt="Serviços Condominiais" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div className="p-3 w-full text-center">
+            <span className="text-sm font-medium text-slate-800">Serviços Condominiais</span>
+          </div>
+        </Link>
+        <Link to="/cliente/pedidos" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
+          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
+            <img src="/src/assets/images/compras_realizadas_1788745073011.jpg" alt="Compras Realizadas" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div className="p-3 w-full text-center">
+            <span className="text-sm font-medium text-slate-800">Compras Realizadas</span>
+          </div>
+        </Link>
+        <Link to="/cliente/ordens-servico" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
+          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
+            <img src="/src/assets/images/ordens_servico_1788745087344.jpg" alt="Ordens de Serviço" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div className="p-3 w-full text-center">
+            <span className="text-sm font-medium text-slate-800">Ordens de Serviço</span>
+          </div>
+        </Link>
+        <Link to="/cliente/meus-contatos" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
+          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
+            <img src="/src/assets/images/contatos_condominio_1788745101754.jpg" alt="Contatos Condomínio" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div className="p-3 w-full text-center">
+            <span className="text-sm font-medium text-slate-800">Contatos Condomínio</span>
+          </div>
+        </Link>
+        <Link to="/cliente/despesas-mensais" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
+          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
+            <img src="/src/assets/images/despesas_mensais_1788745115983.jpg" alt="Despesas Mensais" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div className="p-3 w-full text-center">
+            <span className="text-sm font-medium text-slate-800">Despesas Mensais</span>
+          </div>
+        </Link>
+      </div>
+
       {/* Sugestão de Afiliação para Não Afiliados */}
       {!loadingAfiliado && !isAfiliado && (
         /* Caso Não Afiliado: Sugestão de Afiliação com Explicação dos Descontos */
@@ -354,6 +407,9 @@ export default function CustomerDashboard() {
 
       {/* Principal Item: Acompanhamento em Tempo Real de Pedidos e Ordens de Serviço */}
       <DashboardLiveTracker isAfiliado={isAfiliado ?? false} />
+      
+      {/* Alerta de Despesas da Semana */}
+      <DespesasAlertModal />
 
       {/* Cartão de Cashback e Benefícios */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">

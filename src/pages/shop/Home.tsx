@@ -414,7 +414,7 @@ export default function Home() {
                 to={`/produtos?categoria=${cat.nome}`}
                 className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full"
               >
-                <div className="aspect-[4/3] bg-slate-50 relative overflow-hidden flex items-center justify-center border-b border-slate-100 w-full max-w-full p-2">
+                <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
                   <OptimizedImage
                     src={cat.imagem}
                     alt={cat.nome}

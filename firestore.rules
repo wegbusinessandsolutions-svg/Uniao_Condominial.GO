@@ -292,6 +292,14 @@ service cloud.firestore {
       allow update, delete: if isStaff();
     }
 
+    match /despesas_condominio/{id} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isStaff() || (isSignedIn() && (resource == null || resource.data.get("userId", "") == request.auth.uid));
+    }
+    match /alertas_despesas/{id} {
+      allow read, write: if isSignedIn();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

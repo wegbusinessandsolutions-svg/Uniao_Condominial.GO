@@ -400,9 +400,42 @@
         "editadoAposConclusaoEm": { "type": "string", "format": "date-time" }
       },
       "required": ["clienteId", "status", "etapaExecucao"]
+    },
+    "despesas_condominio": {
+      "title": "Despesas Mensais do Condomínio",
+      "description": "Despesas ordinárias do condomínio cadastradas pelo cliente",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "titulo": { "type": "string" },
+        "diaVencimento": { "type": "number" },
+        "valor": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "titulo", "diaVencimento"]
+    },
+    "alertas_despesas": {
+      "title": "Alertas de Despesas",
+      "description": "Status dos alertas de pagamentos de despesas para o cliente",
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "despesaId": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["status", "despesaId"]
     }
   },
   "firestore": {
+    "despesas_condominio/{despesaId}": {
+      "schema": "despesas_condominio",
+      "description": "Coleção de despesas mensais do condomínio"
+    },
+    "alertas_despesas/{alertaId}": {
+      "schema": "alertas_despesas",
+      "description": "Coleção de status de alertas de pagamentos"
+    },
     "ordens_servico/{id}": {
       "schema": "ordens_servico",
       "description": "Ordens de serviço com 4 fotos antes, 4 fotos depois, histórico de 8h e assinatura digital"

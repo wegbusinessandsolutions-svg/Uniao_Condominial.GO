@@ -63,6 +63,7 @@ import MeusPedidos from "./pages/cliente/MeusPedidos";
 import LocalEntrega from "./pages/cliente/LocalEntrega";
 import ServicosEssenciais from "./pages/cliente/ServicosEssenciais";
 import MinhasOrdensServico from "./pages/cliente/OrdensServico";
+import DespesasMensais from "./pages/cliente/DespesasMensais";
 const ServicosEssenciaisAdmin = lazy(() => import("./pages/admin/ServicosEssenciais"));
 const OrdensServicoAdmin = lazy(() => import("./pages/admin/OrdensServico"));
 
@@ -138,6 +139,7 @@ export default function App() {
             <Route path="produtos" element={<Catalog />} />
             <Route path="servicos" element={<ServicosEssenciais />} />
             <Route path="ordens-servico" element={<MinhasOrdensServico />} />
+            <Route path="despesas-mensais" element={<DespesasMensais />} />
             <Route path="marcas" element={<MarcasParceiras />} />
             <Route path="beneficios" element={<ClubeBeneficios />} />
             <Route path="cartao" element={<CartaoVirtual />} />
@@ -546,6 +548,7 @@ export default function App() {
               />
               <Route path="servicos" element={<ServicosEssenciaisAdmin />} />
               <Route path="ordens-servico" element={<OrdensServicoAdmin />} />
+            <Route path="despesas-mensais" element={<DespesasMensais />} />
               <Route path="agenda" element={<AgendaServicos />} />
               <Route path="agenda-servicos" element={<AgendaServicos />} />
             </Route>

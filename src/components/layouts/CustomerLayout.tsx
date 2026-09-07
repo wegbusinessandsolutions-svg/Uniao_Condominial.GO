@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { ClientAfiliacaoAlert } from "../cliente/ClientAfiliacaoAlert";
+import { DespesasAlertModal } from "../cliente/DespesasAlertModal";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import { Home, FileText, User, ShoppingBag, MapPin, Package, Tag, Heart, CreditCard, LogOut, Book, Menu, Sun, Moon, Coins, MessageSquare, Headphones, Megaphone, Building2, BookUser } from "lucide-react";
+import { Home, FileText, User, ShoppingBag, MapPin, Package, Tag, Heart, CreditCard, LogOut, Book, Menu, Sun, Moon, Coins, MessageSquare, Headphones, Megaphone, Building2, BookUser, Calendar } from "lucide-react";
 import { getAuth } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -102,6 +103,7 @@ export default function CustomerLayout() {
     { name: "Meus Contatos", path: "/cliente/meus-contatos", icon: BookUser, key: "menuMeusContatos" },
     { name: "Meus Pedidos", path: "/cliente/pedidos", icon: ShoppingBag, key: "menuMeusPedidos" },
     { name: "Minhas Ordens de Serviço", path: "/cliente/ordens-servico", icon: FileText, key: "menuOrdensServico" },
+    { name: "Despesas Mensais", path: "/cliente/despesas-mensais", icon: Calendar, key: "menuDespesasMensais" },
     { name: "Localização do Condomínio", path: "/cliente/endereco", icon: MapPin, key: "menuLocalEntrega" },
   ].filter(item => menuConfig[item.key] !== false);
 
@@ -294,6 +296,7 @@ export default function CustomerLayout() {
       <main ref={mainRef} className="flex-1 py-4 px-2 sm:px-4 md:px-6 flex flex-col justify-between min-w-0 w-full max-w-full overflow-x-hidden">
         <div className="w-full max-w-full mx-auto flex-1 min-w-0 overflow-x-hidden">
           <ClientAfiliacaoAlert />
+          <DespesasAlertModal />
           <Outlet />
         </div>
 
