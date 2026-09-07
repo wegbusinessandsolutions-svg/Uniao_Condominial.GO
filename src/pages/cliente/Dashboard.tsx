@@ -8,6 +8,12 @@ import PartnersCarousel from "../../components/cliente/PartnersCarousel";
 import MuralCondominial from "../../components/cliente/MuralCondominial";
 import WeatherWidget from "../../components/cliente/WeatherWidget";
 import { DashboardLiveTracker } from "../../components/cliente/DashboardLiveTracker";
+import imgProdutosLimpeza from "../../assets/images/produtos_limpeza_comercio_1788746019076.jpg";
+import imgServicos from "../../assets/images/servicos_condominiais_novo_1788745740694.jpg";
+import imgCompras from "../../assets/images/compras_realizadas_1788745073011.jpg";
+import imgOrdens from "../../assets/images/ordens_servico_1788745087344.jpg";
+import imgContatos from "../../assets/images/contatos_condominio_1788745101754.jpg";
+import imgDespesas from "../../assets/images/despesas_mensais_1788745115983.jpg";
 
 import badgeBronze from "../../assets/images/badge_bronze_1787100127454.jpg";
 import badgePrata from "../../assets/images/badge_prata_1787100145745.jpg";
@@ -255,7 +261,7 @@ export default function CustomerDashboard() {
           {/* Customer Identification (Font size reduced by 10%) */}
           <div className="w-full -mt-2">
             <p className="text-slate-500 text-sm sm:text-base font-normal tracking-wide ml-0.5 mb-1.5">Bem-vindo de volta,</p>
-            <h1 className="text-[27px] sm:text-[32.4px] font-normal text-[#0f172a] leading-tight tracking-tight max-w-[34rem]">
+            <h1 className="text-[24px] sm:text-[29px] font-normal text-[#0f172a] leading-tight tracking-tight max-w-[34rem]">
               Olá, {profile?.displayName || "Cliente"}
             </h1>
           </div>
@@ -263,53 +269,53 @@ export default function CustomerDashboard() {
       </div>
 
       {/* Navigation Grid (Based on requested layout) */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-5 w-full">
-        <Link to="/cliente/produtos" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
-          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
-            <img src="/src/assets/images/produtos_limpeza_comercio_1788746019076.jpg" alt="Produtos de Limpeza" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 w-[90%] mx-auto sm:w-full">
+        <Link to="/cliente/produtos" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
+            <img src={imgProdutosLimpeza} alt="Produtos de Limpeza" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
           </div>
-          <div className="p-3 w-full text-center">
-            <span className="text-sm font-medium text-slate-800">Produtos de Limpeza</span>
-          </div>
-        </Link>
-        <Link to="/cliente/servicos" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
-          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
-            <img src="/src/assets/images/servicos_condominiais_novo_1788745740694.jpg" alt="Serviços Condominiais" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-          </div>
-          <div className="p-3 w-full text-center">
-            <span className="text-sm font-medium text-slate-800">Serviços Condominiais</span>
+          <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Produtos de Limpeza</span>
           </div>
         </Link>
-        <Link to="/cliente/pedidos" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
-          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
-            <img src="/src/assets/images/compras_realizadas_1788745073011.jpg" alt="Compras Realizadas" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <Link to="/cliente/servicos" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
+            <img src={imgServicos} alt="Serviços Condominiais" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
           </div>
-          <div className="p-3 w-full text-center">
-            <span className="text-sm font-medium text-slate-800">Compras Realizadas</span>
-          </div>
-        </Link>
-        <Link to="/cliente/ordens-servico" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
-          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
-            <img src="/src/assets/images/ordens_servico_1788745087344.jpg" alt="Ordens de Serviço" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-          </div>
-          <div className="p-3 w-full text-center">
-            <span className="text-sm font-medium text-slate-800">Ordens de Serviço</span>
+          <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Serviços Condominiais</span>
           </div>
         </Link>
-        <Link to="/cliente/meus-contatos" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
-          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
-            <img src="/src/assets/images/contatos_condominio_1788745101754.jpg" alt="Contatos Condomínio" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <Link to="/cliente/pedidos" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
+            <img src={imgCompras} alt="Compras Realizadas" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
           </div>
-          <div className="p-3 w-full text-center">
-            <span className="text-sm font-medium text-slate-800">Contatos Condomínio</span>
+          <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Compras Realizadas</span>
           </div>
         </Link>
-        <Link to="/cliente/despesas-mensais" className="flex flex-col items-center bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow overflow-hidden group">
-          <div className="w-full aspect-video bg-slate-100 overflow-hidden">
-            <img src="/src/assets/images/despesas_mensais_1788745115983.jpg" alt="Despesas Mensais" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <Link to="/cliente/ordens-servico" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
+            <img src={imgOrdens} alt="Ordens de Serviço" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
           </div>
-          <div className="p-3 w-full text-center">
-            <span className="text-sm font-medium text-slate-800">Despesas Mensais</span>
+          <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Ordens de Serviço</span>
+          </div>
+        </Link>
+        <Link to="/cliente/meus-contatos" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
+            <img src={imgContatos} alt="Contatos Condomínio" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
+          </div>
+          <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Contatos Condomínio</span>
+          </div>
+        </Link>
+        <Link to="/cliente/despesas-mensais" className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full">
+          <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
+            <img src={imgDespesas} alt="Despesas Mensais" className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain" />
+          </div>
+          <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
+            <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0071e3] transition-colors leading-tight">Despesas Mensais</span>
           </div>
         </Link>
       </div>
@@ -405,9 +411,6 @@ export default function CustomerDashboard() {
         </div>
       )}
 
-      {/* Principal Item: Acompanhamento em Tempo Real de Pedidos e Ordens de Serviço */}
-      <DashboardLiveTracker isAfiliado={isAfiliado ?? false} />
-      
       {/* Alerta de Despesas da Semana */}
       <DespesasAlertModal />
 

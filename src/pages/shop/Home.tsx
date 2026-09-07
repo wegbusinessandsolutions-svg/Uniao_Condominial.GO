@@ -414,12 +414,12 @@ export default function Home() {
                 to={`/produtos?categoria=${cat.nome}`}
                 className="group flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 w-full max-w-full"
               >
-                <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full p-2">
+                <div className="aspect-[4/3] relative overflow-hidden flex items-center justify-center w-full max-w-full">
                   <OptimizedImage
                     src={cat.imagem}
                     alt={cat.nome}
-                    objectFit="contain"
-                    className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-contain"
+                    objectFit="cover"
+                    className="group-hover:scale-105 transition-transform duration-500 max-w-full h-full object-cover"
                   />
                 </div>
                 <div className="p-3.5 sm:p-5 flex items-center justify-center text-center min-h-[60px] bg-white">
