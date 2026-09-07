@@ -258,6 +258,7 @@ export default function Afiliacao() {
         console.warn("Aviso ao sincronizar contas a receber:", syncErr);
       }
 
+
       const htmlTermo = `
       <div style="font-family: Arial, sans-serif; color: #333; max-width: 800px; margin: 0 auto; line-height: 1.6; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px;">
         <h2 style="text-align: center; color: #0071e3; margin-bottom: 4px;">TERMO DE AFILIAÇÃO À UNIÃO CONDOMINIAL</h2>

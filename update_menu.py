@@ -5,14 +5,6 @@ with open('src/components/layouts/CustomerLayout.tsx', 'r') as f:
 
 target = """        <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 -ml-2 text-slate-600 hover:text-slate-900 focus:outline-none transition-colors"
-          aria-label="Toggle Menu"
-        >
-          <Menu size={24} />
-        </button>"""
-
-replacement = """        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="p-2 -ml-2 text-slate-600 hover:text-slate-900 focus:outline-none transition-colors relative group cursor-pointer"
           aria-label="Toggle Menu"
         >
@@ -20,10 +12,18 @@ replacement = """        <button
           <Menu size={24} className="relative z-10" />
         </button>"""
 
+replacement = """        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 -ml-2 text-[#0071e3] hover:text-[#005bb5] focus:outline-none transition-colors relative group cursor-pointer animate-blink-3s"
+          aria-label="Toggle Menu"
+        >
+          <Menu size={26} />
+        </button>"""
+
 if target in content:
     content = content.replace(target, replacement)
     with open('src/components/layouts/CustomerLayout.tsx', 'w') as f:
         f.write(content)
-    print("Success")
+    print("Success CustomerLayout")
 else:
-    print("Target not found")
+    print("Target not found CustomerLayout")

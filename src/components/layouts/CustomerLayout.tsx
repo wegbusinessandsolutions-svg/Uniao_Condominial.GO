@@ -127,11 +127,10 @@ export default function CustomerLayout() {
       <header className="md:hidden bg-white shadow-sm h-16 flex items-center justify-between px-4 sticky top-0 z-40 w-full shrink-0">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 -ml-2 text-slate-600 hover:text-slate-900 focus:outline-none transition-colors relative group cursor-pointer"
+          className="p-2 -ml-2 text-[#0071e3] hover:text-[#005bb5] focus:outline-none transition-colors relative group cursor-pointer animate-blink-3s"
           aria-label="Toggle Menu"
         >
-          <div className="absolute inset-0 rounded-full border border-dashed border-[#0071e3] animate-[spin_3s_linear_infinite] opacity-60 scale-[1.15]"></div>
-          <Menu size={24} className="relative z-10" />
+          <Menu size={26} />
         </button>
         <div className="text-center flex-1 pt-1 px-2">
           <span className="font-medium text-slate-800 text-lg block leading-none notranslate" translate="no">

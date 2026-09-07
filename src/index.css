@@ -285,3 +285,16 @@ html.dark .bg-slate-900\/50 {
     content: "Página " counter(page);
   }
 }
+
+@keyframes blink-3s {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.animate-blink-3s {
+  animation: blink-3s 3s infinite;
+}

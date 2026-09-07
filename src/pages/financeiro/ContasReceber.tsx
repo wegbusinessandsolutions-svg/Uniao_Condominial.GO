@@ -1193,7 +1193,7 @@ export default function ContasReceber() {
                 <th className="px-6 py-4 whitespace-nowrap">Valor</th>
                 <th className="px-6 py-4 whitespace-nowrap">Parc.</th>
                 <th className="px-6 py-4 whitespace-nowrap">Recebido em</th>
-                <th className="px-6 py-4 whitespace-nowrap">Observações</th>
+
                 <th className="px-6 py-4 whitespace-nowrap">Status</th>
                 <th className="px-6 py-4 text-right">Ações</th>
               </tr>
@@ -1280,9 +1280,7 @@ export default function ContasReceber() {
                       <td className="px-6 py-4 font-medium">{formatCurrency(item.valor)}</td>
                       <td className="px-6 py-4">{item.parcelas || 1}</td>
                       <td className="px-6 py-4">{formatDate(item.recebidoEm)}</td>
-                      <td className="px-6 py-4 max-w-xs truncate text-xs text-slate-500" title={item.observacoes || ""}>
-                        {item.observacoes || "-"}
-                      </td>
+
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 text-[11px] font-semibold rounded-full ${
                           item.status === 'Recebido' ? 'bg-emerald-100 text-emerald-700' : 
