@@ -59,7 +59,7 @@ interface ShippingConfig {
 const defaultShippingConfig: ShippingConfig = {
   cepOrigem: "74000-000",
   tipoCalculo: "tabela",
-  freteGratisMinimo: 300,
+  freteGratisMinimo: 350,
   valorFixoPadrao: 25,
   faixasPeso: [
     { id: "1", pesoMaximo: 1, valor: 15 },

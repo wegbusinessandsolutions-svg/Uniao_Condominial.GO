@@ -148,7 +148,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                   3.1. Todos os pedidos de mercadorias estão sujeitos à confirmação de disponibilidade de estoque e validação cadastral.
                 </p>
                 <p>
-                  3.2. As entregas abrangem a Região Metropolitana de Goiânia (Goiânia, Aparecida de Goiânia, Senador Canedo e Trindade), respeitando as condições de frete grátis para compras que atinjam o valor mínimo estabelecido pela plataforma (atualmente acima de R$ 300,00 para a capital).
+                  3.2. As entregas abrangem a Região Metropolitana de Goiânia (Goiânia, Aparecida de Goiânia, Senador Canedo e Trindade), respeitando as condições de frete grátis para compras que atinjam o valor mínimo estabelecido pela plataforma (atualmente acima de R$ 350,00 para a capital).
                 </p>
                 <p>
                   3.3. É dever do condomínio disponibilizar responsável no local para o recebimento e conferência das mercadorias no ato da entrega.
@@ -283,7 +283,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                 </p>
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs sm:text-sm space-y-1 font-medium">
                   <p><strong>E-mail:</strong> sac@uniaocondominial.com.br</p>
-                  <p><strong>Telefone / WhatsApp:</strong> (62) 99925-0523</p>
+                  <p><strong>Telefone / WhatsApp:</strong> (62) 99816-0501</p>
                   <p><strong>Endereço:</strong> Rua 4, n. 515, Edif. Parthenon Center Sala 1414 - Setor Central, Goiânia - GO</p>
                 </div>
               </section>

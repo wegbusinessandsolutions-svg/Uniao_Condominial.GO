@@ -344,7 +344,7 @@ export default function CustomerDashboard() {
               </div>
 
               <Link
-                to="/cliente/meus-dados"
+                to="/cliente/afiliacao"
                 className="inline-flex items-center justify-center gap-2 w-full lg:w-auto py-3.5 px-6 bg-[#0071e3] hover:bg-[#005bb5] text-white font-medium rounded-2xl text-base shadow-md shadow-blue-500/20 hover:shadow-lg transition-all active:scale-98 shrink-0"
               >
                 <span>Quero me Afiliar Agora</span>

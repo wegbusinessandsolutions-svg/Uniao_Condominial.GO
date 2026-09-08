@@ -743,7 +743,7 @@ export default function Afiliacao() {
               </div>
             )}
             
-            {(afiliadoStatus === "Cancelado" || (afiliadoStatus && afiliadoStatus !== "Cancelado")) && (
+            {afiliadoStatus && afiliadoStatus !== "Cancelado" && (
                 <div className="bg-slate-50/50 rounded-3xl p-6 shadow-sm">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2.5 bg-white text-slate-600 rounded-2xl shadow-xs">
@@ -755,20 +755,6 @@ export default function Afiliacao() {
                     </div>
                   </div>
                   
-                  {afiliadoStatus === "Cancelado" && (
-                  <div className="p-4 bg-white rounded-2xl flex items-start gap-3 shadow-xs">
-                    <CheckCircle className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-slate-900 text-sm">
-                        Afiliação Desativada
-                      </p>
-                      <p className="text-xs text-slate-600 mt-1 leading-relaxed font-normal">
-                        Sua afiliação encontra-se cancelada e não há cobranças ativas. Para reativar seu plano e recuperar os descontos e vantagens, clique em <span className="font-medium">Afiliar-se Novamente</span>.
-                      </p>
-                    </div>
-                  </div>
-                  )}
-
                   {faturasAfil.length > 0 && (
                     <div className="mt-4 pt-3">
                       <button

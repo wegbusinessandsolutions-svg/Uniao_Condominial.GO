@@ -289,9 +289,11 @@ html.dark .bg-slate-900\/50 {
 @keyframes blink-3s {
   0%, 100% {
     opacity: 1;
+    color: #0071e3;
   }
   50% {
-    opacity: 0.2;
+    opacity: 0.8;
+    color: #064e3b; /* Verde Escuro */
   }
 }
 

@@ -40,7 +40,7 @@ export default function ShopLayout() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 text-[15px] sm:text-[16px] w-full overflow-x-hidden">
       {/* Top Banner */}
       <div className="bg-brand-dark text-white text-xs sm:text-sm py-2 px-4 text-center font-semibold tracking-wide shadow-xs w-full">
-        Frete grátis nas compras acima de R$ 300,00 para a capital.
+        Frete grátis nas compras acima de R$ 350,00 para a capital.
       </div>
 
       {/* Header */}

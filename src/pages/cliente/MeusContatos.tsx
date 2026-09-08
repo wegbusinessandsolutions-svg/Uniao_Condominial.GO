@@ -263,7 +263,8 @@ export default function MeusContatos() {
 
     lines.push("");
     lines.push("----------------------------------------");
-    lines.push("Encaminhado pela Administração do Condomínio");
+    lines.push(`Encaminhado pela Administração do ${user?.displayName || "Condomínio"} através do Aplicativo: União Condominial - Goiás.`);
+    lines.push("www.uniaocondominial.com.br");
 
     const text = lines.join("\n");
 

@@ -204,7 +204,7 @@ export default function Cart() {
     if (totalAmount === 0) return 0;
     if (!shippingConfig) {
       // Fallback
-      return totalAmount >= 300 ? 0 : 25;
+      return totalAmount >= 350 ? 0 : 25;
     }
 
     // 1. Check free shipping minimum
@@ -1091,9 +1091,9 @@ export default function Cart() {
                     {shippingCost === 0 ? "Grátis" : `R$ ${Number(shippingCost).toFixed(2)}`}
                   </span>
                 </div>
-                {shippingCost > 0 && (shippingConfig ? Number(shippingConfig.freteGratisMinimo ?? 300) : 300) > 0 && (
+                {shippingCost > 0 && (shippingConfig ? Number(shippingConfig.freteGratisMinimo ?? 350) : 350) > 0 && (
                   <p className="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                    💡 Dica: Adicione mais R$ {Number((shippingConfig ? Number(shippingConfig.freteGratisMinimo ?? 300) : 300) - totalAmount).toFixed(2)} em produtos para ganhar frete grátis!
+                    💡 Dica: Adicione mais R$ {Number((shippingConfig ? Number(shippingConfig.freteGratisMinimo ?? 350) : 350) - totalAmount).toFixed(2)} em produtos para ganhar frete grátis!
                   </p>
                 )}
                 

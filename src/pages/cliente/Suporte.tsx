@@ -153,7 +153,7 @@ export default function Suporte() {
       } else if (lower.includes("atendente") || lower.includes("humano") || lower.includes("falar com alguém")) {
         replyText = `👨‍💼 Um de nossos consultores da União Condominial.GO visualizou a sua mensagem e prestará assistência personalizada aqui ou via WhatsApp.`;
       } else {
-        replyText = `Recebemos sua solicitação! Nossa central de suporte está à disposição. Se desejar atendimento direto, você também pode nos contatar pelo WhatsApp (62) 99925-0523.`;
+        replyText = `Recebemos sua solicitação! Nossa central de suporte está à disposição. Se desejar atendimento direto, você também pode nos contatar pelo WhatsApp (62) 99816-0501.`;
       }
 
       setMensagens((prev) => [
@@ -431,7 +431,7 @@ export default function Suporte() {
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wider block">WhatsApp Suporte</span>
                     <span className="text-[10px] bg-emerald-100 text-emerald-800 font-medium px-2 py-0.5 rounded-full">Conversar</span>
                   </div>
-                  <p className="text-sm font-medium text-slate-900 mt-0.5 group-hover:text-emerald-700 transition-colors">(62) 99925-0523</p>
+                  <p className="text-sm font-medium text-slate-900 mt-0.5 group-hover:text-emerald-700 transition-colors">(62) 99816-0501</p>
                   <p className="text-[11px] text-slate-500 font-normal">Atendimento rápido para síndicos e gestores</p>
                 </div>
               </a>
