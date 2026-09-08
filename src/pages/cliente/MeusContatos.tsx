@@ -231,7 +231,7 @@ export default function MeusContatos() {
 
     // Apresentação sóbria, bem estruturada e sem formatação em negrito
     const lines: string[] = [
-      "INDICAÇÃO DE CONTATO / PRESTADOR",
+      "*INDICAÇÃO DE CONTATO / PRESTADOR DE SERVIÇO*",
       "----------------------------------------",
       "Olá! Conforme solicitado, seguem os dados do contato cadastrado para atendimento no condomínio:",
       "",
@@ -244,10 +244,7 @@ export default function MeusContatos() {
     }
 
     if (contato.telefone) {
-      lines.push(`▪ Telefone: ${contato.telefone}`);
-      if (rawTel) {
-        lines.push(`▪ WhatsApp direto: https://wa.me/55${rawTel}`);
-      }
+      lines.push(`▪ Telefone / WhatsApp: ${contato.telefone}`);
     }
 
     lines.push(`▪ Atendimento de urgência: ${urgenciaTexto}`);
