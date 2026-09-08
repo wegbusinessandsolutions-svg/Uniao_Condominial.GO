@@ -218,12 +218,12 @@ export async function processarPedidoWebsite(pedidoWebsite: any) {
   const agora = new Date();
   const dia = String(agora.getDate()).padStart(2, "0");
   const mes = String(agora.getMonth() + 1).padStart(2, "0");
-  const ano = String(agora.getFullYear()).slice(-2);
-  const prefixo = `${uf.toUpperCase()}${dia}${mes}${ano}`;
-
-  // Generate a random 4-digit suffix to avoid needing to query the entire collection from the client
-  const randomSuffix = String(Math.floor(Math.random() * 9000) + 1000);
-  const numeroPedido = `${prefixo}${randomSuffix}`;
+  const hora = String(agora.getHours()).padStart(2, "0");
+  const minuto = String(agora.getMinutes()).padStart(2, "0");
+  const segundo = String(agora.getSeconds()).padStart(2, "0");
+  const afiliada = "001";
+  
+  const numeroPedido = `PD.${afiliada}.${dia}${mes}.${hora}${minuto}${segundo}`;
 
   const pedidosRef = collection(db, "pedidos_venda");
   const pedidoCRM: any = criarPedidoCRM(pedidoWebsite, numeroPedido);

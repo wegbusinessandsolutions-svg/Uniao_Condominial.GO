@@ -233,13 +233,13 @@ export default function OrdensServicoAdmin() {
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6;">
             <div style="background-color: #0071e3; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
               <h2 style="color: #ffffff; margin: 0; font-size: 20px;">Confirmação de Agendamento da Visita Técnica</h2>
-              <p style="color: #e2e8f0; margin: 5px 0 0 0; font-size: 14px;">Ordem de Serviço Nº ${numeroOS}</p>
+              <p style="color: #e2e8f0; margin: 5px 0 0 0; font-size: 14px;">Código Ordem de Serviço ${numeroOS}</p>
             </div>
             
             <div style="padding: 24px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; background-color: #ffffff;">
               <p>Olá, <strong>${clientName}</strong>,</p>
               
-              <p>Informamos que o agendamento da sua <strong>Ordem de Serviço Nº ${numeroOS}</strong> (${orderToSchedule.servicoNome || "Serviços Contratados"}) foi confirmado por nossa equipe técnica.</p>
+              <p>Informamos que o agendamento da sua <strong>Código Ordem de Serviço ${numeroOS}</strong> (${orderToSchedule.servicoNome || "Serviços Contratados"}) foi confirmado por nossa equipe técnica.</p>
               
               <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 20px 0;">
                 <h3 style="color: #166534; margin: 0 0 10px 0; font-size: 16px;">Detalhes do Agendamento Confirmado</h3>
@@ -266,7 +266,7 @@ export default function OrdensServicoAdmin() {
         try {
           await sendEmailWithLog({
             to: clientEmail,
-            subject: `Visita Técnica Confirmada: ${dateBR} - OS Nº ${numeroOS}`,
+            subject: `Visita Técnica Confirmada: ${dateBR} - Código OS ${numeroOS}`,
             html: emailHtml
           }, "AGENDAMENTO_OS_CONFIRMADO");
         } catch (emailErr) {
@@ -330,7 +330,7 @@ export default function OrdensServicoAdmin() {
             userId: currentData.clienteId,
             type: "estorno_cancelamento",
             amount: usedCashback,
-            description: `Estorno de cashback por cancelamento administrativo da OS Nº ${orderToCancel.numeroOS || orderToCancel.id?.slice(0, 8)}`,
+            description: `Estorno de cashback por cancelamento administrativo da Código OS ${orderToCancel.numeroOS || orderToCancel.id?.slice(0, 8)}`,
             date: new Date().toISOString(),
             createdAt: new Date(),
             status: "Aprovado"
@@ -667,7 +667,7 @@ export default function OrdensServicoAdmin() {
       <DataTableToolbar
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
-        searchPlaceholder="Buscar por cliente, condomínio, serviço, e-mail ou Nº da OS..."
+        searchPlaceholder="Buscar por cliente, condomínio, serviço, e-mail ou Código da OS..."
         filterOptions={[
           { label: "Todas", value: "all", count: kpis.total },
           { label: "Aguardando Confirmação", value: "aguardando", count: kpis.aguardando },
@@ -708,7 +708,7 @@ export default function OrdensServicoAdmin() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 dark:border-slate-700 pb-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className="text-xs font-mono font-bold text-slate-400">OS Nº: {o.numeroOS || o.id}</span>
+                      <span className="text-xs font-mono font-bold text-slate-400">Código OS: {o.numeroOS || o.id}</span>
                       <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${visual.badgeBg} ${visual.badgeText} ${visual.badgeBorder}`}>
                         {effectiveStatus}
                       </span>
@@ -1032,7 +1032,7 @@ export default function OrdensServicoAdmin() {
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-100 pb-2">
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold text-xs bg-[#0071e3] text-white px-2 py-0.5 rounded">
-                      OS Nº {orderToSchedule.numeroOS || orderToSchedule.id?.slice(0, 8)}
+                      Código OS {orderToSchedule.numeroOS || orderToSchedule.id?.slice(0, 8)}
                     </span>
                     <span className="font-bold text-sm text-slate-900">
                       {orderToSchedule.servicoNome}
@@ -1187,7 +1187,7 @@ export default function OrdensServicoAdmin() {
                     {ordersOnSelectedDate.map((oItem, oIdx) => (
                       <div key={oIdx} className="bg-white border border-slate-200 rounded-lg p-2 text-xs flex justify-between items-center">
                         <div>
-                          <strong className="text-slate-900 block">OS Nº {oItem.numeroOS || oItem.id?.slice(0, 8)} - {oItem.servicoNome}</strong>
+                          <strong className="text-slate-900 block">Código OS {oItem.numeroOS || oItem.id?.slice(0, 8)} - {oItem.servicoNome}</strong>
                           <span className="text-slate-500 text-[11px]">{getClientName(oItem)} {oItem.turnoAgendado ? `• ${oItem.turnoAgendado}` : ''}</span>
                         </div>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 text-sky-800">
@@ -1328,7 +1328,7 @@ export default function OrdensServicoAdmin() {
             <div className="p-6 space-y-4">
               <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 text-xs text-slate-700 space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-900">OS Nº {orderToCancel.numeroOS || orderToCancel.id?.slice(0, 8)}</span>
+                  <span className="font-bold text-slate-900">Código OS {orderToCancel.numeroOS || orderToCancel.id?.slice(0, 8)}</span>
                   <span className="text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                     {orderToCancel.status}
                   </span>

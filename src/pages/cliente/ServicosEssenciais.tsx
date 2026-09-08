@@ -275,14 +275,15 @@ export default function ServicosEssenciais() {
         ? `${cartItems[0].quantidade}x ${cartItems[0].servico.nome}`
         : `${cartItems.length} Serviços: ` + cartItems.map(i => `${i.quantidade}x ${i.servico.nome}`).join(", ");
 
-      const generateNumeroOS = (estado: string = "GO") => {
+      const generateNumeroOS = () => {
         const now = new Date();
         const dia = String(now.getDate()).padStart(2, '0');
         const mes = String(now.getMonth() + 1).padStart(2, '0');
         const hora = String(now.getHours()).padStart(2, '0');
         const minuto = String(now.getMinutes()).padStart(2, '0');
-        const numero = String(Math.floor(Math.random() * 100)).padStart(2, '0');
-        return `${estado}${dia}${mes}${hora}${minuto}${numero}`;
+        const segundo = String(now.getSeconds()).padStart(2, '0');
+        const afiliada = "001";
+        return `OS.${afiliada}.${dia}${mes}.${hora}${minuto}${segundo}`;
       };
 
       const nowIso = new Date().toISOString();
@@ -290,7 +291,7 @@ export default function ServicosEssenciais() {
       const clientName = (profile as any)?.displayName || (profile as any)?.nome || (profile as any)?.razaoSocial || (profile as any)?.nomeCondominio || (profile as any)?.name || profile?.email?.split('@')[0] || "Cliente";
 
       const orderPayload = {
-        numeroOS: generateNumeroOS(profile?.endereco?.uf || "GO"),
+        numeroOS: generateNumeroOS(),
         clienteId: profile.uid,
         clienteNome: clientName,
         clienteEmail: profile.email || "",

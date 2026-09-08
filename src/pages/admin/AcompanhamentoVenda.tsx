@@ -279,7 +279,7 @@ export default function AcompanhamentoVenda() {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-medium">
               <tr>
-                <th className="px-6 py-4">Número do Pedido</th>
+                <th className="px-6 py-4">Código do Pedido</th>
                 <th className="px-6 py-4">Nome do Cliente</th>
                 <th className="px-6 py-4">Data e Hora</th>
                 <th className="px-6 py-4">Valor Total</th>

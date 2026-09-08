@@ -281,7 +281,7 @@ export default function MinhasOrdensServico() {
             userEmail: profile?.email || currentData.clienteEmail || "",
             type: "estorno_cancelamento",
             amount: usedCashback,
-            description: `Estorno de cashback por cancelamento da OS Nº ${selectedOrderToCancel.numeroOS || selectedOrderToCancel.id?.slice(0, 8)}`,
+            description: `Estorno de cashback por cancelamento da Código OS ${selectedOrderToCancel.numeroOS || selectedOrderToCancel.id?.slice(0, 8)}`,
             date: new Date().toISOString(),
             createdAt: new Date(),
             status: "Aprovado"
@@ -371,7 +371,7 @@ export default function MinhasOrdensServico() {
             userEmail: profile?.email || currentData.clienteEmail || "",
             type: "estorno_exclusao",
             amount: usedCashback,
-            description: `Estorno de cashback por exclusão da OS Nº ${selectedOrderToDelete.numeroOS || selectedOrderToDelete.id?.slice(0, 8)}`,
+            description: `Estorno de cashback por exclusão da Código OS ${selectedOrderToDelete.numeroOS || selectedOrderToDelete.id?.slice(0, 8)}`,
             date: new Date().toISOString(),
             createdAt: new Date(),
             status: "Aprovado"
@@ -765,7 +765,7 @@ export default function MinhasOrdensServico() {
             <div className="p-4 sm:p-6 space-y-4">
               <div className="bg-slate-50 rounded-2xl p-3.5 sm:p-4 text-xs text-slate-700 space-y-1 shadow-xs">
                 <div className="flex justify-between items-center flex-wrap gap-1">
-                  <span className="font-medium text-slate-900">OS Nº {selectedOrderToCancel.numeroOS || selectedOrderToCancel.id?.slice(0, 8)}</span>
+                  <span className="font-medium text-slate-900">Código OS {selectedOrderToCancel.numeroOS || selectedOrderToCancel.id?.slice(0, 8)}</span>
                   <span className={`font-medium flex items-center gap-1 px-2.5 py-0.5 rounded-xl shadow-xs ${
                     getCancelEligibility(selectedOrderToCancel).is24hRule 
                       ? "text-red-700 bg-red-50" 
@@ -862,7 +862,7 @@ export default function MinhasOrdensServico() {
             <div className="p-4 sm:p-6 space-y-4">
               <div className="bg-slate-50 rounded-2xl p-3.5 sm:p-4 text-xs text-slate-700 space-y-1 shadow-xs">
                 <div className="flex justify-between items-center flex-wrap gap-1">
-                  <span className="font-medium text-slate-900">OS Nº {selectedOrderToDelete.numeroOS || selectedOrderToDelete.id?.slice(0, 8)}</span>
+                  <span className="font-medium text-slate-900">Código OS {selectedOrderToDelete.numeroOS || selectedOrderToDelete.id?.slice(0, 8)}</span>
                   <span className="text-red-700 font-medium flex items-center gap-1 bg-red-50 px-2.5 py-0.5 rounded-xl shadow-xs">
                     <Clock size={12} />
                     Sem alteração há +24h
