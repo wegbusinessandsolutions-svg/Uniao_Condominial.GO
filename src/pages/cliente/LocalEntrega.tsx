@@ -1,8 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MapPin, Target, Share2, MessageCircle } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import L from "leaflet";
+
+// Correção do ícone padrão do Leaflet no React
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+function MapUpdater({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.flyTo(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
 
 export default function LocalEntrega() {
   const { profile, refreshProfile } = useAuth();
@@ -137,18 +155,32 @@ export default function LocalEntrega() {
           </div>
         </div>
 
-        <div className="p-0 h-[400px] relative overflow-hidden bg-slate-50">
-          <iframe
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            scrolling="no"
-            marginHeight={0}
-            marginWidth={0}
-            src={`https://maps.google.com/maps?q=${lat},${lng}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-            style={{ border: 0 }}
-            allowFullScreen
-          ></iframe>
+        <div className="p-0 h-[400px] relative overflow-hidden bg-slate-50 z-0">
+          <MapContainer 
+            center={[lat, lng]} 
+            zoom={15} 
+            scrollWheelZoom={true} 
+            style={{ height: "100%", width: "100%", zIndex: 10 }}
+          >
+            <TileLayer
+              attribution='&copy; Google Maps'
+              url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+            />
+            <Marker 
+              position={[lat, lng]} 
+              draggable={true}
+              eventHandlers={{
+                dragend: (e) => {
+                  const marker = e.target;
+                  const position = marker.getLatLng();
+                  setLat(position.lat);
+                  setLng(position.lng);
+                  setSuccessMsg("Localização ajustada no mapa. Não se esqueça de salvar ✓");
+                },
+              }}
+            />
+            <MapUpdater center={[lat, lng]} />
+          </MapContainer>
         </div>
 
         <div className="p-6 md:p-8 flex flex-col sm:flex-row justify-between items-center bg-white gap-4">

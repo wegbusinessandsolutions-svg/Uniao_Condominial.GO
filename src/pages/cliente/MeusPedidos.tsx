@@ -6,7 +6,7 @@ import {
   Package, ExternalLink, Printer, ShieldCheck, ArrowRight, Banknote, 
   AlertCircle, ChevronRight, Eye, Check, Tag, Bell, Volume2, Sparkles
 } from "lucide-react";
-import { collection, onSnapshot, query, getDocs, where } from "firebase/firestore";
+import { collection, onSnapshot, query, getDocs, where, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { isStaffRole } from "../../lib/permissions";
 import { useAuth } from "../../context/AuthContext";
@@ -407,12 +407,14 @@ const getTotalGeral = (pedido: any, catalogProducts?: any[], clientTier?: string
 export default function MeusPedidos() {
   const { profile, user } = useAuth();
   const navigate = useNavigate();
-  const { addMultipleToCart } = useCart();
+  const { addMultipleToCart, clearCart } = useCart();
   const { addToast, addOrderToast } = useToast();
   const [pedidos, setPedidos] = useState<any[]>([]);
   const [catalogProducts, setCatalogProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedPedidoId, setExpandedPedidoId] = useState<string | null>(null);
+  const [pedidoToEdit, setPedidoToEdit] = useState<any>(null);
+  const [loadingEdit, setLoadingEdit] = useState(false);
   const [selectedPedidoModal, setSelectedPedidoModal] = useState<any | null>(null);
   const [repeatingOrderId, setRepeatingOrderId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -632,6 +634,53 @@ export default function MeusPedidos() {
 
   const toggleExpand = (id: string) => {
     setExpandedPedidoId(expandedPedidoId === id ? null : id);
+  };
+
+  const handleConfirmEditOrder = async (pedido: any) => {
+    setLoadingEdit(true);
+    try {
+      // 1. Gather the items to add
+      const itens = getPedidoItensList(pedido);
+      const itemsToAdd: { product: any; quantity: number }[] = [];
+
+      for (const it of itens) {
+        const product = catalogProducts.find((p) => p.id === it.id || p.sku === it.codigo || p.id === it.codigo);
+        if (product) {
+          itemsToAdd.push({ product, quantity: getItemQuantity(it) });
+        } else {
+          // Fallback if product not found in catalog
+          itemsToAdd.push({
+             product: { 
+               id: it.id || it.codigo, 
+               nome: it.descricao || it.nome, 
+               precoAplicado: getItemUnitPrice(it, pedido, catalogProducts, profile?.level), 
+               precoOriginal: getItemUnitPrice(it, pedido, catalogProducts, profile?.level),
+               sku: it.codigo,
+               imagemPrincipal: it.imagemPrincipal || it.imagem || undefined
+             },
+             quantity: getItemQuantity(it)
+          });
+        }
+      }
+
+      // 2. Clear current cart
+      clearCart();
+
+      // 3. Add to cart
+      await addMultipleToCart(itemsToAdd);
+
+      // 4. Delete the order
+      await deleteDoc(doc(db, "pedidos_venda", pedido.firebaseId));
+
+      // 5. Navigate to cart
+      navigate("/shop/cart");
+    } catch (error) {
+      console.error("Erro ao alterar pedido:", error);
+      alert("Ocorreu um erro ao alterar o pedido.");
+    } finally {
+      setLoadingEdit(false);
+      setPedidoToEdit(null);
+    }
   };
 
   const copyToClipboard = (text: string, id: string) => {
@@ -960,6 +1009,17 @@ export default function MeusPedidos() {
                         </button>
 
                         {/* Inline Expand Accordion */}
+                        {pedido.status === CONFIG.STATUS.NOVO && (
+                          <button
+                            onClick={() => setPedidoToEdit(pedido)}
+                            title="Alterar dados do pedido"
+                            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 font-medium text-xs rounded-2xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 border border-amber-200/50"
+                          >
+                            <RefreshCw size={14} />
+                            <span className="hidden sm:inline">Alterar Pedido</span>
+                            <span className="sm:hidden">Alterar</span>
+                          </button>
+                        )}
                         <button
                           onClick={() => toggleExpand(pedido.firebaseId)}
                           aria-label={isExpanded ? "Recolher detalhes" : "Expandir detalhes"}
@@ -1198,6 +1258,40 @@ export default function MeusPedidos() {
           </div>
         )}
       </div>
+
+      {/* ============================================================
+          EDIT CONFIRMATION MODAL
+          ============================================================ */}
+      {pedidoToEdit && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-scale-up text-center border border-slate-100">
+            <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-5">
+              <RefreshCw size={28} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-3">Alterar Pedido</h3>
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              Ao prosseguir, este pedido (<strong className="text-slate-800">#{pedidoToEdit.numeroPedido || pedidoToEdit.firebaseId.slice(-6).toUpperCase()}</strong>) será cancelado e excluído automaticamente. Todos os itens retornarão ao seu carrinho para que você possa alterar as quantidades ou a forma de pagamento.<br/><br/>
+              Você precisará <strong>confirmar todos os dados novamente</strong> para gerar um novo pedido. Deseja continuar?
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setPedidoToEdit(null)}
+                disabled={loadingEdit}
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors cursor-pointer flex-1"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleConfirmEditOrder(pedidoToEdit)}
+                disabled={loadingEdit}
+                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition-colors cursor-pointer flex-1 flex items-center justify-center"
+              >
+                {loadingEdit ? <RefreshCw className="animate-spin" size={18} /> : "Sim, Alterar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============================================================
           DETAILED ORDER MODAL (Modal Completo de Detalhes do Pedido)

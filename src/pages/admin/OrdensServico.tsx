@@ -72,6 +72,7 @@ export default function OrdensServicoAdmin() {
   // Search and Status Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [activeStatusFilter, setActiveStatusFilter] = useState("all");
+  const [activePeriodFilter, setActivePeriodFilter] = useState("all");
 
   const fetchOrdens = async () => {
     setLoading(true);
@@ -516,6 +517,19 @@ export default function OrdensServicoAdmin() {
         if (eff !== "Cancelada pelo Cliente" && eff !== "Cancelado") return false;
       }
 
+      // Date/Period filter
+      if (activePeriodFilter !== "all" && o.createdAt) {
+        const orderDate = new Date(o.createdAt?.seconds ? o.createdAt.seconds * 1000 : o.createdAt);
+        const now = new Date();
+        const diffTime = Math.abs(now.getTime() - orderDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (activePeriodFilter === "7d" && diffDays > 7) return false;
+        if (activePeriodFilter === "15d" && diffDays > 15) return false;
+        if (activePeriodFilter === "30d" && diffDays > 30) return false;
+        if (activePeriodFilter === "6m" && diffDays > 180) return false;
+      }
+
       // Search term filter
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase().trim();
@@ -536,7 +550,7 @@ export default function OrdensServicoAdmin() {
 
       return true;
     });
-  }, [ordens, activeStatusFilter, searchTerm, usersMap]);
+  }, [ordens, activeStatusFilter, activePeriodFilter, searchTerm, usersMap]);
 
   // Export Filtered Orders to CSV
   const handleExportCsv = () => {
@@ -677,6 +691,15 @@ export default function OrdensServicoAdmin() {
         ]}
         activeFilter={activeStatusFilter}
         onFilterChange={setActiveStatusFilter}
+        periodOptions={[
+          { label: "Todo o período", value: "all" },
+          { label: "Últimos 7 dias", value: "7d" },
+          { label: "Últimos 15 dias", value: "15d" },
+          { label: "Últimos 30 dias", value: "30d" },
+          { label: "Últimos 6 meses", value: "6m" },
+        ]}
+        activePeriod={activePeriodFilter}
+        onPeriodChange={setActivePeriodFilter}
         onExportCsv={handleExportCsv}
         totalRecords={ordens.length}
         filteredRecords={filteredOrdens.length}
