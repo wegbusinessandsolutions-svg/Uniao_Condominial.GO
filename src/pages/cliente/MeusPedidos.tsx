@@ -4,7 +4,7 @@ import {
   ShoppingBag, Search, Calendar, MapPin, CreditCard, ChevronDown, ChevronUp, 
   Clock, CheckCircle, X, RefreshCw, Clipboard, QrCode, FileText, Truck, 
   Package, ExternalLink, Printer, ShieldCheck, ArrowRight, Banknote, 
-  AlertCircle, ChevronRight, Eye, Check, Tag, Bell, Volume2, Sparkles
+  AlertCircle, ChevronRight, Eye, Check, Tag, Bell, Volume2, Sparkles, Trash2
 } from "lucide-react";
 import { collection, onSnapshot, query, getDocs, where, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -639,44 +639,14 @@ export default function MeusPedidos() {
   const handleConfirmEditOrder = async (pedido: any) => {
     setLoadingEdit(true);
     try {
-      // 1. Gather the items to add
-      const itens = getPedidoItensList(pedido);
-      const itemsToAdd: { product: any; quantity: number }[] = [];
-
-      for (const it of itens) {
-        const product = catalogProducts.find((p) => p.id === it.id || p.sku === it.codigo || p.id === it.codigo);
-        if (product) {
-          itemsToAdd.push({ product, quantity: getItemQuantity(it) });
-        } else {
-          // Fallback if product not found in catalog
-          itemsToAdd.push({
-             product: { 
-               id: it.id || it.codigo, 
-               nome: it.descricao || it.nome, 
-               precoAplicado: getItemUnitPrice(it, pedido, catalogProducts, profile?.level), 
-               precoOriginal: getItemUnitPrice(it, pedido, catalogProducts, profile?.level),
-               sku: it.codigo,
-               imagemPrincipal: it.imagemPrincipal || it.imagem || undefined
-             },
-             quantity: getItemQuantity(it)
-          });
-        }
-      }
-
-      // 2. Clear current cart
-      clearCart();
-
-      // 3. Add to cart
-      await addMultipleToCart(itemsToAdd);
-
-      // 4. Delete the order
+      // 1. Delete the order
       await deleteDoc(doc(db, "pedidos_venda", pedido.firebaseId));
 
-      // 5. Navigate to cart
-      navigate("/shop/cart");
+      // 2. Navigate to product catalog
+      navigate("/cliente/produtos");
     } catch (error) {
       console.error("Erro ao alterar pedido:", error);
-      alert("Ocorreu um erro ao alterar o pedido.");
+      alert("Ocorreu um erro ao excluir o pedido.");
     } finally {
       setLoadingEdit(false);
       setPedidoToEdit(null);
@@ -1015,9 +985,9 @@ export default function MeusPedidos() {
                             title="Alterar dados do pedido"
                             className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 font-medium text-xs rounded-2xl transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 border border-amber-200/50"
                           >
-                            <RefreshCw size={14} />
-                            <span className="hidden sm:inline">Alterar Pedido</span>
-                            <span className="sm:hidden">Alterar</span>
+                            <Trash2 size={14} />
+                            <span className="hidden sm:inline">Alterar/Excluir Pedido</span>
+                            <span className="sm:hidden">Excluir</span>
                           </button>
                         )}
                         <button
@@ -1266,12 +1236,12 @@ export default function MeusPedidos() {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-scale-up text-center border border-slate-100">
             <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-5">
-              <RefreshCw size={28} />
+              <Trash2 size={28} />
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-3">Alterar Pedido</h3>
             <p className="text-sm text-slate-600 mb-6 leading-relaxed">
-              Ao prosseguir, este pedido (<strong className="text-slate-800">#{pedidoToEdit.numeroPedido || pedidoToEdit.firebaseId.slice(-6).toUpperCase()}</strong>) será cancelado e excluído automaticamente. Todos os itens retornarão ao seu carrinho para que você possa alterar as quantidades ou a forma de pagamento.<br/><br/>
-              Você precisará <strong>confirmar todos os dados novamente</strong> para gerar um novo pedido. Deseja continuar?
+              O pedido em questão (<strong className="text-slate-800">#{pedidoToEdit.numeroPedido || pedidoToEdit.firebaseId.slice(-6).toUpperCase()}</strong>) não poderá ser alterado diretamente, mas poderá ser <strong>excluído</strong> para que você realize um novo pedido.<br/><br/>
+              Ao confirmar a exclusão, você será redirecionado para o Catálogo de Produtos para iniciar uma nova compra. Deseja continuar?
             </p>
             <div className="flex gap-3 justify-center">
               <button
@@ -1286,7 +1256,7 @@ export default function MeusPedidos() {
                 disabled={loadingEdit}
                 className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition-colors cursor-pointer flex-1 flex items-center justify-center"
               >
-                {loadingEdit ? <RefreshCw className="animate-spin" size={18} /> : "Sim, Alterar"}
+                {loadingEdit ? <RefreshCw className="animate-spin" size={18} /> : "Sim, Excluir Pedido"}
               </button>
             </div>
           </div>
