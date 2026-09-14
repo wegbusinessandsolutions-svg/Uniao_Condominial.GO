@@ -99,10 +99,8 @@ service cloud.firestore {
         isSignedIn() && 
         (resource.data.clienteId == request.auth.uid || (resource.data.clienteEmail != null && request.auth.token.email != null && resource.data.clienteEmail == request.auth.token.email)) && 
         (
-          (resource.data.status == 'Solicitado o Serviço' && (
-            !(resource.data.createdAt is timestamp) ||
-            request.time <= resource.data.createdAt + duration.value(24, 'h')
-          )) ||
+          resource.data.status == 'Confirmação de Data' ||
+          resource.data.status == 'Solicitado o Serviço' ||
           resource.data.status == 'Cancelada pelo Cliente' ||
           resource.data.status == 'Cancelado'
         )

@@ -121,25 +121,7 @@ const getDeleteEligibility = (order: any, effStatus?: string) => {
     return { canDelete: true, hoursElapsed: 0, reasonText: "Pendente de confirmação" };
   }
 
-  if (!isInitialPendingStatus(order.status)) {
-    return { canDelete: false, reason: "Disponível apenas para solicitações sem alteração de status" };
-  }
-
-  const createdDate = getOrderDate(order.createdAt);
-  if (!createdDate) {
-    return { canDelete: false, reason: "Data da solicitação indisponível" };
-  }
-
-  const now = new Date();
-  const diffMs = now.getTime() - createdDate.getTime();
-  const diffHours = diffMs / (1000 * 60 * 60);
-
-  if (diffHours >= 24) {
-    const hoursElapsed = Math.floor(diffHours);
-    return { canDelete: true, hoursElapsed, reasonText: "Sem alteração há +24h" };
-  }
-
-  return { canDelete: false, reason: "Aguardando prazo de 24 horas sem alteração de status" };
+  return { canDelete: false, reason: "Apenas ordens aguardando confirmação podem ser excluídas" };
 };
 
 export default function MinhasOrdensServico() {
@@ -721,7 +703,7 @@ export default function MinhasOrdensServico() {
                           <Trash2 size={15} /> Excluir Ordem de Serviço
                         </button>
                         <span className="text-[10px] text-slate-500 font-normal flex items-center gap-1 justify-center sm:justify-end">
-                          <Clock size={11} className="text-slate-400" /> {deleteInfo.reasonText || "Sem alteração há +24h"}
+                          <Clock size={11} className="text-slate-400" /> {deleteInfo.reasonText || "Pendente"}
                         </span>
                       </div>
                     )}
@@ -869,7 +851,7 @@ export default function MinhasOrdensServico() {
                   <span className="font-medium text-slate-900">Código OS {selectedOrderToDelete.numeroOS || selectedOrderToDelete.id?.slice(0, 8)}</span>
                   <span className="text-red-700 font-medium flex items-center gap-1 bg-red-50 px-2.5 py-0.5 rounded-xl shadow-xs">
                     <Clock size={12} />
-                    {getDeleteEligibility(selectedOrderToDelete, getEffectiveOSStatus(selectedOrderToDelete)).reasonText || "Sem alteração há +24h"}
+                    {getDeleteEligibility(selectedOrderToDelete, getEffectiveOSStatus(selectedOrderToDelete)).reasonText || "Pendente"}
                   </span>
                 </div>
                 <p className="font-medium text-slate-800 break-words">{selectedOrderToDelete.servicoNome}</p>
