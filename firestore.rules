@@ -137,7 +137,14 @@ service cloud.firestore {
             (request.auth.token.email != null && resource.data.get('clienteEmail', '') == request.auth.token.email)
           ));
       allow create: if isSignedIn();
-      allow update, delete: if isStaff();
+      allow update: if isStaff();
+      allow delete: if isStaff() || (isSignedIn() && (
+            (resource.data.get('clienteId', '') == request.auth.uid) ||
+            (resource.data.get('clienteUid', '') == request.auth.uid) ||
+            (resource.data.get(['cliente', 'uid'], '') == request.auth.uid) ||
+            (request.auth.token.email != null && resource.data.get(['cliente', 'email'], '') == request.auth.token.email) ||
+            (request.auth.token.email != null && resource.data.get('clienteEmail', '') == request.auth.token.email)
+          ) && resource.data.status == 'AGUARDANDO_CONFERENCIA');
     }
 
     match /contas_receber/{id} {

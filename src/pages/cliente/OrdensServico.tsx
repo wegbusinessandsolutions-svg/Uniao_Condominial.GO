@@ -116,7 +116,11 @@ const getCancelEligibility = (order: any) => {
   return { canCancel: false, is24hRule: false, reason: "Prazo de 4 horas para cancelamento expirado" };
 };
 
-const getDeleteEligibility = (order: any) => {
+const getDeleteEligibility = (order: any, effStatus?: string) => {
+  if (effStatus === "Confirmação de Data") {
+    return { canDelete: true, hoursElapsed: 0, reasonText: "Pendente de confirmação" };
+  }
+
   if (!isInitialPendingStatus(order.status)) {
     return { canDelete: false, reason: "Disponível apenas para solicitações sem alteração de status" };
   }
@@ -132,7 +136,7 @@ const getDeleteEligibility = (order: any) => {
 
   if (diffHours >= 24) {
     const hoursElapsed = Math.floor(diffHours);
-    return { canDelete: true, hoursElapsed };
+    return { canDelete: true, hoursElapsed, reasonText: "Sem alteração há +24h" };
   }
 
   return { canDelete: false, reason: "Aguardando prazo de 24 horas sem alteração de status" };
@@ -536,9 +540,9 @@ export default function MinhasOrdensServico() {
       ) : (
         <div className="space-y-5 w-full min-w-0">
           {filteredOrdens.map((o) => {
-            const cancelInfo = getCancelEligibility(o);
-            const deleteInfo = getDeleteEligibility(o);
             const effStatus = getEffectiveOSStatus(o);
+            const cancelInfo = getCancelEligibility(o);
+            const deleteInfo = getDeleteEligibility(o, effStatus);
             const visualInfo = getOSStatusVisualInfo(effStatus);
             const isCancelled = o.status === "Cancelada pelo Cliente" || o.status === "Cancelado" || effStatus === "Cancelada pelo Cliente";
             const createdDate = getOrderDate(o.createdAt);
@@ -717,7 +721,7 @@ export default function MinhasOrdensServico() {
                           <Trash2 size={15} /> Excluir Ordem de Serviço
                         </button>
                         <span className="text-[10px] text-slate-500 font-normal flex items-center gap-1 justify-center sm:justify-end">
-                          <Clock size={11} className="text-slate-400" /> Sem alteração de status há +24h
+                          <Clock size={11} className="text-slate-400" /> {deleteInfo.reasonText || "Sem alteração há +24h"}
                         </span>
                       </div>
                     )}
@@ -865,7 +869,7 @@ export default function MinhasOrdensServico() {
                   <span className="font-medium text-slate-900">Código OS {selectedOrderToDelete.numeroOS || selectedOrderToDelete.id?.slice(0, 8)}</span>
                   <span className="text-red-700 font-medium flex items-center gap-1 bg-red-50 px-2.5 py-0.5 rounded-xl shadow-xs">
                     <Clock size={12} />
-                    Sem alteração há +24h
+                    {getDeleteEligibility(selectedOrderToDelete, getEffectiveOSStatus(selectedOrderToDelete)).reasonText || "Sem alteração há +24h"}
                   </span>
                 </div>
                 <p className="font-medium text-slate-800 break-words">{selectedOrderToDelete.servicoNome}</p>
@@ -877,7 +881,7 @@ export default function MinhasOrdensServico() {
               <div className="bg-amber-50 rounded-2xl p-3.5 sm:p-4 text-xs text-amber-900 space-y-1 shadow-xs">
                 <p className="font-medium">Atenção:</p>
                 <p className="font-normal">
-                  Esta solicitação permaneceu com o status <span className="font-medium">'Aguardando confirmação - Data'</span> por mais de 24 horas sem alteração de status. Ao confirmar, a ordem de serviço será permanentemente excluída do aplicativo.
+                  Ao confirmar, a ordem de serviço será excluída em definitivo do sistema. Deseja prosseguir com a exclusão?
                 </p>
               </div>
 
