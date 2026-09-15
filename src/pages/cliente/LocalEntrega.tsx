@@ -24,14 +24,14 @@ function MapUpdater({ center }: { center: [number, number] }) {
 
 export default function LocalEntrega() {
   const { profile, refreshProfile } = useAuth();
-  const [lat, setLat] = useState(profile?.latitude || -16.685847);
-  const [lng, setLng] = useState(profile?.longitude || -49.261107);
+  const [lat, setLat] = useState(Number(profile?.latitude) || -16.685847);
+  const [lng, setLng] = useState(Number(profile?.longitude) || -49.261107);
   const [successMsg, setSuccessMsg] = useState("Localização do condomínio padrão selecionada ✓");
 
   useEffect(() => {
     if (profile?.latitude && profile?.longitude) {
-      setLat(profile.latitude);
-      setLng(profile.longitude);
+      setLat(Number(profile.latitude));
+      setLng(Number(profile.longitude));
       setSuccessMsg("Localização configurada do condomínio carregada ✓");
     }
   }, [profile?.latitude, profile?.longitude]);
