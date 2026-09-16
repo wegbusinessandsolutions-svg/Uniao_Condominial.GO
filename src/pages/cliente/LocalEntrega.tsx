@@ -101,6 +101,8 @@ export default function LocalEntrega() {
     }
   }, [profile?.latitude, profile?.longitude]);
 
+  // Removed automatic GPS request because mobile browsers block it without direct user click.
+  // The user MUST click the "Obter Localização por GPS" button on the first-time screen.
 
   const handleUseMyLocation = () => {
     if (navigator.geolocation) {
@@ -392,8 +394,8 @@ export default function LocalEntrega() {
             style={{ height: "100%", width: "100%", zIndex: 10 }}
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; Google Maps'
+              url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
             />
             <Marker 
               position={[lat, lng]} 
