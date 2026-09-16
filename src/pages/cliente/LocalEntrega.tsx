@@ -17,12 +17,25 @@ L.Icon.Default.mergeOptions({
 function MapUpdater({ center }: { center: [number, number] }) {
   const map = useMap();
   useEffect(() => {
-    // Timeout to ensure the container has correctly sized itself before flying
-    const timer = setTimeout(() => {
+    // Initial size invalidation
+    setTimeout(() => {
       map.invalidateSize();
       map.setView(center, map.getZoom(), { animate: false });
-    }, 100);
-    return () => clearTimeout(timer);
+    }, 200);
+
+    // Watch for container resizes
+    const container = map.getContainer();
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [center, map]);
   return null;
 }
@@ -379,8 +392,8 @@ export default function LocalEntrega() {
             style={{ height: "100%", width: "100%", zIndex: 10 }}
           >
             <TileLayer
-              attribution='&copy; Google Maps'
-              url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <Marker 
               position={[lat, lng]} 
