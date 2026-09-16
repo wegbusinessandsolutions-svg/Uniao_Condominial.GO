@@ -16,6 +16,7 @@ import {
   RoutineServiceOrderStatus
 } from "../../lib/serviceStatusWorkflow";
 import { ServiceTrackingTimeline } from "../../components/servicos/ServiceTrackingTimeline";
+import { SignatureModal } from "../../components/cliente/SignatureModal";
 
 const parsePrice = (val: any): number => {
   if (val === undefined || val === null) return 0;
@@ -140,6 +141,10 @@ export default function MinhasOrdensServico() {
   const [selectedOrderToDelete, setSelectedOrderToDelete] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+
+  // Signature Modal States
+  const [signatureModalOpen, setSignatureModalOpen] = useState(false);
+  const [orderToSign, setOrderToSign] = useState<any>(null);
 
   // Real-time synchronization
   useEffect(() => {
@@ -674,8 +679,42 @@ export default function MinhasOrdensServico() {
                     )}
                   </div>
 
-                  {/* Actions (Cancel / Delete if eligible) */}
+                  {/* Actions (Signature / Cancel / Delete if eligible) */}
                   <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start sm:justify-end">
+                    
+                    {/* Signature Button or Status */}
+                    {o.assinaturaCliente ? (
+                      <div className="flex flex-col items-stretch sm:items-end gap-1 w-full sm:w-auto">
+                        <div className="w-full sm:w-auto px-4 py-2.5 bg-emerald-50 text-emerald-800 text-xs font-medium rounded-2xl flex items-center justify-center gap-1.5 shadow-xs border border-emerald-100">
+                          <CheckCircle2 size={15} className="text-emerald-600" />
+                          Termo de Aceite Assinado
+                        </div>
+                        {o.assinaturaClienteData && (
+                          <span className="text-[10px] text-slate-500 font-normal flex items-center gap-1 justify-center sm:justify-end">
+                            <Clock size={11} className="text-emerald-500" /> 
+                            {formatDateBR(o.assinaturaClienteData)}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      (effStatus === "Em execução" || effStatus === "Serviço Concluído") && (
+                        <div className="flex flex-col items-stretch sm:items-end gap-1 w-full sm:w-auto">
+                          <button
+                            onClick={() => {
+                              setOrderToSign(o);
+                              setSignatureModalOpen(true);
+                            }}
+                            className="w-full sm:w-auto px-4 py-2.5 bg-[#0071e3] hover:bg-[#0071e3]/90 text-white text-xs font-medium rounded-2xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md"
+                          >
+                            <Sparkles size={15} /> Assinar Termo de Aceite
+                          </button>
+                          <span className="text-[10px] text-slate-500 font-normal flex items-center gap-1 justify-center sm:justify-end">
+                            <AlertCircle size={11} className="text-[#0071e3]" /> Pendente de assinatura do síndico/zelador
+                          </span>
+                        </div>
+                      )
+                    )}
+
                     {cancelInfo.canCancel && (
                       <div className="flex flex-col items-stretch sm:items-end gap-1 w-full sm:w-auto">
                         <button
@@ -906,6 +945,20 @@ export default function MinhasOrdensServico() {
             </div>
           </div>
         </div>
+      )}
+      {signatureModalOpen && orderToSign && (
+        <SignatureModal
+          order={orderToSign}
+          onClose={() => {
+            setSignatureModalOpen(false);
+            setOrderToSign(null);
+          }}
+          onSuccess={() => {
+            setSignatureModalOpen(false);
+            setOrderToSign(null);
+            // Optional: trigger refresh or just let snapshot handle it
+          }}
+        />
       )}
     </div>
   );

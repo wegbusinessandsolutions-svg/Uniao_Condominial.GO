@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { ShoppingCart, Receipt, ArrowRight, HeartHandshake, Sparkles } from "lucide-react";
+import { ShoppingCart, Receipt, ArrowRight, HeartHandshake, Sparkles, CheckCircle } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { doc, getDoc, getDocs, collection, query, where, addDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -169,11 +169,25 @@ export default function CustomerDashboard() {
     };
 
     fetchAfiliacao();
-
     return () => {
       isMounted = false;
     };
   }, [user, profile]);
+
+  let locationDateFormatted = "";
+  if (profile?.geolocalizacaoAtualizadaEm) {
+    let dateObj: Date | null = null;
+    if (typeof profile.geolocalizacaoAtualizadaEm.toDate === 'function') {
+      dateObj = profile.geolocalizacaoAtualizadaEm.toDate();
+    } else if (profile.geolocalizacaoAtualizadaEm.seconds) {
+      dateObj = new Date(profile.geolocalizacaoAtualizadaEm.seconds * 1000);
+    } else {
+      dateObj = new Date(profile.geolocalizacaoAtualizadaEm);
+    }
+    if (dateObj && !isNaN(dateObj.getTime())) {
+      locationDateFormatted = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -187,7 +201,7 @@ export default function CustomerDashboard() {
           <div className="flex flex-row justify-between items-start w-full gap-3 sm:gap-4">
             {/* Left Column: Date & Weather widgets on top, greeting below */}
             <div className="flex flex-col items-start gap-2 flex-1 min-w-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-sm w-full max-w-xl">
+              <div className={`grid grid-cols-1 gap-2.5 sm:gap-3 text-sm w-full ${profile?.geolocalizacaoAtiva && locationDateFormatted ? "sm:grid-cols-2 md:grid-cols-3 max-w-2xl" : "sm:grid-cols-2 max-w-xl"}`}>
                 {/* 1. Date Card */}
                 <div className="bg-white shadow-xs hover:shadow-md px-4 py-2.5 rounded-2xl flex items-center justify-start gap-2.5 text-slate-700 text-xs sm:text-sm font-normal min-h-[56px] transition-shadow w-full">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-pulse shrink-0"></span>
@@ -201,8 +215,18 @@ export default function CustomerDashboard() {
 
                 {/* 2. Temperature Card */}
                 <WeatherWidget cidade={profile?.cidade} className="w-full justify-start" />
-              </div>
 
+                {/* 3. Location Confirmed Card (if active) */}
+                {profile?.geolocalizacaoAtiva && locationDateFormatted && (
+                  <div className="bg-white shadow-xs hover:shadow-md px-4 py-2.5 rounded-2xl flex items-center justify-start gap-2.5 text-slate-700 text-xs sm:text-sm font-normal min-h-[56px] transition-shadow w-full">
+                    <CheckCircle className="w-5 h-5 text-[#10b981] shrink-0" />
+                    <div className="leading-tight">
+                      <div className="font-medium text-slate-800">GPS Confirmado</div>
+                      <div className="text-slate-500 text-[11px] sm:text-xs">em {locationDateFormatted}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Right Column: Classification Badge (aligned at the top with Date, spacious padding) */}

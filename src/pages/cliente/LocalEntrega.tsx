@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MapPin, Target, Share2, MessageCircle } from "lucide-react";
+import { MapPin, Target, Share2, MessageCircle, Search, Building } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -45,6 +45,40 @@ export default function LocalEntrega() {
   const [successMsg, setSuccessMsg] = useState("Localização do condomínio padrão selecionada ✓");
   const [showMapOverride, setShowMapOverride] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+
+  const [cep, setCep] = useState(profile?.cep || "");
+  const [endereco, setEndereco] = useState(profile?.endereco || "");
+  const [numero, setNumero] = useState(profile?.numero || "");
+  const [complemento, setComplemento] = useState(profile?.complemento || "");
+  const [bairro, setBairro] = useState(profile?.bairro || "");
+  const [cidade, setCidade] = useState(profile?.cidade || "");
+  const [estado, setEstado] = useState(profile?.estado || "");
+  const [isSearchingCep, setIsSearchingCep] = useState(false);
+
+  const handleCepSearch = async () => {
+    const cleanCep = cep.replace(/\D/g, "");
+    if (cleanCep.length !== 8) return;
+    
+    setIsSearchingCep(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await res.json();
+      if (!data.erro) {
+        setEndereco(data.logradouro || "");
+        setBairro(data.bairro || "");
+        setCidade(data.localidade || "");
+        setEstado(data.uf || "");
+        setSuccessMsg("Endereço preenchido pelo CEP ✓");
+      } else {
+        alert("CEP não encontrado.");
+      }
+    } catch (err) {
+      console.error("Erro ao buscar CEP:", err);
+      alert("Erro ao buscar o CEP.");
+    } finally {
+      setIsSearchingCep(false);
+    }
+  };
 
   useEffect(() => {
     if (profile && profile.latitude !== undefined && profile.longitude !== undefined) {
@@ -101,6 +135,13 @@ export default function LocalEntrega() {
         await updateDoc(doc(db, "users", profile.uid), {
           latitude: lat,
           longitude: lng,
+          cep,
+          endereco,
+          numero,
+          complemento,
+          bairro,
+          cidade,
+          estado,
           geolocalizacaoAtiva: true,
           geolocalizacaoAtualizadaEm: serverTimestamp()
         });
@@ -220,6 +261,113 @@ export default function LocalEntrega() {
           <div>
             <h1 className="text-2xl font-normal text-slate-900 tracking-tight">Localização do Condomínio</h1>
             <p className="text-sm text-slate-500 font-normal">Defina a localização do condomínio no mapa e compartilhe se necessário.</p>
+          </div>
+        </div>
+
+        <div className="p-6 md:p-8 flex flex-col gap-5 bg-white border-t border-slate-100">
+          <h2 className="text-lg font-medium text-slate-900 flex items-center gap-2">
+            <Building className="w-5 h-5 text-slate-500" />
+            Endereço Completo
+          </h2>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            <div className="sm:col-span-4 space-y-1">
+              <label className="text-sm font-medium text-slate-700">CEP</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={cep}
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/\D/g, '');
+                    if (val.length > 5) {
+                      val = val.substring(0, 5) + '-' + val.substring(5, 8);
+                    }
+                    setCep(val);
+                  }}
+                  maxLength={9}
+                  placeholder="00000-000"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+                />
+                <button
+                  type="button"
+                  onClick={handleCepSearch}
+                  disabled={isSearchingCep || cep.replace(/\D/g, '').length !== 8}
+                  className="px-4 py-2.5 bg-slate-100 rounded-xl text-slate-600 hover:bg-slate-200 transition-colors flex items-center justify-center shrink-0 disabled:opacity-50"
+                  title="Buscar CEP"
+                >
+                  {isSearchingCep ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-600"></div>
+                  ) : (
+                    <Search className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            <div className="sm:col-span-8 space-y-1">
+              <label className="text-sm font-medium text-slate-700">Endereço (Rua/Avenida)</label>
+              <input
+                type="text"
+                value={endereco}
+                onChange={(e) => setEndereco(e.target.value)}
+                placeholder="Rua Exemplo"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+              />
+            </div>
+            
+            <div className="sm:col-span-4 space-y-1">
+              <label className="text-sm font-medium text-slate-700">Número</label>
+              <input
+                type="text"
+                value={numero}
+                onChange={(e) => setNumero(e.target.value)}
+                placeholder="S/N"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+              />
+            </div>
+            
+            <div className="sm:col-span-8 space-y-1">
+              <label className="text-sm font-medium text-slate-700">Complemento / Bairro</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={complemento}
+                  onChange={(e) => setComplemento(e.target.value)}
+                  placeholder="Apto 101"
+                  className="w-1/2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+                />
+                <input
+                  type="text"
+                  value={bairro}
+                  onChange={(e) => setBairro(e.target.value)}
+                  placeholder="Centro"
+                  className="w-1/2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+                />
+              </div>
+            </div>
+            
+            <div className="sm:col-span-8 space-y-1">
+              <label className="text-sm font-medium text-slate-700">Cidade</label>
+              <input
+                type="text"
+                value={cidade}
+                onChange={(e) => setCidade(e.target.value)}
+                placeholder="São Paulo"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+              />
+            </div>
+            
+            <div className="sm:col-span-4 space-y-1">
+              <label className="text-sm font-medium text-slate-700">Estado (UF)</label>
+              <input
+                type="text"
+                value={estado}
+                onChange={(e) => setEstado(e.target.value)}
+                placeholder="SP"
+                maxLength={2}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 uppercase"
+              />
+            </div>
           </div>
         </div>
 
