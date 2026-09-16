@@ -43,6 +43,8 @@ export default function LocalEntrega() {
   const [lat, setLat] = useState(parseCoordinate(profile?.latitude, defaultLat));
   const [lng, setLng] = useState(parseCoordinate(profile?.longitude, defaultLng));
   const [successMsg, setSuccessMsg] = useState("Localização do condomínio padrão selecionada ✓");
+  const [showMapOverride, setShowMapOverride] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
   useEffect(() => {
     if (profile && profile.latitude !== undefined && profile.longitude !== undefined) {
@@ -55,6 +57,7 @@ export default function LocalEntrega() {
 
   const handleUseMyLocation = () => {
     if (navigator.geolocation) {
+      setIsLocating(true);
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const newLat = position.coords.latitude;
@@ -76,15 +79,19 @@ export default function LocalEntrega() {
               console.error("Erro ao sincronizar localização:", err);
             }
           }
+          setIsLocating(false);
         },
         (error) => {
           console.error("Erro ao obter geolocalização:", error);
-          alert("Não foi possível obter sua localização. Por favor, verifique as permissões de localização no seu navegador.");
+          alert("Não foi possível obter sua localização. Por favor, verifique as permissões de localização no seu dispositivo.");
+          setIsLocating(false);
+          setShowMapOverride(true);
         },
         { enableHighAccuracy: true }
       );
     } else {
       alert("Geolocalização não é suportada por este navegador.");
+      setShowMapOverride(true);
     }
   };
 
@@ -158,6 +165,50 @@ export default function LocalEntrega() {
 *Endereço:* ${clientAddress}
 *Localização Exata no Mapa:* https://www.google.com/maps?q=${lat},${lng}`;
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+
+  const isFirstTime = profile && !profile.geolocalizacaoAtiva && !showMapOverride;
+
+  if (isFirstTime) {
+    return (
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="bg-white rounded-3xl shadow-md overflow-hidden p-8 md:p-12 text-center flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="w-20 h-20 rounded-full bg-blue-50 text-[#0071e3] flex items-center justify-center shadow-inner mb-6">
+             <MapPin className="w-10 h-10" />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 tracking-tight mb-4">Configuração Inicial de Localização</h1>
+          <p className="text-base text-slate-600 font-normal max-w-md mx-auto mb-10 leading-relaxed">
+            Para garantir que as entregas e os serviços cheguem corretamente ao seu condomínio, precisamos obter a localização exata por GPS. Esta configuração é feita apenas no primeiro acesso.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <button
+              onClick={handleUseMyLocation}
+              disabled={isLocating}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3.5 bg-[#0071e3] rounded-2xl text-base font-medium text-white hover:bg-[#0071e3]/90 transition-all shadow-md cursor-pointer disabled:opacity-70"
+            >
+              {isLocating ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Obtendo GPS...
+                </>
+              ) : (
+                <>
+                  <Target className="w-5 h-5" />
+                  Obter Localização por GPS
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => setShowMapOverride(true)}
+              disabled={isLocating}
+              className="flex-1 sm:flex-none px-8 py-3.5 bg-slate-100 rounded-2xl text-base font-medium text-slate-700 hover:bg-slate-200 transition-colors shadow-xs cursor-pointer disabled:opacity-70"
+            >
+              Definir no Mapa
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
