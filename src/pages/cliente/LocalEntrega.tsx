@@ -17,24 +17,41 @@ L.Icon.Default.mergeOptions({
 function MapUpdater({ center }: { center: [number, number] }) {
   const map = useMap();
   useEffect(() => {
-    map.flyTo(center, map.getZoom());
+    // Timeout to ensure the container has correctly sized itself before flying
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+      map.setView(center, map.getZoom(), { animate: false });
+    }, 100);
+    return () => clearTimeout(timer);
   }, [center, map]);
   return null;
 }
 
+const parseCoordinate = (val: any, fallback: number) => {
+  if (val === undefined || val === null || val === '') return fallback;
+  if (typeof val === 'number') return val;
+  const num = Number(String(val).replace(',', '.'));
+  return isNaN(num) ? fallback : num;
+};
+
 export default function LocalEntrega() {
   const { profile, refreshProfile } = useAuth();
-  const [lat, setLat] = useState(Number(profile?.latitude) || -16.685847);
-  const [lng, setLng] = useState(Number(profile?.longitude) || -49.261107);
+  
+  const defaultLat = -16.685847;
+  const defaultLng = -49.261107;
+
+  const [lat, setLat] = useState(parseCoordinate(profile?.latitude, defaultLat));
+  const [lng, setLng] = useState(parseCoordinate(profile?.longitude, defaultLng));
   const [successMsg, setSuccessMsg] = useState("Localização do condomínio padrão selecionada ✓");
 
   useEffect(() => {
-    if (profile?.latitude && profile?.longitude) {
-      setLat(Number(profile.latitude));
-      setLng(Number(profile.longitude));
+    if (profile && profile.latitude !== undefined && profile.longitude !== undefined) {
+      setLat(parseCoordinate(profile.latitude, defaultLat));
+      setLng(parseCoordinate(profile.longitude, defaultLng));
       setSuccessMsg("Localização configurada do condomínio carregada ✓");
     }
   }, [profile?.latitude, profile?.longitude]);
+
 
   const handleUseMyLocation = () => {
     if (navigator.geolocation) {
@@ -156,7 +173,7 @@ export default function LocalEntrega() {
         </div>
 
         <div className="p-0 h-[400px] relative overflow-hidden bg-slate-50 z-0">
-          <MapContainer 
+          <MapContainer key={`map-${profile?.uid || "guest"}`} 
             center={[lat, lng]} 
             zoom={15} 
             scrollWheelZoom={true} 
