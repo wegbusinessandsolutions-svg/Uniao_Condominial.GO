@@ -2,36 +2,63 @@ const fs = require('fs');
 const file = '/app/applet/src/pages/cliente/Dashboard.tsx';
 let content = fs.readFileSync(file, 'utf8');
 
-// 1. Restore the 3 column layout
+// 1. Restore layout container for 2 columns (Left: Data+Temp, Right: Badge)
 content = content.replace(
-  `className="grid grid-cols-1 gap-2.5 sm:gap-3 text-sm w-full sm:grid-cols-2 max-w-xl"`,
-  `className="grid grid-cols-1 gap-2.5 sm:gap-3 text-sm w-full sm:grid-cols-2 md:grid-cols-3 max-w-3xl"`
+  `className="grid grid-cols-1 gap-2.5 sm:gap-3 text-sm w-full sm:grid-cols-2 md:grid-cols-3 max-w-3xl"`,
+  `className="grid grid-cols-1 gap-2.5 sm:gap-3 text-sm w-full max-w-sm"`
 );
 
-// 2. Add the classification card
+// 2. Remove the inline classification card we just added in the left column
 content = content.replace(
-  `{/* GPS Confirmado removido a pedido do cliente */}`,
-  `{/* 3. Classification Card */}
-                {(() => {
-                  const rawLevel = (profile?.level || "Bronze").trim();
-                  const levelKey = rawLevel.toLowerCase();
-                  let badgeImage = badgeBronze;
-                  if (levelKey === "prata") badgeImage = badgePrata;
-                  else if (levelKey === "ouro") badgeImage = badgeOuro;
-                  else if (levelKey === "diamante") badgeImage = badgeDiamante;
-                  
-                  return (
-                    <button type="button" onClick={() => setIsClassificationModalOpen(true)} className="bg-white shadow-xs hover:shadow-md px-4 py-2.5 rounded-2xl flex items-center justify-start gap-3 text-slate-700 text-xs sm:text-sm font-normal min-h-[56px] transition-all w-full group cursor-pointer border border-transparent hover:border-slate-100">
-                      <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-slate-50 to-white shadow-sm shrink-0 group-hover:scale-110 transition-transform duration-300">
-                        <img src={badgeImage} alt={rawLevel} className="w-6 h-6 object-contain drop-shadow-sm" />
+  /\{\/\* 3\. Classification Card \*\/\}[\s\S]*?\}\(\)\)\}/,
+  ""
+);
+
+// 3. Add the classification card back to the RIGHT column, formatted exactly like the screenshot
+content = content.replace(
+  `{/* The Classification Badge was here, currently removed. */}`,
+  `{/* Right Column: Classification Badge */}
+            <div className="flex-shrink-0 w-[42%] max-w-[150px]">
+              {(() => {
+                const rawLevel = (profile?.level || "Bronze").trim();
+                const levelKey = rawLevel.toLowerCase();
+                let badgeImage = badgeBronze;
+                let textColor = "text-[#78350f]";
+                
+                if (levelKey === "prata") {
+                  badgeImage = badgePrata;
+                  textColor = "text-[#334155]";
+                } else if (levelKey === "ouro") {
+                  badgeImage = badgeOuro;
+                  textColor = "text-[#854d0e]";
+                } else if (levelKey === "diamante") {
+                  badgeImage = badgeDiamante;
+                  textColor = "text-[#0369a1]";
+                }
+                
+                return (
+                  <button 
+                    type="button" 
+                    onClick={() => setIsClassificationModalOpen(true)}
+                    className="w-full h-full min-h-[120px] bg-white rounded-2xl shadow-xs hover:shadow-md transition-shadow flex flex-col items-center justify-center p-3 gap-2 border border-transparent hover:border-slate-100"
+                  >
+                    <img 
+                      src={badgeImage} 
+                      alt={rawLevel} 
+                      className="w-[52px] h-[52px] object-contain drop-shadow-sm mb-1" 
+                    />
+                    <div className="text-center">
+                      <div className="text-[10px] text-slate-400 uppercase tracking-widest font-medium mb-0.5">
+                        Classificação
                       </div>
-                      <div className="leading-tight text-left">
-                        <div className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-medium tracking-wider mb-0.5">Classificação</div>
-                        <div className="font-semibold text-slate-800 capitalize truncate">{rawLevel}</div>
+                      <div className={\`text-sm font-medium capitalize \${textColor}\`}>
+                        {rawLevel}
                       </div>
-                    </button>
-                  );
-                })()}`
+                    </div>
+                  </button>
+                );
+              })()}
+            </div>`
 );
 
 fs.writeFileSync(file, content);
