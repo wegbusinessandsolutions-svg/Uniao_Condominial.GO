@@ -1,20 +1,8 @@
 const fs = require('fs');
+const file = '/app/applet/src/pages/cliente/MeusDados.tsx';
+let content = fs.readFileSync(file, 'utf8');
 
-let file = fs.readFileSync('src/pages/cliente/MeusDados.tsx', 'utf8');
+content = content.replace(/className="space-y-4"/g, `className="space-y-2"`);
+content = content.replace(/className="py-2\.5 flex justify-between/g, `className="py-1.5 flex justify-between`);
 
-const start = file.indexOf('{/* Form Section to become affiliated */}');
-const end = file.indexOf('{/* Modal de Confirmação de Cancelamento de Afiliação */}');
-const afterModal = file.indexOf('{/* Modal de Confirmação de Exclusão da Conta */}', end);
-
-if (start !== -1 && end !== -1 && afterModal !== -1) {
-  // Replace the entire block from start up to (and excluding) afterModal
-  file = file.substring(0, start) + "\n          </dl>\n        </div>\n      </div>\n      " + file.substring(afterModal);
-  fs.writeFileSync('src/pages/cliente/MeusDados.tsx', file);
-  console.log("Successfully removed affiliation UI from MeusDados");
-} else {
-  console.log("Could not find blocks in MeusDados", {
-    start: start !== -1,
-    end: end !== -1,
-    afterModal: afterModal !== -1
-  });
-}
+fs.writeFileSync(file, content);

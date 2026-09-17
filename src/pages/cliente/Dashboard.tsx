@@ -201,7 +201,7 @@ export default function CustomerDashboard() {
           <div className="flex flex-row justify-between items-start w-full gap-3 sm:gap-4">
             {/* Left Column: Date & Weather widgets on top, greeting below */}
             <div className="flex flex-col items-start gap-2 flex-1 min-w-0">
-              <div className="grid grid-cols-1 gap-2.5 sm:gap-3 text-sm w-full sm:grid-cols-2 max-w-xl">
+              <div className="grid grid-cols-1 gap-2.5 sm:gap-3 text-sm w-full sm:grid-cols-2 md:grid-cols-3 max-w-3xl">
                 {/* 1. Date Card */}
                 <div className="bg-white shadow-xs hover:shadow-md px-4 py-2.5 rounded-2xl flex items-center justify-start gap-2.5 text-slate-700 text-xs sm:text-sm font-normal min-h-[56px] transition-shadow w-full">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-pulse shrink-0"></span>
@@ -216,7 +216,27 @@ export default function CustomerDashboard() {
                 {/* 2. Temperature Card */}
                 <WeatherWidget cidade={profile?.cidade} className="w-full justify-start" />
 
-                {/* GPS Confirmado removido a pedido do cliente */}
+                {/* 3. Classification Card */}
+                {(() => {
+                  const rawLevel = (profile?.level || "Bronze").trim();
+                  const levelKey = rawLevel.toLowerCase();
+                  let badgeImage = badgeBronze;
+                  if (levelKey === "prata") badgeImage = badgePrata;
+                  else if (levelKey === "ouro") badgeImage = badgeOuro;
+                  else if (levelKey === "diamante") badgeImage = badgeDiamante;
+                  
+                  return (
+                    <button type="button" onClick={() => setIsClassificationModalOpen(true)} className="bg-white shadow-xs hover:shadow-md px-4 py-2.5 rounded-2xl flex items-center justify-start gap-3 text-slate-700 text-xs sm:text-sm font-normal min-h-[56px] transition-all w-full group cursor-pointer border border-transparent hover:border-slate-100">
+                      <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-slate-50 to-white shadow-sm shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <img src={badgeImage} alt={rawLevel} className="w-6 h-6 object-contain drop-shadow-sm" />
+                      </div>
+                      <div className="leading-tight text-left">
+                        <div className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-medium tracking-wider mb-0.5">Classificação</div>
+                        <div className="font-semibold text-slate-800 capitalize truncate">{rawLevel}</div>
+                      </div>
+                    </button>
+                  );
+                })()}
               </div>
             </div>
             {/* The Classification Badge was here, currently removed. */}
