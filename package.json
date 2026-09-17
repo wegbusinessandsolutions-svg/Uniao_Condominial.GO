@@ -20,6 +20,7 @@
     "@types/nodemailer": "^8.0.1",
     "@types/react-window": "^2.0.0",
     "@types/recharts": "^2.0.1",
+    "@vis.gl/react-google-maps": "^1.10.0",
     "@vitejs/plugin-react": "^5.0.4",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",

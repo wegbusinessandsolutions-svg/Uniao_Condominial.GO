@@ -3,42 +3,7 @@ import { MapPin, Target, Share2, MessageCircle, Search, Building } from "lucide-
 import { useAuth } from "../../context/AuthContext";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../../lib/firebase";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
-import L from "leaflet";
-
-// Correção do ícone padrão do Leaflet no React
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-function MapUpdater({ center }: { center: [number, number] }) {
-  const map = useMap();
-  useEffect(() => {
-    // Initial size invalidation
-    setTimeout(() => {
-      map.invalidateSize();
-      map.setView(center, map.getZoom(), { animate: false });
-    }, 200);
-
-    // Watch for container resizes
-    const container = map.getContainer();
-    if (!container) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize();
-    });
-    
-    resizeObserver.observe(container);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [center, map]);
-  return null;
-}
+import { APIProvider, Map, AdvancedMarker, Pin } from "@vis.gl/react-google-maps";
 
 const parseCoordinate = (val: any, fallback: number) => {
   if (val === undefined || val === null || val === '') return fallback;
@@ -387,31 +352,49 @@ export default function LocalEntrega() {
         </div>
 
         <div className="p-0 h-[400px] relative overflow-hidden bg-slate-50 z-0">
-          <MapContainer key={`map-${profile?.uid || "guest"}`} 
-            center={[lat, lng]} 
-            zoom={15} 
-            scrollWheelZoom={true} 
-            style={{ height: "100%", width: "100%", zIndex: 10 }}
-          >
-            <TileLayer
-              attribution='&copy; Google Maps'
-              url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
-            />
-            <Marker 
-              position={[lat, lng]} 
-              draggable={true}
-              eventHandlers={{
-                dragend: (e) => {
-                  const marker = e.target;
-                  const position = marker.getLatLng();
-                  setLat(position.lat);
-                  setLng(position.lng);
-                  setSuccessMsg("Localização ajustada no mapa. Não se esqueça de salvar ✓");
-                },
-              }}
-            />
-            <MapUpdater center={[lat, lng]} />
-          </MapContainer>
+          {import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? (
+            <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+              <Map
+                mapId="MAP_ID_LOCAL_ENTREGA"
+                defaultZoom={15}
+                defaultCenter={{ lat, lng }}
+                center={{ lat, lng }}
+                gestureHandling={'greedy'}
+                disableDefaultUI={true}
+                zoomControl={true}
+                onDragend={(e) => {
+                  if (e.map) {
+                    const center = e.map.getCenter();
+                    if (center) {
+                      setLat(center.lat());
+                      setLng(center.lng());
+                      setSuccessMsg("Localização ajustada no mapa. Não se esqueça de salvar ✓");
+                    }
+                  }
+                }}
+              >
+                <AdvancedMarker 
+                  position={{ lat, lng }} 
+                  draggable={true}
+                  onDragEnd={(e) => {
+                    if (e.latLng) {
+                      setLat(e.latLng.lat());
+                      setLng(e.latLng.lng());
+                      setSuccessMsg("Localização ajustada no mapa. Não se esqueça de salvar ✓");
+                    }
+                  }}
+                >
+                  <Pin background={"#0071e3"} borderColor={"#005bb5"} glyphColor={"#fff"} />
+                </AdvancedMarker>
+              </Map>
+            </APIProvider>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 p-6 text-center">
+              <MapPin className="w-12 h-12 text-slate-400 mb-3" />
+              <h3 className="text-sm font-medium text-slate-700">Google Maps Não Configurado</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm">Para exibir o Google Maps, adicione a variável de ambiente VITE_GOOGLE_MAPS_API_KEY com a sua chave de API.</p>
+            </div>
+          )}
         </div>
 
         <div className="p-6 md:p-8 flex flex-col sm:flex-row justify-between items-center bg-white gap-4">

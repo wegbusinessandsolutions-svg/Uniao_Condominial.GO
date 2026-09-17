@@ -201,7 +201,7 @@ export default function CustomerDashboard() {
           <div className="flex flex-row justify-between items-start w-full gap-3 sm:gap-4">
             {/* Left Column: Date & Weather widgets on top, greeting below */}
             <div className="flex flex-col items-start gap-2 flex-1 min-w-0">
-              <div className={`grid grid-cols-1 gap-2.5 sm:gap-3 text-sm w-full ${profile?.geolocalizacaoAtiva && locationDateFormatted ? "sm:grid-cols-2 md:grid-cols-3 max-w-2xl" : "sm:grid-cols-2 max-w-xl"}`}>
+              <div className="grid grid-cols-1 gap-2.5 sm:gap-3 text-sm w-full sm:grid-cols-2 max-w-xl">
                 {/* 1. Date Card */}
                 <div className="bg-white shadow-xs hover:shadow-md px-4 py-2.5 rounded-2xl flex items-center justify-start gap-2.5 text-slate-700 text-xs sm:text-sm font-normal min-h-[56px] transition-shadow w-full">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-pulse shrink-0"></span>
@@ -216,70 +216,10 @@ export default function CustomerDashboard() {
                 {/* 2. Temperature Card */}
                 <WeatherWidget cidade={profile?.cidade} className="w-full justify-start" />
 
-                {/* 3. Location Confirmed Card (if active) */}
-                {profile?.geolocalizacaoAtiva && locationDateFormatted && (
-                  <div className="bg-white shadow-xs hover:shadow-md px-4 py-2.5 rounded-2xl flex items-center justify-start gap-2.5 text-slate-700 text-xs sm:text-sm font-normal min-h-[56px] transition-shadow w-full">
-                    <CheckCircle className="w-5 h-5 text-[#10b981] shrink-0" />
-                    <div className="leading-tight">
-                      <div className="font-medium text-slate-800">GPS Confirmado</div>
-                      <div className="text-slate-500 text-[11px] sm:text-xs">em {locationDateFormatted}</div>
-                    </div>
-                  </div>
-                )}
+                {/* GPS Confirmado removido a pedido do cliente */}
               </div>
             </div>
-
-            {/* Right Column: Classification Badge (aligned at the top with Date, spacious padding) */}
-            {(() => {
-              const rawLevel = (profile?.level || "Bronze").trim();
-              const levelKey = rawLevel.toLowerCase();
-
-              let badgeImage = badgeBronze;
-              let badgeAlt = "Categoria Bronze";
-              let textClass = "text-[#78350f]";
-
-              if (levelKey === "prata") {
-                badgeImage = badgePrata;
-                badgeAlt = "Categoria Prata";
-                textClass = "text-[#334155]";
-              } else if (levelKey === "ouro") {
-                badgeImage = badgeOuro;
-                badgeAlt = "Categoria Ouro";
-                textClass = "text-[#854d0e]";
-              } else if (levelKey === "diamante") {
-                badgeImage = badgeDiamante;
-                badgeAlt = "Categoria Diamante";
-                textClass = "text-[#0369a1]";
-              }
-
-              return (
-                <button
-                  type="button"
-                  onClick={() => setIsClassificationModalOpen(true)}
-                  title="Clique para ampliar a classificação do condomínio"
-                  className="group flex flex-col items-center justify-center p-3.5 sm:px-5 sm:py-4 min-w-[122px] sm:min-w-[145px] bg-white shadow-xs hover:shadow-md active:scale-95 rounded-2xl transition-all duration-200 cursor-pointer shrink-0 focus:outline-none"
-                >
-                  {/* Category Medal Image */}
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5 drop-shadow-2xs transition-transform group-hover:scale-105 duration-200">
-                    <img
-                      src={badgeImage}
-                      alt={badgeAlt}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-
-                  {/* Title with comfortable breathing room */}
-                  <span className="text-[11px] sm:text-xs text-slate-400 font-normal uppercase tracking-wider block px-2 py-0.5 mb-0.5 leading-tight text-center">
-                    Classificação
-                  </span>
-
-                  {/* Level value */}
-                  <span className={`text-[13px] sm:text-base font-medium tracking-wide capitalize leading-tight text-center ${textClass}`}>
-                    {rawLevel}
-                  </span>
-                </button>
-              );
-            })()}
+            {/* The Classification Badge was here, currently removed. */}
           </div>
 
           {/* Customer Identification (Font size reduced by 10%) */}
