@@ -224,7 +224,7 @@ export default function MinhasOrdensServico() {
       const currentData = docSnap.data();
 
       const isOwner = currentData.clienteId === profile?.uid || currentData.clienteEmail === profile?.email;
-      const isAdmin = profile?.role === "Administrador" || profile?.role === "admin" || profile?.role === "Admin" || profile?.role === "master";
+      const isAdmin = profile?.role === "Administrador" || profile?.role === "admin" || profile?.role === "Administrador" || profile?.role === "Administrador";
 
       if (!isOwner && !isAdmin) {
         throw new Error("Permissão negada: você não é o proprietário desta ordem de serviço.");
@@ -326,7 +326,7 @@ export default function MinhasOrdensServico() {
       const currentData = docSnap.data();
 
       const isOwner = currentData.clienteId === profile?.uid || currentData.clienteEmail === profile?.email;
-      const isAdmin = profile?.role === "Administrador" || profile?.role === "admin" || profile?.role === "Admin" || profile?.role === "master";
+      const isAdmin = profile?.role === "Administrador" || profile?.role === "admin" || profile?.role === "Administrador" || profile?.role === "Administrador";
 
       if (!isOwner && !isAdmin) {
         throw new Error("Permissão negada: você não pode excluir esta ordem de serviço.");

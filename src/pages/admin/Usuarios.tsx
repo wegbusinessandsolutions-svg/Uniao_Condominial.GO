@@ -166,8 +166,8 @@ export default function Usuarios() {
         funcao: user.funcao || "",
         cpfResponsavel: user.cpfResponsavel || "",
         codigoIndicacao: user.codigoIndicacao || "",
-        tipoCondominio: user.tipoCondominio || "",
-        quantidadeUnidades: user.quantidadeUnidades || user.quantidadeUnidadesCondominio || "",
+        tipoCliente: user.tipoCliente || "",
+        unidades: user.unidades || user.unidadesCondominio || "",
         permissions: initialPermissions,
         emailConfirmadoAdmin: user.emailConfirmadoAdmin || false,
         password: ""
@@ -197,8 +197,8 @@ export default function Usuarios() {
         funcao: "",
         cpfResponsavel: "",
         codigoIndicacao: "",
-        tipoCondominio: "",
-        quantidadeUnidades: "",
+        tipoCliente: "",
+        unidades: "",
         permissions: {}
       }));
     }
@@ -304,8 +304,8 @@ export default function Usuarios() {
         funcao: formData.funcao,
         cpfResponsavel: formData.cpfResponsavel,
         codigoIndicacao: formData.codigoIndicacao,
-        tipoCondominio: formData.tipoCondominio || "",
-        quantidadeUnidades: formData.quantidadeUnidades ? Number(formData.quantidadeUnidades) || formData.quantidadeUnidades : "",
+        tipoCliente: formData.tipoCliente || "",
+        unidades: formData.unidades ? Number(formData.unidades) || formData.unidades : "",
         permissions: ["admin", "Administrador", "Admin", "Comercial", "Financeiro", "Estoquista", "Entregador", "Expedição"].includes(formData.role) ? formData.permissions : {},
         emailConfirmadoAdmin: formData.emailConfirmadoAdmin,
         updatedAt: nowIso
@@ -337,8 +337,8 @@ export default function Usuarios() {
           cnpj: formData.cnpj || formData.cpf || "",
           telefone: formData.telefone || "",
           email: formData.email,
-          tipoCondominio: formData.tipoCondominio || "",
-          unidadesHabitacionais: formData.quantidadeUnidades ? Number(formData.quantidadeUnidades) || formData.quantidadeUnidades : 0,
+          tipoCliente: formData.tipoCliente || "",
+          unidadesHabitacionais: formData.unidades ? Number(formData.unidades) || formData.unidades : 0,
           endereco: formData.endereco || "",
           numero: formData.numero || "",
           complemento: formData.complemento || "",
@@ -583,8 +583,8 @@ export default function Usuarios() {
         nivel: u.level || "Bronze",
         saldo_cashback: Number(u.cashbackBalance || 0).toFixed(2),
         telefone: u.telefone || "",
-        tipo_condominio: u.tipoCondominio || "",
-        quantidade_unidades: u.quantidadeUnidades || u.quantidadeUnidadesCondominio || "",
+        tipo_condominio: u.tipoCliente || "",
+        quantidade_unidades: u.unidades || u.unidadesCondominio || "",
         cpf_cnpj: u.cpf || u.cnpj || "",
         endereco: u.endereco || "",
         numero: u.numero || "",
@@ -1327,8 +1327,8 @@ export default function Usuarios() {
                       <div>
                         <label className="block text-sm font-bold text-slate-900 mb-1">Tipo de Condomínio</label>
                         <select
-                          value={formData.tipoCondominio || ""}
-                          onChange={(e) => setFormData({ ...formData, tipoCondominio: e.target.value })}
+                          value={formData.tipoCliente || ""}
+                          onChange={(e) => setFormData({ ...formData, tipoCliente: e.target.value })}
                           className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
                         >
                           <option value="">Não informado</option>
@@ -1341,8 +1341,8 @@ export default function Usuarios() {
                         <input
                           type="text"
                           inputMode="numeric"
-                          value={formData.quantidadeUnidades || ""}
-                          onChange={(e) => setFormData({ ...formData, quantidadeUnidades: e.target.value.replace(/\D/g, "") })}
+                          value={formData.unidades || ""}
+                          onChange={(e) => setFormData({ ...formData, unidades: e.target.value.replace(/\D/g, "") })}
                           placeholder="Ex: 12"
                           className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
                         />
@@ -1393,8 +1393,8 @@ export default function Usuarios() {
                       <div>
                         <label className="block text-sm font-bold text-slate-900 mb-1">Tipo de Condomínio</label>
                         <select
-                          value={formData.tipoCondominio || ""}
-                          onChange={(e) => setFormData({ ...formData, tipoCondominio: e.target.value })}
+                          value={formData.tipoCliente || ""}
+                          onChange={(e) => setFormData({ ...formData, tipoCliente: e.target.value })}
                           className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
                         >
                           <option value="">Não informado</option>
@@ -1407,8 +1407,8 @@ export default function Usuarios() {
                         <input
                           type="text"
                           inputMode="numeric"
-                          value={formData.quantidadeUnidades || ""}
-                          onChange={(e) => setFormData({ ...formData, quantidadeUnidades: e.target.value.replace(/\D/g, "") })}
+                          value={formData.unidades || ""}
+                          onChange={(e) => setFormData({ ...formData, unidades: e.target.value.replace(/\D/g, "") })}
                           placeholder="Ex: 12"
                           className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-[#0B1A3A] outline-none"
                         />

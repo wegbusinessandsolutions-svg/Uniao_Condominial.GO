@@ -213,9 +213,9 @@ export default function Afiliacao() {
     setLoadingAfil(true);
     try {
       const emailCli = profile?.email || user?.email || "";
-      const nomeCondominio = profile?.displayName || profile?.nome || "Condomínio";
+      const nomeCondominio = profile?.displayName || "Condomínio";
       const cnpj = profile?.cnpj || profile?.cpfCnpj || "Não informado";
-      const nomeSindico = (profile as any)?.nomeResponsavel || profile?.nome || "Não informado";
+      const nomeSindico = (profile as any)?.nomeResponsavel || profile?.displayName || "Não informado";
       const tel = profile?.telefone || profile?.phone || "Não informado";
 
       const data = {
@@ -332,7 +332,7 @@ export default function Afiliacao() {
     setCanceling(true);
     try {
       const emailCli = profile?.email || user?.email || afiliadoData?.email || "";
-      const nomeCondominio = profile?.displayName || profile?.nome || afiliadoData?.nomeCondominio || "Condomínio";
+      const nomeCondominio = profile?.displayName || afiliadoData?.nomeCondominio || "Condomínio";
       const nowIso = new Date().toISOString();
 
       await setDoc(
@@ -410,9 +410,9 @@ export default function Afiliacao() {
       return;
     }
 
-    const nomeCliente = profile?.displayName || profile?.nome || (profile as any)?.nomeFantasia || (profile as any)?.razaoSocial || afiliadoData?.nomeCondominio || "Condomínio Afiliado";
+    const nomeCliente = profile?.displayName || (profile as any)?.nomeFantasia || (profile as any)?.razaoSocial || afiliadoData?.nomeCondominio || "Condomínio Afiliado";
     const cnpjCliente = profile?.cnpj || profile?.cpfCnpj || (profile as any)?.cpf || (profile as any)?.documento || afiliadoData?.cnpj || "Não informado";
-    const representante = (profile as any)?.nomeResponsavel || (profile as any)?.responsavel || profile?.nome || afiliadoData?.nomeSindico || "Não informado";
+    const representante = (profile as any)?.nomeResponsavel || (profile as any)?.responsavel || profile?.displayName || afiliadoData?.nomeSindico || "Não informado";
     const numParcela = selectedParcelaParaBoleto.numeroParcela || "1";
     const valorFormatado = Number(selectedParcelaParaBoleto.valor || 0).toFixed(2).replace('.', ',');
     const vencFormatado = formatDateBR(selectedParcelaParaBoleto.vencimento);
@@ -889,7 +889,7 @@ export default function Afiliacao() {
             
             <div className="space-y-4 text-sm text-slate-600 mb-6 font-normal">
               <p className="text-sm leading-relaxed text-slate-700 font-normal">
-                Tem certeza de que deseja cancelar a afiliação do condomínio <span className="font-medium">{afiliadoData?.nomeCondominio || user?.nome}</span>?
+                Tem certeza de que deseja cancelar a afiliação do condomínio <span className="font-medium">{afiliadoData?.nomeCondominio || user?.email || "Usuário"}</span>?
               </p>
               
               <div className="p-4 bg-rose-50/70 rounded-2xl text-rose-950 space-y-2 shadow-xs">
@@ -962,7 +962,7 @@ export default function Afiliacao() {
                   <div>
                     <span className="text-slate-500 block font-normal">Nome do Cliente / Condomínio:</span>
                     <span className="font-medium text-slate-900 text-sm">
-                      {profile?.displayName || profile?.nome || (profile as any)?.nomeFantasia || (profile as any)?.razaoSocial || afiliadoData?.nomeCondominio || "Condomínio"}
+                      {profile?.displayName || (profile as any)?.nomeFantasia || (profile as any)?.razaoSocial || afiliadoData?.nomeCondominio || "Condomínio"}
                     </span>
                   </div>
 
@@ -976,7 +976,7 @@ export default function Afiliacao() {
                   <div className="sm:col-span-2">
                     <span className="text-slate-500 block font-normal">Representado por:</span>
                     <span className="font-medium text-slate-800 text-sm">
-                      {(profile as any)?.nomeResponsavel || (profile as any)?.responsavel || profile?.nome || afiliadoData?.nomeSindico || "Não informado"}
+                      {(profile as any)?.nomeResponsavel || (profile as any)?.responsavel || profile?.displayName || afiliadoData?.nomeSindico || "Não informado"}
                     </span>
                   </div>
                 </div>
@@ -1014,7 +1014,7 @@ export default function Afiliacao() {
               {/* Declaração formal de solicitação */}
               <div className="bg-blue-50/60 rounded-2xl p-4 text-xs text-slate-700 leading-relaxed shadow-xs font-normal">
                 <p>
-                  O cliente <span className="font-medium">{profile?.displayName || profile?.nome || afiliadoData?.nomeCondominio || "Condomínio"}</span>, C.N.P.J. Nº <span className="font-medium">{profile?.cnpj || profile?.cpfCnpj || afiliadoData?.cnpj || "Não informado"}</span>, representado por <span className="font-medium">{(profile as any)?.nomeResponsavel || profile?.nome || afiliadoData?.nomeSindico || "Não informado"}</span>, solicita a emissão de um novo boleto bancário atualizado para pagamento da mensalidade em atraso.
+                  O cliente <span className="font-medium">{profile?.displayName || afiliadoData?.nomeCondominio || "Condomínio"}</span>, C.N.P.J. Nº <span className="font-medium">{profile?.cnpj || profile?.cpfCnpj || afiliadoData?.cnpj || "Não informado"}</span>, representado por <span className="font-medium">{(profile as any)?.nomeResponsavel || profile?.displayName || afiliadoData?.nomeSindico || "Não informado"}</span>, solicita a emissão de um novo boleto bancário atualizado para pagamento da mensalidade em atraso.
                 </p>
                 <p className="mt-2 text-[11px] text-slate-500 font-normal">
                   Ao clicar em <span className="font-medium">Solicitar</span>, a notificação será encaminhada diretamente ao departamento financeiro responsável pela unidade para emissão e envio do novo boleto com a data de vencimento atualizada.

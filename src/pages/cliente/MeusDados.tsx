@@ -155,9 +155,9 @@ export default function MeusDados() {
     setLoadingAfil(true);
     try {
       const emailCli = profile?.email || user?.email || "";
-      const nomeCondominio = profile?.displayName || profile?.nome || "Condomínio";
+      const nomeCondominio = profile?.displayName || "Condomínio";
       const cnpj = profile?.cnpj || profile?.cpfCnpj || "Não informado";
-      const nomeSindico = (profile as any)?.nomeResponsavel || profile?.nome || "Não informado";
+      const nomeSindico = (profile as any)?.nomeResponsavel || profile?.displayName || "Não informado";
       const tel = profile?.telefone || profile?.phone || "Não informado";
 
       const data = {
@@ -274,9 +274,9 @@ export default function MeusDados() {
     setCanceling(true);
     try {
       const emailCli = profile?.email || user?.email || afiliadoData?.email || "";
-      const nomeCondominio = profile?.displayName || profile?.nome || afiliadoData?.nomeCondominio || "Condomínio";
+      const nomeCondominio = profile?.displayName || afiliadoData?.nomeCondominio || "Condomínio";
       const cnpj = profile?.cnpj || profile?.cpfCnpj || afiliadoData?.cnpj || "Não informado";
-      const nomeSindico = (profile as any)?.nomeResponsavel || profile?.nome || afiliadoData?.nomeSindico || "Síndico/Responsável";
+      const nomeSindico = (profile as any)?.nomeResponsavel || profile?.displayName || afiliadoData?.nomeSindico || "Síndico/Responsável";
       const nowIso = new Date().toISOString();
 
       // 1. Update in Firestore

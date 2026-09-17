@@ -508,7 +508,7 @@ export default function ComercialExternoDashboard() {
                 <Link
                   to="/admin/config-dashboard-comercial-externo"
                   className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:text-[#0071e3] hover:border-[#0071e3]/30 shadow-xs text-xs font-bold transition-all"
-                  title="Configurar opções exibidas neste painel"
+                  aria-label="Configurar opções exibidas neste painel"
                 >
                   <Sliders size={14} className="text-[#0071e3]" />
                   <span className="hidden md:inline">Opções do Painel</span>
@@ -519,7 +519,7 @@ export default function ComercialExternoDashboard() {
                 onClick={loadData}
                 disabled={loading}
                 className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:text-[#0071e3] shadow-xs text-xs font-bold transition-all cursor-pointer"
-                title="Atualizar dados em tempo real"
+                aria-label="Atualizar dados em tempo real"
               >
                 <RefreshCw size={14} className={`text-[#0071e3] ${loading ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline">Atualizar</span>
@@ -997,7 +997,7 @@ export default function ComercialExternoDashboard() {
                           <div className="text-slate-900 font-extrabold flex items-center gap-2">
                             {v.nomeCondominio}
                             {v.statusSindico === "Visitado Afiliado" && (
-                              <CheckCircle2 size={14} className="text-[#0071e3]" title="Afiliado à U.C." />
+                              <CheckCircle2 size={14} className="text-[#0071e3]" aria-label="Afiliado à U.C." />
                             )}
                           </div>
                           {v.qtdUnidades && (
@@ -1053,7 +1053,7 @@ export default function ComercialExternoDashboard() {
                             <button
                               onClick={() => openEditModal(v)}
                               className="p-2 text-slate-500 hover:text-[#0071e3] hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
-                              title="Visualizar / Editar Visita"
+                              aria-label="Visualizar / Editar Visita"
                             >
                               <Edit size={16} />
                             </button>
@@ -1063,7 +1063,7 @@ export default function ComercialExternoDashboard() {
                                 setIsMsgModalOpen(true);
                               }}
                               className="p-2 text-slate-500 hover:text-[#0071e3] hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
-                              title="Enviar Mensagem via WhatsApp"
+                              aria-label="Enviar Mensagem via WhatsApp"
                             >
                               <MessageCircle size={16} />
                             </button>

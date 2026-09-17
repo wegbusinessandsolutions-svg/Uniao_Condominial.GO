@@ -344,7 +344,7 @@ export default function CashbackControle() {
   });
 
   const filteredRequests = requests.filter(req => {
-    const text = `${req.fornecedor} ${req.descricao} ${req.observacoes || ""} ${req.status} ${req.userEmail || ""}`.toLowerCase();
+    const text = `${req.userName || req.userId} ${req.descricao} ${req.observacoes || ""} ${req.status} ${req.userEmail || ""}`.toLowerCase();
     return text.includes(requestsSearchTerm.toLowerCase());
   });
 
@@ -633,7 +633,7 @@ export default function CashbackControle() {
                         className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                       >
                         <td className="px-6 py-4 font-semibold text-slate-900 group-hover:text-brand-dark transition-colors">
-                          {req.fornecedor}
+                          {req.userName || req.userId}
                           {req.userEmail && (
                             <span className="text-[11px] text-slate-400 block font-normal">{req.userEmail}</span>
                           )}

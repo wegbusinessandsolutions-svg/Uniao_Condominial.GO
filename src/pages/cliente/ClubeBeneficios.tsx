@@ -37,7 +37,7 @@ export default function ClubeBeneficios() {
 
   const userName = profile?.displayName || user?.displayName || (user?.email ? user.email.split("@")[0].toUpperCase() : "CONDÔMINO TITULAR");
   const userCpf = profile?.cpf || profile?.documento || profile?.cpfCnpj || "";
-  const condominioName = profile?.nome || profile?.razaoSocial || profile?.displayName || user?.displayName || profile?.condominio || profile?.empresa || empresaNome || "CONDOMÍNIO";
+  const condominioName = profile?.displayName || profile?.nomeEmpresa || profile?.displayName || user?.displayName || profile?.condominio || profile?.nomeEmpresa || empresaNome || "CONDOMÍNIO";
   const condominioCnpj = profile?.cnpj || profile?.cpfCnpj || profile?.cpf || "";
   const cardSuffix = user?.uid ? `${user.uid.slice(0, 4).toUpperCase()} ${user.uid.slice(4, 8).toUpperCase()}` : "344D 4CA4";
 

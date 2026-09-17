@@ -7,7 +7,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 
 export default function VisitasCliente() {
   const { profile } = useAuth();
-  const isAdmin = profile?.role === "Administrador" || profile?.role === "admin" || profile?.role === "Admin" || profile?.role === "master";
+  const isAdmin = profile?.role === "Administrador" || profile?.role === "admin" || profile?.role === "Administrador" || profile?.role === "Administrador";
 
   const [visitas, setVisitas] = useState<any[]>([]);
   const [filteredVisitas, setFilteredVisitas] = useState<any[]>([]);
@@ -683,7 +683,7 @@ export default function VisitasCliente() {
                       <div className="text-slate-900 font-bold flex items-center gap-2">
                         {v.nomeCondominio}
                         {v.statusSindico === "Visitado Afiliado" && (
-                          <CheckCircle2 size={14} className="text-emerald-500" title="Afiliado à U.C." />
+                          <CheckCircle2 size={14} className="text-emerald-500" aria-label="Afiliado à U.C." />
                         )}
                       </div>
                     </td>
@@ -729,7 +729,7 @@ export default function VisitasCliente() {
                         <button
                           onClick={() => openEditModal(v)}
                           className="p-1.5 text-slate-400 hover:text-[#0071e3] hover:bg-sky-50 rounded-lg transition-colors"
-                          title="Visualizar / Editar"
+                          aria-label="Visualizar / Editar"
                         >
                           <Edit size={16} />
                         </button>
@@ -739,7 +739,7 @@ export default function VisitasCliente() {
                             setIsMsgModalOpen(true);
                           }}
                           className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors"
-                          title="Enviar Msg Zap"
+                          aria-label="Enviar Msg Zap"
                         >
                           <MessageCircle size={16} />
                         </button>

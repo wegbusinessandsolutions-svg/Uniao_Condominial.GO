@@ -320,13 +320,13 @@ export default function Cashback() {
       
       // 2. Criar lançamento no Contas a Pagar do financeiro
       await addDoc(collection(db, "contas_pagar"), {
-        descricao: `Saque Cashback Pix - ${profile?.nome || 'Cliente'}`,
+        descricao: `Saque Cashback Pix - ${profile?.displayName || 'Cliente'}`,
         valor: netValue,
         vencimento: new Date().toISOString().split('T')[0],
         status: "Aberto",
         categoria: "Cashback Cliente",
         centroCusto: "Comercial",
-        fornecedorId: profile?.nome || "Cliente (Cashback)",
+        fornecedorId: profile?.displayName || "Cliente (Cashback)",
         observacoes: `Chave Pix: ${pixKey} (${pixKeyType}) | Telefone: ${pixPhone}`,
         pixKeyType,
         pixKey,

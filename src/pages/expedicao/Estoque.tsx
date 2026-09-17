@@ -239,7 +239,7 @@ export default function EstoqueControle() {
         tipo: movTipo,
         quantidade: Number(movQtd),
         motivo: movMotivo || (movTipo === "Entrada" ? "Reposição de Estoque" : "Saída Operacional / Venda"),
-        responsavel: profile?.nome || profile?.displayName || "Administrador",
+        responsavel: profile?.displayName || profile?.displayName || "Administrador",
         createdAt: new Date().toISOString(),
       };
 

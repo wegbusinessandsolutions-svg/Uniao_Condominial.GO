@@ -19,7 +19,7 @@ export default function Comissoes() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const isAdmin = profile?.role === "Administrador" || profile?.role === "admin" || profile?.role === "Admin";
+  const isAdmin = profile?.role === "Administrador" || profile?.role === "admin" || profile?.role === "Administrador";
 
   const fetchData = async () => {
     setLoading(true);
@@ -41,7 +41,7 @@ export default function Comissoes() {
         items = items.filter(i => 
            i.consultorEmail === profile?.email || 
            i.consultorNome === profile?.displayName || 
-           i.consultorNome === profile?.nome
+           i.consultorNome === profile?.displayName
         );
       }
 

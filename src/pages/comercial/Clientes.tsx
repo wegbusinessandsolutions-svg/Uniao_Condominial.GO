@@ -453,7 +453,7 @@ export default function Clientes() {
                           value={formData.tipo || "Pessoa Jurídica"}
                           onChange={(e) => {
                             handleInputChange(e);
-                            if (e.target.value === "Pessoa Física" && activeTab === "Responsável") {
+                            if (e.target.value === "Pessoa Física" && activeTab === "Administrador") {
                               setActiveTab("Básico");
                             }
                           }}
@@ -747,7 +747,7 @@ export default function Clientes() {
                   </div>
                 )}
 
-                {activeTab === "Responsável" && formData.tipo === "Pessoa Jurídica" && (
+                {activeTab === "Administrador" && formData.tipo === "Pessoa Jurídica" && (
                   <div className="space-y-5">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">

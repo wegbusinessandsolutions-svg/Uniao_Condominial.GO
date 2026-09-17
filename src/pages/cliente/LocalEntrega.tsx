@@ -90,7 +90,7 @@ export default function LocalEntrega() {
           latitude: lat,
           longitude: lng,
           cep,
-          endereco,
+          
           numero,
           complemento,
           bairro,
